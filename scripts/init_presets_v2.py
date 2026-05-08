@@ -72,14 +72,14 @@ def init_presets():
         # belleza, e-commerce puro, B2B/manufactura/3PL/professional services
         # eliminados — el producto ya no los soporta. Las filas existentes en
         # `industry_presets` quedan en BD hasta que el operador las depure
-        # manualmente; este seed solo upserts. Industrias kept: DATAXPOS,
+        # manualmente; este seed solo upserts. Industrias kept: ATLAS_POS,
         # DISTRIBUTOR_POS, RETAIL_CHAIN, RESTAURANT_*, CAFE_BAKERY,
         # AUTO_REPAIR_SHOP, CUSTOM.
         presets_data = [
             # Retail
             {
-                "id": "DATAXPOS", "name": "DataXPOS - Alto Rendimiento",
-                "desc": "Punto de venta de alto rendimiento con gestión completa de inventario, catálogo, precios, promociones y CRM",
+                "id": "ATLAS_POS", "name": "Atlas POS",
+                "desc": "Punto de venta ligero y de alto rendimiento con gestión completa de inventario, catálogo, precios, promociones y CRM",
                 "mods": [
                     "core",
                     "pos",

@@ -20,7 +20,7 @@ class BranchType(str, enum.Enum):
 
 class IndustryType(str, enum.Enum):
     # Retail / Comercio
-    DATAXPOS = "DATAXPOS"
+    ATLAS_POS = "ATLAS_POS"
     DISTRIBUTOR_POS = "DISTRIBUTOR_POS"
     RETAIL_CHAIN = "RETAIL_CHAIN"
     ECOMMERCE = "ECOMMERCE"

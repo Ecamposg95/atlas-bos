@@ -211,7 +211,7 @@ export function LoginPage() {
         if (data.user.platform_role === 'SUPERADMIN') { navigate('/platform/metrics'); return }
         const role = data.user.role
         if (['VENDEDOR', 'SOPORTE_OPERATIVO'].includes(role)) navigate('/mobile/dashboard')
-        else if (['CAJERO', 'GERENTE'].includes(role)) navigate('/dataxpos')
+        else if (['CAJERO', 'GERENTE'].includes(role)) navigate('/atlas-pos')
         else if (role === 'CLIENTE') navigate('/portal')
         else navigate('/hq/operations')
       }, 800)

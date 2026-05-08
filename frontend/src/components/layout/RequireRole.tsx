@@ -10,12 +10,12 @@ import type { Role } from '../../types/auth'
  * authorization on every API call. Do not rely on this to hide sensitive
  * data; rely on it to prevent confusing redirects and unreachable UI.
  *
- * Unauthorized users are redirected to `/dataxpos` (the default home).
+ * Unauthorized users are redirected to `/atlas-pos` (the default home).
  */
 export function RequireRole({
   roles,
   children,
-  redirectTo = '/dataxpos',
+  redirectTo = '/atlas-pos',
 }: {
   roles: Role[]
   children: React.ReactNode

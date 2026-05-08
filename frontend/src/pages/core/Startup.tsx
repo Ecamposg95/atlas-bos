@@ -4,10 +4,10 @@ import client from '../../api/client'
 import { useAuthStore } from '../../store/authStore'
 import './startup.css'
 
-type PresetType = 'DataXPOS' | 'Retail' | 'Gastronomía' | 'Logística' | 'Servicios' | 'Manual'
+type PresetType = 'Atlas POS' | 'Retail' | 'Gastronomía' | 'Logística' | 'Servicios' | 'Manual'
 
 const PRESET_KEY: Record<PresetType, string> = {
-  DataXPOS: 'DATAXPOS',
+  'Atlas POS': 'ATLAS_POS',
   Retail: 'CUSTOM',
   'Gastronomía': 'CUSTOM',
   'Logística': 'CUSTOM',
@@ -61,7 +61,7 @@ export function Startup() {
     try {
       const { data } = await client.post('/setup/initialize', { industry_type: PRESET_KEY[type] })
       await wait(1800)
-      navigate(data?.redirect_url || '/dataxpos')
+      navigate(data?.redirect_url || '/atlas-pos')
     } catch {
       setSubMsg('Error al inicializar. Reintentando...')
       setPhase('idle')
@@ -101,8 +101,8 @@ export function Startup() {
 
       <div className="setup-grid">
         <PresetCard
-          type="DataXPOS"
-          title="DataXPOS"
+          type="Atlas POS"
+          title="Atlas POS"
           description="Análisis predictivo y visualización de datos en tiempo real. La inteligencia detrás del punto de venta."
           highlighted
           onPick={startSetup}

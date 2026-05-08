@@ -193,7 +193,7 @@ export function PlatformOrgWizard({ open, onClose, onSuccess }: Props) {
     tax_id: '',
     email: '',
     phone: '',
-    industry_type: 'DATAXPOS',
+    industry_type: 'ATLAS_POS',
     timezone: 'America/Mexico_City',
   })
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set())
@@ -226,7 +226,7 @@ export function PlatformOrgWizard({ open, onClose, onSuccess }: Props) {
       tax_id: '',
       email: '',
       phone: '',
-      industry_type: 'DATAXPOS',
+      industry_type: 'ATLAS_POS',
       timezone: 'America/Mexico_City',
     })
     setSelectedModules(new Set())
@@ -243,7 +243,7 @@ export function PlatformOrgWizard({ open, onClose, onSuccess }: Props) {
         setPresets(p)
         setCatalog(c)
         // If current industry is not in presets, fall back to first available
-        if (p.length > 0 && !p.find((x: IndustryPreset) => x.industry_type === 'DATAXPOS')) {
+        if (p.length > 0 && !p.find((x: IndustryPreset) => x.industry_type === 'ATLAS_POS')) {
           setIdentity((prev) => ({ ...prev, industry_type: p[0].industry_type }))
         }
       })
@@ -535,7 +535,7 @@ export function PlatformOrgWizard({ open, onClose, onSuccess }: Props) {
           onChange={(e) => setIdentity({ ...identity, industry_type: e.target.value })}
           style={inputStyle}
         >
-          {presets.length === 0 && <option value="DATAXPOS">DataXPOS</option>}
+          {presets.length === 0 && <option value="ATLAS_POS">AtlasPOS</option>}
           {presets.map((p) => (
             <option key={p.industry_type} value={p.industry_type}>
               {p.display_name}

@@ -23,7 +23,7 @@ const EMPTY_FORM: OrgFormState = {
   email: '', phone: '', address: '', website: '',
   logo_url: '', timezone: 'America/Mexico_City',
   ticket_header: '', ticket_footer: '', printer_name: '',
-  industry_type: 'DATAXPOS',
+  industry_type: 'ATLAS_POS',
 }
 
 function orgToForm(o: PlatformOrg): OrgFormState {
@@ -41,7 +41,7 @@ function orgToForm(o: PlatformOrg): OrgFormState {
     ticket_header: o.ticket_header || '',
     ticket_footer: o.ticket_footer || '',
     printer_name: o.printer_name || '',
-    industry_type: (o.industry_type as string) || 'DATAXPOS',
+    industry_type: (o.industry_type as string) || 'ATLAS_POS',
   }
 }
 
@@ -735,7 +735,7 @@ export function PlatformOrganizations() {
               style={{ ...inputStyle, background: 'var(--p-surface-2)' }}
             >
               {presets.length === 0 && (
-                <option value="DATAXPOS">DataXPOS — Punto de venta de alto rendimiento</option>
+                <option value="ATLAS_POS">AtlasPOS — Punto de venta de alto rendimiento</option>
               )}
               {presets.map(p => (
                 <option key={p.industry_type} value={p.industry_type}>

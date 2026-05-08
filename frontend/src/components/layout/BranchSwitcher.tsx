@@ -62,7 +62,7 @@ export function BranchSwitcher() {
     const isAdmin = user?.role === 'ADMINISTRADOR' || user?.role === 'DUEÑO'
     if (branchType === 'WAREHOUSE') navigate('/inventory')
     else if (isAdmin) navigate('/hq/operations')
-    else navigate('/dataxpos')
+    else navigate('/atlas-pos')
   }
 
   return (

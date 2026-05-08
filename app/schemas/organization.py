@@ -32,8 +32,8 @@ class OrganizationBase(BaseModel):
 
 
 class OrganizationCreate(OrganizationBase):
-    # Default DATAXPOS — preset se aplica automáticamente al crear (ver router).
-    industry_type: Optional[IndustryType] = IndustryType.DATAXPOS
+    # Default ATLAS_POS — preset se aplica automáticamente al crear (ver router).
+    industry_type: Optional[IndustryType] = IndustryType.ATLAS_POS
 
     model_config = {"extra": "ignore"}
 

@@ -32,7 +32,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/users':            'Usuarios',
   '/hr/me':            'Mi Expediente',
   '/hr':               'Recursos Humanos',
-  '/dataxpos':         'Inicio',
+  '/atlas-pos':         'Inicio',
   '/pos':              'Punto de Venta',
   '/sales':            'Historial de Ventas',
   '/cash-history':     'Cortes de Caja',

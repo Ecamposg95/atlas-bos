@@ -62,7 +62,7 @@ const HR              = lazy(() => import('./pages/hr/HR').then(m => ({ default:
 const HRMe            = lazy(() => import('./pages/hr/HRMe').then(m => ({ default: m.HRMe })))
 
 // POS / Branch
-const DataXPOS        = lazy(() => import('./pages/pos/DataXPOS').then(m => ({ default: m.DataXPOS })))
+const AtlasPOS        = lazy(() => import('./pages/pos/AtlasPOS').then(m => ({ default: m.AtlasPOS })))
 const POS             = lazy(() => import('./pages/pos/POS').then(m => ({ default: m.POS })))
 const PrinterSettings = lazy(() => import('./pages/pos/PrinterSettings').then(m => ({ default: m.PrinterSettings })))
 
@@ -136,7 +136,7 @@ function homePathForRole(role?: string | null, isMobile = false): string {
   if (role === 'ADMINISTRADOR' || role === 'DUEÑO') return '/hq/operations'
   if (role === 'VENDEDOR' || role === 'SOPORTE_OPERATIVO') return '/mobile/dashboard'
   if (role === 'CLIENTE') return '/portal'
-  return '/dataxpos'
+  return '/atlas-pos'
 }
 
 function RoleHomeRedirect() {
@@ -145,7 +145,7 @@ function RoleHomeRedirect() {
   return <Navigate to={homePathForRole(user?.role, isMobile)} replace />
 }
 
-function DataxposGate({ children }: { children: React.ReactNode }) {
+function AtlasPOSGate({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
   if (user?.role === 'ADMINISTRADOR' || user?.role === 'DUEÑO') {
     return <Navigate to="/hq/operations" replace />
@@ -210,7 +210,7 @@ export default function App() {
         >
           <Route index element={<RoleHomeRedirect />} />
 
-          <Route path="dataxpos" element={<DataxposGate><Suspense fallback={<PageLoader />}><DataXPOS /></Suspense></DataxposGate>} />
+          <Route path="atlas-pos" element={<AtlasPOSGate><Suspense fallback={<PageLoader />}><AtlasPOS /></Suspense></AtlasPOSGate>} />
 
           {/* HQ */}
           <Route path="hq">

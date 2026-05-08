@@ -1,1 +1,0 @@
-import{c as n}from"./index-BHROJTe3.js";const s={getKardex:async(a,t)=>{const{data:r}=await n.get(`/inventory/kardex/${a}`,{params:t?{branch_id:t}:void 0});return r},createAdjustment:async a=>{const{data:t}=await n.post("/inventory/adjust",a);return t},transferStock:async a=>{const{data:t}=await n.post("/inventory/transfer",a);return t}};export{s as i};

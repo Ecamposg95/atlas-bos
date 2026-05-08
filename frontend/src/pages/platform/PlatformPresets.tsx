@@ -644,7 +644,7 @@ export function PlatformPresets() {
             <input
               value={form.industry_type}
               onChange={e => setForm({ ...form, industry_type: e.target.value.toUpperCase() })}
-              placeholder="Ej. DAXPOS, RESTAURANT, CLINIC..."
+              placeholder="Ej. ATLASPOS, RESTAURANT, CLINIC..."
               required
               style={{ ...inputStyle, fontFamily: 'monospace' }}
             />

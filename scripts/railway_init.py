@@ -3,7 +3,7 @@
 Railway Deployment Initialization Script
 Ejecuta la secuencia completa de inicialización:
 1. Crear Superadmin
-2. Crear Organización Rmazh con preset DATAXPOS
+2. Crear Organización Rmazh con preset ATLAS_POS
 3. Vincular Superadmin a Rmazh
 """
 import sys
@@ -227,7 +227,7 @@ def create_superadmin(db):
     return superadmin
 
 def create_rmazh_organization(db):
-    """Create Rmazh organization with DATAXPOS preset"""
+    """Create Rmazh organization with ATLAS_POS preset"""
     print("\n🏢 Creating Rmazh Organization...")
     
     # Check if organization exists
@@ -238,7 +238,7 @@ def create_rmazh_organization(db):
     
     rmazh = Organization(
         name="Rmazh",
-        industry_type=IndustryType.DATAXPOS,
+        industry_type=IndustryType.ATLAS_POS,
         is_active=True,
         plan="Pro",
         status="ACTIVE"
@@ -278,12 +278,12 @@ def link_superadmin_to_rmazh(db, superadmin, organization):
     print(f"✅ Superadmin linked to {organization.name}")
 
 def initialize_modules(db, organization):
-    """Initialize DATAXPOS modules for organization"""
-    print("\n📦 Initializing DATAXPOS modules...")
+    """Initialize ATLAS_POS modules for organization"""
+    print("\n📦 Initializing ATLAS_POS modules...")
     
     from app.models.modules import Module, OrganizationModule
     
-    # DATAXPOS module keys — alineado con scripts/init_presets_v2.py preset
+    # ATLAS_POS module keys — alineado con scripts/init_presets_v2.py preset
     # canónico (Wave 2: removidos purchasing/fulfillment/documents/
     # sales_pipeline/invoicing/quotes que no son parte del preset DAXPOS).
     dataxpos_modules = [
@@ -331,10 +331,10 @@ def initialize_presets(db):
     
     from app.models.modules import IndustryPreset, Module
     
-    # DATAXPOS Preset
+    # ATLAS_POS Preset
     preset_data = {
-        "industry_type": "DATAXPOS",
-        "display_name": "DataXPOS Retail",
+        "industry_type": "ATLAS_POS",
+        "display_name": "Atlas POS Retail",
         "description": "Configuración completa para punto de venta retail con inventario avanzado.",
         "modules": [
             "pos", "inventory", "sales", "customers", "finance", 
@@ -349,9 +349,9 @@ def initialize_presets(db):
     if not existing:
         preset = IndustryPreset(**preset_data)
         db.add(preset)
-        print("✅ Created preset: DATAXPOS Retail")
+        print("✅ Created preset: ATLAS_POS Retail")
     else:
-        print("⚠️  Preset DATAXPOS already exists, skipping...")
+        print("⚠️  Preset ATLAS_POS already exists, skipping...")
         
     db.commit()
 

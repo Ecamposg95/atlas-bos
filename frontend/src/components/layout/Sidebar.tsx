@@ -12,7 +12,7 @@ const RETURNS_URLS = new Set(['/returns', '/hq/returns'])
 
 // Branch nav group labels — keyed by URL, defines section header shown above each group
 const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
-  { header: 'Mi día',        urls: ['/dataxpos', '/pos'] },
+  { header: 'Mi día',        urls: ['/atlas-pos', '/pos'] },
   { header: 'Mi turno',      urls: ['/cash-history', '/sales'] },
   { header: 'Inventario',    urls: ['/products'] },
   { header: 'Reportes',      urls: ['/reports'] },
@@ -64,7 +64,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Sucursales',        short: 'SCR', icon: 'fa-store',               url: '/hq/branches',      group: 'hq',   sort: 19 },
   { label: 'Usuarios',          short: 'USR', icon: 'fa-users-cog',           url: '/users',            group: 'hq',   sort: 20 },
   { label: 'RRHH',              short: 'HR',  icon: 'fa-user-tie',            url: '/hr',               group: 'hq',   sort: 21 },
-  { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/dataxpos',         group: 'pos',  sort: 0  },
+  { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/atlas-pos',         group: 'pos',  sort: 0  },
   { label: 'Cobrar',            short: 'POS', icon: 'fa-cash-register',       url: '/pos',              group: 'pos',  sort: 1  },
   { label: 'Mis ventas',        short: 'HST', icon: 'fa-history',             url: '/sales',            group: 'pos',  sort: 2  },
   { label: 'Mi caja',           short: 'CRT', icon: 'fa-vault',               url: '/cash-history',     group: 'pos',  sort: 3  },
@@ -82,10 +82,10 @@ const ALL_NAV: NavItem[] = [
 const ROLE_ROUTES: Record<Role, string[]> = {
   ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses'],
   DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses'],
-  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/dataxpos'],
-  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/dataxpos'],
-  VENDEDOR:         ['/mobile/dashboard','/mobile/query','/mobile/sales','/mobile/profile','/hr/me','/dataxpos'],
-  SOPORTE_OPERATIVO:['/mobile/dashboard','/mobile/query','/mobile/profile','/hr/me','/dataxpos'],
+  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos'],
+  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos'],
+  VENDEDOR:         ['/mobile/dashboard','/mobile/query','/mobile/sales','/mobile/profile','/hr/me','/atlas-pos'],
+  SOPORTE_OPERATIVO:['/mobile/dashboard','/mobile/query','/mobile/profile','/hr/me','/atlas-pos'],
   CLIENTE:          ['/portal'],
 }
 

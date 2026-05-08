@@ -1,7 +1,7 @@
 export const INDUSTRY_ICON_V2: Record<string, string> = {
   RETAIL: 'fa-bag-shopping',
   CLINIC: 'fa-stethoscope',
-  DATAXPOS: 'fa-cash-register',
+  ATLAS_POS: 'fa-cash-register',
   RESTAURANT: 'fa-utensils',
   FOOD: 'fa-utensils',
   WORKSHOP: 'fa-screwdriver-wrench',

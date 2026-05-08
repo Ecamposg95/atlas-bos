@@ -59,9 +59,9 @@ def initialize_preset(
     org.industry_type = payload.industry_type
     db.commit()
 
-    target_url = "/dataxpos"
-    if payload.industry_type == "DATAXPOS":
-        target_url = "/dataxpos"
+    target_url = "/atlas-pos"
+    if payload.industry_type == "ATLAS_POS":
+        target_url = "/atlas-pos"
     elif payload.industry_type == "CRM":
         target_url = "/crm"
 

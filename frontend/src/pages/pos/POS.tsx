@@ -376,7 +376,7 @@ export function POS() {
         {isBranch && (
           <>
             <Link
-              to="/dataxpos"
+              to="/atlas-pos"
               className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
               style={{ color: 'var(--dax-text-muted)' }}
             >

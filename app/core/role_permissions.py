@@ -1,13 +1,13 @@
 # app/core/role_permissions.py
 """
-DataXPOS Role-Based View Permissions Matrix
-Defines which templates each role can access in the DataXPOS preset.
+Atlas POS Role-Based View Permissions Matrix
+Defines which templates each role can access in the Atlas POS preset.
 """
 
 from app.models.users import Role
 
-# DataXPOS Role -> Allowed Templates Mapping
-DATAXPOS_ROLE_VIEWS = {
+# Atlas POS Role -> Allowed Templates Mapping
+ATLAS_POS_ROLE_VIEWS = {
     Role.ADMINISTRADOR: [
         # HQ Administration
         "hq_operations.html",
@@ -40,8 +40,8 @@ DATAXPOS_ROLE_VIEWS = {
         "returns.html",
         "purchases.html",
         "expenses.html",
-        # DataXPOS Home
-        "dataxpos.html",
+        # Atlas POS Home
+        "atlas-pos.html",
         "startup.html",
         "index.html",
         "construction.html",
@@ -67,8 +67,8 @@ DATAXPOS_ROLE_VIEWS = {
         "returns.html",
         "purchases.html",
         "expenses.html",
-        # DataXPOS Home
-        "dataxpos.html",
+        # Atlas POS Home
+        "atlas-pos.html",
         "startup.html",
         "index.html",
         "construction.html",
@@ -83,7 +83,7 @@ DATAXPOS_ROLE_VIEWS = {
         "pos.html",
         "sales.html",
         "returns.html",
-        "dataxpos.html",
+        "atlas-pos.html",
         "index.html",
         "construction.html",
     ],
@@ -98,7 +98,7 @@ DATAXPOS_ROLE_VIEWS = {
         "sales.html",
         "returns.html",
         "reports.html",
-        "dataxpos.html",
+        "atlas-pos.html",
         "index.html",
         "construction.html",
     ],
@@ -110,7 +110,7 @@ DATAXPOS_ROLE_VIEWS = {
         "mobile_sales.html",
         "mobile_profile.html",
         "hr_me.html",
-        "dataxpos.html",
+        "atlas-pos.html",
         "index.html",
         "construction.html",
     ],
@@ -121,7 +121,7 @@ DATAXPOS_ROLE_VIEWS = {
         "mobile_query.html",
         "mobile_profile.html",
         "hr_me.html",
-        "dataxpos.html",
+        "atlas-pos.html",
         "index.html",
         "construction.html",
     ],
@@ -172,7 +172,7 @@ _NAV_GROUP = {
     "users.html":                    (6, "Organización"),
     "hr.html":                       (6, "Organización"),
     # ── BRANCH — GERENTE / CAJERO ─────────────────────────
-    "dataxpos.html":                 (-2, "Mi día"),
+    "atlas-pos.html":                 (-2, "Mi día"),
     "pos.html":                      (-1, "Cobrar"),
     "cash_history.html":             (1, "Mi turno"),
     "sales.html":                    (2, "Mi turno"),
@@ -186,7 +186,7 @@ _NAV_GROUP = {
     "mobile_profile.html":           (1, "Móvil"),
 }
 
-# Template Metadata for DataXPOS (Label, Icon, URL)
+# Template Metadata for Atlas POS (Label, Icon, URL)
 TEMPLATE_METADATA = {
     # --- HQ / Admin ---
     "hq_operations.html":            {"label": "Operaciones",            "icon": "fa-gauge-high",          "url": "/hq/operations"},
@@ -229,7 +229,7 @@ TEMPLATE_METADATA = {
     # --- Portal ---
     "portal.html":                   {"label": "Portal Clientes",        "icon": "fa-user-circle",         "url": "/portal/dashboard"},
     # --- Internal (excluded from nav) ---
-    "dataxpos.html":                 {"label": "Inicio",                 "icon": "fa-home",                "url": "/dataxpos"},
+    "atlas-pos.html":                 {"label": "Inicio",                 "icon": "fa-home",                "url": "/atlas-pos"},
     "index.html":                    {"label": "Inicio",                 "icon": "fa-home",                "url": "/index"},
     "startup.html":                  {"label": "Setup",                  "icon": "fa-gear",                "url": "/startup"},
 }
@@ -238,7 +238,7 @@ TEMPLATE_METADATA = {
 # Branch users see semantic labels ("Mi día", "Cobrar") while HQ keeps canonical names.
 TEMPLATE_LABEL_OVERRIDES_BY_ROLE: dict[Role, dict[str, str]] = {
     Role.CAJERO: {
-        "dataxpos.html":       "Mi día",
+        "atlas-pos.html":       "Mi día",
         "pos.html":             "Cobrar",
         "cash_history.html":    "Mi caja",
         "sales.html":           "Mis ventas",
@@ -256,13 +256,13 @@ TEMPLATE_LABEL_OVERRIDES_BY_ROLE[Role.GERENTE] = {
 TEMPLATE_LABEL_OVERRIDES_BY_ROLE[Role.GERENTE]["reports.html"] = "Reportes"
 
 
-# Validation: every override key must exist in DATAXPOS_ROLE_VIEWS for that role.
+# Validation: every override key must exist in ATLAS_POS_ROLE_VIEWS for that role.
 for _role, _overrides in TEMPLATE_LABEL_OVERRIDES_BY_ROLE.items():
-    _allowed = set(DATAXPOS_ROLE_VIEWS.get(_role, []))
+    _allowed = set(ATLAS_POS_ROLE_VIEWS.get(_role, []))
     _missing = set(_overrides) - _allowed
     if _missing:
         raise RuntimeError(
-            f"TEMPLATE_LABEL_OVERRIDES_BY_ROLE[{_role}] references templates not in DATAXPOS_ROLE_VIEWS: {_missing}"
+            f"TEMPLATE_LABEL_OVERRIDES_BY_ROLE[{_role}] references templates not in ATLAS_POS_ROLE_VIEWS: {_missing}"
         )
 
 
@@ -276,7 +276,7 @@ def can_access_template(role: Role, template_name: str) -> bool:
         except (ValueError, KeyError):
             pass
             
-    allowed_templates = DATAXPOS_ROLE_VIEWS.get(lookup_key, [])
+    allowed_templates = ATLAS_POS_ROLE_VIEWS.get(lookup_key, [])
     
     # If empty, double check if we have a string/enum mismatch in the dict keys
     if not allowed_templates and hasattr(role, 'value'):
@@ -287,14 +287,14 @@ def can_access_template(role: Role, template_name: str) -> bool:
 
 def get_allowed_templates(role: Role) -> list[str]:
     """Get all templates a role can access."""
-    return DATAXPOS_ROLE_VIEWS.get(role, [])
+    return ATLAS_POS_ROLE_VIEWS.get(role, [])
 
 def get_required_context(role: Role) -> str:
     """Get the required context for a role."""
     return ROLE_CONTEXT_REQUIREMENTS.get(role, "HQ")
 
-def get_dataxpos_nav(role: Role) -> list[dict]:
-    """Returns list of nav items for DataXPOS based on role, with group metadata for sidebar rendering."""
+def get_atlas_pos_nav(role: Role) -> list[dict]:
+    """Returns list of nav items for Atlas POS based on role, with group metadata for sidebar rendering."""
     lookup_key = role
     if isinstance(role, str):
         try:
@@ -302,11 +302,11 @@ def get_dataxpos_nav(role: Role) -> list[dict]:
         except (ValueError, KeyError):
             pass
 
-    templates = DATAXPOS_ROLE_VIEWS.get(lookup_key, [])
+    templates = ATLAS_POS_ROLE_VIEWS.get(lookup_key, [])
 
     # Templates that are internal/utility — never appear in sidebar
     _EXCLUDED_FROM_NAV = {
-        "index.html", "startup.html", "dataxpos.html", "hr_me.html",
+        "index.html", "startup.html", "atlas-pos.html", "hr_me.html",
         "hq_branch_detail.html", "construction.html", "hq_reports.html",
         "command_center_dashboard.html",  # legacy — reemplazado por hq_operations/reports/control
     }
@@ -314,7 +314,7 @@ def get_dataxpos_nav(role: Role) -> list[dict]:
     # para los demás roles (CAJERO, GERENTE, VENDEDOR, SOPORTE) dataxpos es el "Inicio".
     _ROLES_SIN_INICIO = {Role.ADMINISTRADOR, Role.DUEÑO}
     if lookup_key not in _ROLES_SIN_INICIO:
-        _EXCLUDED_FROM_NAV.discard("dataxpos.html")
+        _EXCLUDED_FROM_NAV.discard("atlas-pos.html")
 
     overrides = TEMPLATE_LABEL_OVERRIDES_BY_ROLE.get(lookup_key, {}) if isinstance(lookup_key, Role) else {}
     nav = []

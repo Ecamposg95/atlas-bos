@@ -190,13 +190,13 @@ def check_view_permission(view_name: str):
 
         enabled_mods = get_organization_capabilities(db, mod_org_id) if mod_org_id else ["core"]
         
-        # [NEW] DataXPOS Preset Navigation Override
+        # [NEW] Atlas POS Preset Navigation Override
         from app.models.organization import Organization, IndustryType
-        from app.core.role_permissions import get_dataxpos_nav
+        from app.core.role_permissions import get_atlas_pos_nav
         
         org = db.query(Organization).get(mod_org_id) if mod_org_id else None
-        if org and org.industry_type == IndustryType.DATAXPOS:
-            nav_items = get_dataxpos_nav(user.role)
+        if org and org.industry_type == IndustryType.ATLAS_POS:
+            nav_items = get_atlas_pos_nav(user.role)
         else:
             nav_items = get_nav_for_context(ctx_type, enabled_mods, user.role.value)
             

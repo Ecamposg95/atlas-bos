@@ -197,7 +197,7 @@ async def branches_redirect():
 
 @app.get("/home", include_in_schema=False)
 async def home_redirect():
-    return RedirectResponse(url="/dataxpos", status_code=302)
+    return RedirectResponse(url="/atlas-pos", status_code=302)
 
 @app.get("/sales/light", include_in_schema=False)
 async def sales_light_redirect():
