@@ -15,12 +15,12 @@ except ImportError:
 
 MX_TZ = ZoneInfo("America/Mexico_City")
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import CashSession, CashSessionStatus, Payment, PaymentMethod, SalesDocument, DocumentStatus, CashMovement
 from app.schemas.cash import CashSessionCreate, CashSessionRead, CashSessionClose, CashMovementCreate, CashMovementRead, CashSessionCloseGuided
-from app.security import get_current_user, User
+from app.core.security import get_current_user, User
 from app.models.users import Role
-from app.dependencies import get_current_active_organization
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 

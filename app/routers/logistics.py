@@ -5,7 +5,7 @@ import math
 from datetime import datetime
 from decimal import Decimal
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import (
     ContainerType, BoxType, ContainerLoadCalc, 
     InboundShipment, ShipmentItem, 
@@ -17,10 +17,10 @@ from app.schemas.logistics import (
     LoadCalcRequest, LoadCalcResult,
     ShipmentCreate, ShipmentRead, ShipmentItemCreate
 )
-from app.security import get_current_user
+from app.core.security import get_current_user
 from app.models import User
-from app.dependencies import get_current_active_organization
-from app.security.require_module import require_module
+from app.core.tenant_context import get_current_active_organization
+from app.core.permissions import require_module
 
 router = APIRouter(dependencies=[Depends(require_module("warehouse"))])
 

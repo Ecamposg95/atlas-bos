@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from typing import List, Optional
-from app.database import get_db
-from app.security import verify_pin, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
+from app.core.database import get_db
+from app.core.security import verify_pin, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, get_current_user
 from app.schemas.auth import Token, TokenWithUser
 from app.crud.users import get_user_by_username
 from app.models.users import User, Role, PlatformRole, UserOrganization

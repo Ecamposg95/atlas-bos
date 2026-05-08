@@ -3,11 +3,11 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from typing import Optional, Tuple
-from app.database import get_db
+from app.core.database import get_db
 from app.models import SalesDocument, User, SalesLineItem, ProductVariant, SaleReturn, SaleReturnItem
 from app.models.print_job import PrintJob, PrintJobStatus
-from app.security import get_current_user
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user
+from app.core.tenant_context import get_current_active_organization
 from app.pos_printer import PosPrinter
 from app.routers.sales import _assert_sale_branch_access
 import base64

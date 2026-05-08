@@ -14,7 +14,7 @@ import argparse
 import sys
 from datetime import datetime, timezone
 
-from app.database import SessionLocal
+from app.core.database import SessionLocal
 from app.models.cash import CashSession, CashSessionStatus
 from app.services.cash_reconciliation import (
     compute_expected_cash,

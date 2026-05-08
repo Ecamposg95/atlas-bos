@@ -7,10 +7,10 @@ from pydantic import BaseModel, field_validator
 import json as _json
 from datetime import datetime, timezone
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User
-from app.security import require_platform_admin, require_superadmin
+from app.modules.platform.dependencies import require_platform_admin, require_superadmin
 
 router = APIRouter()
 
@@ -134,7 +134,7 @@ def create_api_key(
     """Generate a new API key. Returns the full key ONCE — it cannot be
     retrieved afterwards. Only SHA-256 hash + prefix are persisted."""
     from app.models.platform import ApiKey
-    from app.security.api_keys import generate_api_key
+    from app.modules.platform.api_keys import generate_api_key
     from app.services.audit_service import write_audit
 
     org = db.query(Organization).filter(Organization.id == body.organization_id).first()

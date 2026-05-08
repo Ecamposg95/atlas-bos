@@ -5,12 +5,12 @@ from typing import List
 from pathlib import Path
 import shutil
 import time
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Branch
 from app.schemas.branches import BranchCreate, BranchRead, BranchUpdate
-from app.security import get_current_user, require_admin_or_owner
+from app.core.security import get_current_user, require_admin_or_owner
 from app.models.users import User, Role
-from app.dependencies import get_current_active_organization
+from app.core.tenant_context import get_current_active_organization
 from app.models.organization import BranchType
 from app.models.products import ProductVariant, ProductBranchStatus
 from app.models.inventory import StockOnHand

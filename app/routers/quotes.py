@@ -5,20 +5,20 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import (
     SalesDocument, SalesLineItem, DocumentType, DocumentStatus,
     ProductVariant, StockOnHand, InventoryMovement, MovementType,
     Payment, Customer, Product
 )
 from app.schemas.sales import SaleCreate, SaleRead, QuoteDetailRead
-from app.security import get_current_user, User
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user, User
+from app.core.tenant_context import get_current_active_organization
 from app.crud.products import get_variant_if_visible
 from app.utils.folios import get_next_folio
 from app.utils.pdf_generator import generate_quote_pdf
 
-from app.security.require_module import require_module
+from app.core.permissions import require_module
 
 router = APIRouter(dependencies=[Depends(require_module("quotes"))])
 

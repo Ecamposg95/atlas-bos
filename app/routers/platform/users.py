@@ -6,10 +6,11 @@ from typing import List, Optional
 from pydantic import BaseModel
 import json as _json
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.users import User, UserOrganization, PlatformRole, Role as AppRole
 from app.schemas.users import UserCreate, UserUpdate, UserRead as GlobalUserRead
-from app.security import require_platform_admin, get_password_hash
+from app.core.security import get_password_hash
+from app.modules.platform.dependencies import require_platform_admin
 
 from ._shared import _USER_UPDATE_FIELDS, _audit, _sync_user_organization
 

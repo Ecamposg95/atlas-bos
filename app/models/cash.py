@@ -3,7 +3,7 @@ import enum
 from sqlalchemy import Column, Integer, String, DateTime, Numeric, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database import Base
+from app.core.database import Base
 from app.models.mixins import TenantMixin
 
 class CashSessionStatus(str, enum.Enum):

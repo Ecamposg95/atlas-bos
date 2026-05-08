@@ -2,7 +2,7 @@ import enum
 from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, DateTime, JSON, Boolean, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database import Base
+from app.core.database import Base
 
 from app.models.mixins import TenantMixin
 
@@ -215,5 +215,4 @@ class TransferFulfillmentLine(Base, TenantMixin):
 
     fulfillment = relationship("TransferFulfillment", back_populates="lines")
     transfer_line = relationship("TransferOrderLine")
-
 

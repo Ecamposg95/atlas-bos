@@ -26,7 +26,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy import and_, case, distinct, func, nulls_last
 from sqlalchemy.orm import Session
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import (
     Branch,
     DocumentStatus,

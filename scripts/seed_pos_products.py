@@ -17,7 +17,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from decimal import Decimal
-from app.database import SessionLocal
+from app.core.database import SessionLocal
 from app.models.organization import Organization, Branch, BranchType
 from app.models.products import (
     Department, Brand, Product, ProductVariant,

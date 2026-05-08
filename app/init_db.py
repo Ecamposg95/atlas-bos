@@ -6,7 +6,7 @@ import logging
 # Add root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import engine, Base
+from app.core.database import engine, Base
 # Import all models to ensure they are registered in Base.metadata
 from app.models import * 
 

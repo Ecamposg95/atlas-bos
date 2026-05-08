@@ -7,12 +7,12 @@ STATUS: Core
 from typing import List  # <--- ESTA ERA LA LÍNEA QUE FALTABA
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.core.database import get_db
 from app.models import InventoryMovement, StockOnHand, MovementType, User, ProductVariant
 from app.models.organization import Branch
 from app.schemas.inventory import AdjustmentCreate, MovementRead, TransferCreate
-from app.security import get_current_user
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user
+from app.core.tenant_context import get_current_active_organization
 from app.crud.products import get_variant_if_visible, _is_admin, _role_str
 
 router = APIRouter()

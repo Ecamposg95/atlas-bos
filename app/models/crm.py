@@ -4,7 +4,7 @@ import enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 # --- CORRECCIÓN CRÍTICA: Usar la Base de app.database ---
-from app.database import Base 
+from app.core.database import Base 
 
 from app.models.mixins import TenantMixin
 

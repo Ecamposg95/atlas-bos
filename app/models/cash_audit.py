@@ -11,7 +11,7 @@ from sqlalchemy import Column, Integer, String, Numeric, DateTime, ForeignKey, I
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.sql import func
 
-from app.database import Base
+from app.core.database import Base
 
 
 # Event-type vocabulary. Keep flat enums (str), not Enum types, so adding

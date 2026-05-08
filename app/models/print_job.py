@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, Text, DateTime, Enum
 from sqlalchemy.sql import func
 import enum
-from app.database import Base
+from app.core.database import Base
 from app.models.mixins import UUIDMixin, TenantMixin
 
 class PrintJobStatus(str, enum.Enum):

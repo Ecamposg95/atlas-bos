@@ -23,7 +23,7 @@ from app.models.products import (
     Product, ProductVariant, ProductBranchStatus,
 )
 from app.models.inventory import StockOnHand
-from app.security import get_password_hash, create_access_token
+from app.core.security import get_password_hash, create_access_token
 
 
 def _auth(user):

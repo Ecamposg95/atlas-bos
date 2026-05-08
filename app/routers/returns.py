@@ -3,12 +3,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, Date
 from typing import List, Dict, Any, Optional
 from datetime import date
-from app.database import get_db
+from app.core.database import get_db
 from app.schemas.returns import SaleReturn, SaleReturnCreate, SaleReturnSummary
 from app.crud import returns as crud_returns
-from app.security import get_current_user
+from app.core.security import get_current_user
 from app.models.users import User
-from app.dependencies import get_current_active_organization
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 

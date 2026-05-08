@@ -24,7 +24,7 @@ from app.models.products import (
 from app.models.inventory import StockOnHand
 from app.models.modules import Module, OrganizationModule
 from app.models.platform import PlatformAuditLog
-from app.security import get_password_hash, create_access_token
+from app.core.security import get_password_hash, create_access_token
 
 
 # ── Extra fixtures ────────────────────────────────────────────────────────────

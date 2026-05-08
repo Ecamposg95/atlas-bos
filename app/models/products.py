@@ -6,7 +6,7 @@ STATUS: Stable
 """
 from sqlalchemy import Column, String, Boolean, ForeignKey, Numeric, Integer, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.core.database import Base
 from app.models.mixins import UUIDMixin, AuditMixin, TenantMixin
 
 # --- DEPARTAMENTOS (Antes Categories) ---

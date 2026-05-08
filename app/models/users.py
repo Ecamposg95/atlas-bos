@@ -8,7 +8,7 @@ STATUS: Stable
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database import Base 
+from app.core.database import Base 
 
 class Role(str, enum.Enum):
     ADMINISTRADOR = "ADMINISTRADOR"

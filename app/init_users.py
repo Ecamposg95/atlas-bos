@@ -6,8 +6,8 @@ from sqlalchemy.exc import ProgrammingError, OperationalError
 # Add root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, engine, Base
-from app.security import get_password_hash
+from app.core.database import SessionLocal, engine, Base
+from app.core.security import get_password_hash
 # Import all models to ensure metadata is populated for create_all
 import app.models 
 from app.models.users import User, Role, PlatformRole, UserOrganization

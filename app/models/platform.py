@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.sql import func
-from app.database import Base
+from app.core.database import Base
 
 
 class PlatformAuditLog(Base):

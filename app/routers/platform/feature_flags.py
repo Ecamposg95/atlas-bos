@@ -6,10 +6,10 @@ from typing import Optional
 from pydantic import BaseModel, field_validator
 import re as _re
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User
-from app.security import require_platform_admin, require_superadmin
+from app.modules.platform.dependencies import require_platform_admin, require_superadmin
 
 router = APIRouter()
 

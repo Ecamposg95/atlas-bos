@@ -7,8 +7,8 @@ import logging
 sys.path.append(os.getcwd())
 
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.security import get_password_hash
+from app.core.database import SessionLocal
+from app.core.security import get_password_hash
 from app.models.users import User, Role, PlatformRole, UserOrganization
 from app.models.organization import Organization, Branch
 

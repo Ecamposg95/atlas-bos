@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.core.database import get_db
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime, timezone
-from app.security import require_platform_admin
-from app.database import engine
+from app.modules.platform.dependencies import require_platform_admin
+from app.core.database import engine
 from app.models import Base
 from app.routers import (
     auth, users, branches, products,
@@ -48,7 +48,7 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     setup_abasto_subscribers()
-    from app.database import SessionLocal
+    from app.core.database import SessionLocal
     from app.services.capabilities_service import seed_global_modules
     db = SessionLocal()
     try:
@@ -160,8 +160,8 @@ app.include_router(setup.router, prefix="/api/setup", tags=["Setup"])
 # Alias de compatibilidad para departamentos (URLs históricas).
 # El handler canonical vive en products.list_departments — aquí lo
 # re-exportamos bajo prefijos legacy para no romper llamadas viejas.
-from app.security import get_current_user as _gcu_for_alias
-from app.dependencies import get_current_active_organization as _gcao_for_alias
+from app.core.security import get_current_user as _gcu_for_alias
+from app.core.tenant_context import get_current_active_organization as _gcao_for_alias
 from app.routers.products import list_departments as _list_departments_canonical
 
 @app.get("/api/products/departments",   tags=["Departamentos"], include_in_schema=False)

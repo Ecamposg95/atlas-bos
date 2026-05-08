@@ -5,7 +5,7 @@ Run once: python scripts/migrate_add_brand_logo.py
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import engine
+from app.core.database import engine
 from sqlalchemy import text
 
 def run():

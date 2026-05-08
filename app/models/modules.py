@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, JSON, Enum
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.core.database import Base
 
 class ModuleScope(str, enum.Enum):
     HQ = "HQ"

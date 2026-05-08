@@ -13,14 +13,15 @@ from pydantic import BaseModel, field_validator
 import json as _json
 from datetime import datetime, timezone
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User, UserOrganization, PlatformRole, Role as AppRole
 from app.schemas.organization import OrganizationCreate, OrganizationRead, OrganizationUpdate
 from app.schemas.branches import BranchCreate, BranchUpdate, BranchRead
 from app.schemas.users import UserCreate, UserUpdate, UserRead as GlobalUserRead
 from app.schemas.presets import IndustryPresetRead
-from app.security import require_platform_admin, require_superadmin, get_password_hash
+from app.core.security import get_password_hash
+from app.modules.platform.dependencies import require_platform_admin, require_superadmin
 
 
 # --- Schemas Local

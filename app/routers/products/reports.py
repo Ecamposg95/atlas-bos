@@ -7,12 +7,12 @@ from sqlalchemy.orm import Session, joinedload, contains_eager
 from sqlalchemy import or_, and_, func
 from typing import Optional
 
-from app.database import get_db
-from app.dependencies import get_current_active_organization
+from app.core.database import get_db
+from app.core.tenant_context import get_current_active_organization
 from app.models import (
     Product, ProductVariant, StockOnHand, User, Department,
 )
-from app.security import get_current_user
+from app.core.security import get_current_user
 from app.crud.products import _is_admin
 
 from ._shared import _compute_product_read

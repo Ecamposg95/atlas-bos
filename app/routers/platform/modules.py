@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 from typing import Optional
 from pydantic import BaseModel
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User, PlatformRole
-from app.security import require_platform_admin
+from app.modules.platform.dependencies import require_platform_admin
 
 router = APIRouter()
 

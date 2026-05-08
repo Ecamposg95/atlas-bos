@@ -3,8 +3,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import SessionLocal, engine, Base
-from app.security import get_password_hash
+from app.core.database import SessionLocal, engine, Base
+from app.core.security import get_password_hash
 from app.models.users import User, Role
 from app.models.organization import Branch
 

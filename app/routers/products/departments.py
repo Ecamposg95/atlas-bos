@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import List
 
-from app.database import get_db
-from app.dependencies import get_current_active_organization
+from app.core.database import get_db
+from app.core.tenant_context import get_current_active_organization
 from app.models import Department
 from app.schemas.products import DepartmentRead
 

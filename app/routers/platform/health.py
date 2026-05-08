@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timezone
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import UserOrganization
 

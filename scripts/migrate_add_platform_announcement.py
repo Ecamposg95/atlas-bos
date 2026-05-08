@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database import engine
+from app.core.database import engine
 from app.models.platform import PlatformAnnouncement  # noqa: F401  (registra modelo)
 
 

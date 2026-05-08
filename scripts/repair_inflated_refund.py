@@ -30,7 +30,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.database import SessionLocal
+from app.core.database import SessionLocal
 from app.models.cash import CashMovement
 from app.models.returns import SaleReturn, SaleReturnItem
 from app.models.sales import SalesDocument, DocumentStatus

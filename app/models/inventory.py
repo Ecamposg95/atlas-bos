@@ -6,7 +6,7 @@ STATUS: Core
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Numeric, DateTime, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from app.database import Base
+from app.core.database import Base
 import enum
 
 from app.models.mixins import TenantMixin

@@ -5,11 +5,11 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import json as _json
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User
 from app.schemas.branches import BranchCreate, BranchUpdate, BranchRead
-from app.security import require_platform_admin, require_superadmin
+from app.modules.platform.dependencies import require_platform_admin, require_superadmin
 
 from ._shared import _BRANCH_UPDATE_FIELDS, _audit
 

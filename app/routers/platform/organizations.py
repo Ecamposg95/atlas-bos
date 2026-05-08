@@ -6,11 +6,12 @@ from sqlalchemy.orm import Session
 from typing import List
 import json as _json
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User, UserOrganization, Role as AppRole
 from app.schemas.organization import OrganizationCreate, OrganizationRead, OrganizationUpdate
-from app.security import require_platform_admin, require_superadmin, get_password_hash
+from app.core.security import get_password_hash
+from app.modules.platform.dependencies import require_platform_admin, require_superadmin
 
 from ._shared import (
     AdminAssign,

@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from typing import Optional
 
-from app.database import get_db
-from app.dependencies import get_current_active_organization
-from app.security import get_current_user
+from app.core.database import get_db
+from app.core.tenant_context import get_current_active_organization
+from app.core.security import get_current_user
 from app.models.users import User
 from app.models.organization import Branch
 from app.schemas.branch_dashboard import BranchDashboardRead

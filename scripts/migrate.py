@@ -36,7 +36,7 @@ if str(ROOT) not in sys.path:
 
 from sqlalchemy import text
 
-from app.database import engine
+from app.core.database import engine
 
 
 BOOTSTRAP_SCRIPT = "migrate_add_schema_migrations.py"

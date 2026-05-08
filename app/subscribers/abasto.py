@@ -1,5 +1,5 @@
 from app.core.events import SalesDocumentCreated, EventBus
-from app.database import SessionLocal
+from app.core.database import SessionLocal
 from app.models.inventory import StockOnHand
 from app.models.abasto import PurchaseRecommendation, RecommendationStatus
 from sqlalchemy.orm import Session

@@ -6,7 +6,7 @@ import logging
 # Add project root to path
 sys.path.append(os.getcwd())
 
-from app.database import engine, Base
+from app.core.database import engine, Base
 import app.models  # Import all models to register them with Base
 
 logging.basicConfig(level=logging.INFO)

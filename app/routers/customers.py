@@ -5,11 +5,11 @@ from sqlalchemy import desc, func, and_
 from typing import List, Optional
 from decimal import Decimal
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import Customer, CustomerLedgerEntry
 from app.schemas.customers import CustomerCreate, CustomerRead, CustomerUpdate, LedgerEntryResponse, CustomerPaymentCreate
-from app.security import get_current_user, User
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user, User
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 
@@ -198,7 +198,7 @@ def create_customer(
     # PORTAL ACCESS LOGIC
     if customer_in.enable_portal and customer_in.email and customer_in.password:
         from app.models.users import User, Role
-        from app.security import get_password_hash
+        from app.core.security import get_password_hash
         
         # Check if user exists
         existing_user = db.query(User).filter(User.username == customer_in.email).first()
@@ -252,7 +252,7 @@ def update_customer(
     # PORTAL ACCESS LOGIC (Update/Enable)
     if (customer_in.enable_portal or customer_in.password) and customer.email:
         from app.models.users import User, Role
-        from app.security import get_password_hash
+        from app.core.security import get_password_hash
         
         user = db.query(User).filter(User.username == customer.email).first()
         

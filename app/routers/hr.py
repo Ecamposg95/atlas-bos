@@ -3,15 +3,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from datetime import date, datetime
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import Employee, BranchAssignment, Attendance, User, Branch
 from app.schemas.hr import (
     EmployeeCreate, EmployeeRead, EmployeeUpdate, EmployeeSelfUpdate,
     AssignmentCreate, AssignmentRead,
     CheckInRequest, CheckOutRequest, AttendanceRead
 )
-from app.security import get_current_user
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 

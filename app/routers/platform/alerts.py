@@ -6,10 +6,10 @@ from typing import Optional
 import json as _json
 from datetime import datetime
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.organization import Organization
 from app.models.users import User
-from app.security import require_platform_admin
+from app.modules.platform.dependencies import require_platform_admin
 
 from ._shared import _audit
 

@@ -5,10 +5,10 @@ Sprint 5b split — extracted verbatim from the original ``products.py``.
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.database import get_db
-from app.dependencies import get_current_active_organization
+from app.core.database import get_db
+from app.core.tenant_context import get_current_active_organization
 from app.models import Product, User
-from app.security import get_current_user
+from app.core.security import get_current_user
 from app.crud.products import _is_admin
 from app.schemas.products import BatchActionRequest
 

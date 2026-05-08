@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime
 from decimal import Decimal
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.logistics import (
     TransferOrder, TransferOrderLine,
     TransferFulfillment, TransferFulfillmentLine,
@@ -17,8 +17,8 @@ from app.schemas.logistics import (
     TransferOrderCreate, TransferOrderRead,
     TransferFulfillmentCreate, TransferFulfillmentRead
 )
-from app.security import get_current_user
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 

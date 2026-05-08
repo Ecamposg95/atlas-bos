@@ -20,7 +20,7 @@ from app.models.organization import Organization, Branch, BranchType
 from app.models.products import ProductVariant, ProductBranchStatus
 from app.models.inventory import StockOnHand, InventoryMovement, MovementType
 from app.models.modules import Module, OrganizationModule
-from app.security import get_password_hash, create_access_token
+from app.core.security import get_password_hash, create_access_token
 
 
 # ── Extra fixtures specific to creation tests ────────────────────────────────

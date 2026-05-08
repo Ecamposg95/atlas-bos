@@ -16,7 +16,7 @@ Idempotente (`CREATE INDEX IF NOT EXISTS`).
 """
 from sqlalchemy import text
 
-from app.database import engine
+from app.core.database import engine
 
 SQL = """
 CREATE INDEX IF NOT EXISTS ix_pbs_branch_active_pos

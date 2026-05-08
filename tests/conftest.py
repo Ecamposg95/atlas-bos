@@ -21,14 +21,14 @@ from sqlalchemy.ext.compiler import compiles
 def _compile_jsonb_for_sqlite(_type, _compiler, **_kw):
     return "JSON"
 
-from app.database import Base, get_db
+from app.core.database import Base, get_db
 from app.models.users import User, UserOrganization, Role, PlatformRole
 from app.models.organization import Organization, Branch, BranchType
 from app.models.products import Product, ProductVariant, ProductBranchStatus
 from app.models.inventory import StockOnHand
 from app.models.cash import CashSession, CashSessionStatus, CashMovement
 from app.models.sales import SalesDocument, DocumentStatus, Payment, PaymentMethod
-from app.security import get_password_hash, create_access_token
+from app.core.security import get_password_hash, create_access_token
 
 # ── Engine & Session ──────────────────────────────────────────────────────────
 TEST_ENGINE = create_engine(

@@ -20,10 +20,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
 
-from app.database import get_db
-from app.dependencies import get_current_active_organization
+from app.core.database import get_db
+from app.core.tenant_context import get_current_active_organization
 from app.models import Product, Department, Brand, User
-from app.security import get_current_user
+from app.core.security import get_current_user
 from app.schemas.departments import (
     DepartmentCreate, DepartmentUpdate, DepartmentResponse,
 )

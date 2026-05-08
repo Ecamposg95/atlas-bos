@@ -8,12 +8,12 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from app.database import get_db
-from app.security import get_current_user
+from app.core.database import get_db
+from app.core.security import get_current_user
 from app.models import User, Organization
 from app.models.modules import IndustryPreset
 from app.models.organization import IndustryType
-from app.dependencies import get_current_active_organization
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 

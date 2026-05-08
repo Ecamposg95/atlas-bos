@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 from typing import List
 import json as _json
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models.users import User
 from app.schemas.presets import IndustryPresetRead
-from app.security import require_platform_admin
+from app.modules.platform.dependencies import require_platform_admin
 
 from ._shared import IndustryPresetCreate, IndustryPresetUpdate, _audit
 

@@ -4,7 +4,7 @@ import os
 import logging
 
 sys.path.append(os.getcwd())
-from app.database import engine, Base
+from app.core.database import engine, Base
 import app.models
 
 logging.basicConfig(level=logging.INFO)

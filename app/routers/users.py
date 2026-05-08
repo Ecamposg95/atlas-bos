@@ -8,13 +8,13 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 # Importaciones de tu proyecto
-from app.database import get_db
+from app.core.database import get_db
 from app.models import User
 from app.models.organization import Organization, Branch
 from app.models.users import UserOrganization
 from app.schemas.users import UserCreate, UserRead, UserUpdate 
-from app.security import get_current_user, get_password_hash
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user, get_password_hash
+from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 

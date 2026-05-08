@@ -10,8 +10,8 @@ from decimal import Decimal
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.security import get_password_hash
+from app.core.database import SessionLocal
+from app.core.security import get_password_hash
 from app.models import *
 from app.models.organization import Organization, Branch, BranchType, IndustryType
 from app.models.users import User, Role, PlatformRole, UserOrganization

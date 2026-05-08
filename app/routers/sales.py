@@ -16,7 +16,7 @@ from decimal import Decimal
 from typing import Dict, Any, List, Optional
 
 # Asegúrate de que estas importaciones coincidan con la estructura de tu proyecto
-from app.database import get_db
+from app.core.database import get_db
 import logging
 from app.models import (
     ProductVariant, StockOnHand, InventoryMovement, Product, Branch,
@@ -30,11 +30,11 @@ from app.models import (
 logger = logging.getLogger(__name__)
 from app.models.returns import SaleReturn, SaleReturnItem
 from app.schemas.sales import SaleCreate, SaleRead
-from app.security import get_current_user
+from app.core.security import get_current_user
 # --- NUEVA IMPORTACIÓN PARA FOLIOS ---
 from app.utils.folios import get_next_folio
 from app.core.events import EventBus, SalesDocumentCreated # [NEW] Event Bus Integration
-from app.dependencies import get_current_active_organization
+from app.core.tenant_context import get_current_active_organization
 from app.models.organization import Organization
 from app.crud.products import get_variant_if_visible
 try:
@@ -44,7 +44,7 @@ except ImportError:
 
 MX_TZ = ZoneInfo("America/Mexico_City")
 
-from app.security.require_module import require_module
+from app.core.permissions import require_module
 
 # Máximo descuento permitido por línea para roles no-admin (CAJERO/GERENTE/etc.)
 # Rechazamos ventas donde unit_price < reference_price * (1 - MAX_DISCOUNT_PCT).

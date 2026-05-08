@@ -1,7 +1,7 @@
 # app/models/__init__.py
 
 # 1. Base de datos (Origen de la clase declarativa)
-from app.database import Base
+from app.core.database import Base
 
 # 2. Organización (Sucursales y Deptos)
 from .organization import Branch, Organization, IndustryType

@@ -16,7 +16,7 @@ import pytest
 from app.models.products import Department, Brand, Product
 from app.models.organization import IndustryType
 from app.models.modules import Module, OrganizationModule
-from app.security import create_access_token
+from app.core.security import create_access_token
 
 
 def _auth(user):

@@ -20,17 +20,17 @@ def _mx(col):
     """Convierte una columna TIMESTAMPTZ de UTC a America/Mexico_City en SQL."""
     return func.timezone("America/Mexico_City", col)
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import (
     SalesDocument, SalesLineItem, Payment, 
     ProductVariant, Customer, CashSession, DocumentStatus, CustomerLedgerEntry,
     InboundShipment, Product, StockOnHand, Branch, SaleReturn
 )
-from app.security import get_current_user, User
+from app.core.security import get_current_user, User
 from app.models.cash import CashSessionStatus
 from app.models.organization import BranchType
 from app.schemas.reports import AgingReportResponse
-from app.dependencies import get_current_active_organization
+from app.core.tenant_context import get_current_active_organization
 from app.crud.products import _is_admin
 
 CRITICAL_STOCK_THRESHOLD = 5

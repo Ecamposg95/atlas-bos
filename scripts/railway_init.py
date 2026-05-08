@@ -15,10 +15,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import app.models to ensure all tables are registered in Base.metadata
 import app.models  # This imports all submodules defined in app/models/__init__.py
 
-from app.database import SessionLocal, engine, Base
+from app.core.database import SessionLocal, engine, Base
 from app.models.users import User, PlatformRole, Role, UserOrganization
 from app.models.organization import Organization, IndustryType
-from app.security import get_password_hash
+from app.core.security import get_password_hash
 from sqlalchemy.exc import IntegrityError
 
 def init_database():

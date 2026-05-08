@@ -23,7 +23,7 @@ parciales (cada ALTER va en su propia transacción).
 """
 from sqlalchemy import text
 
-from app.database import engine
+from app.core.database import engine
 
 TABLES = ("products", "departments", "stock_on_hand", "packaging_units")
 

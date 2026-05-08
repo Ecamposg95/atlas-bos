@@ -11,7 +11,7 @@ sibling ``platform.py``, so the import path stays the same.
 
 from fastapi import APIRouter, Depends
 
-from app.security import require_platform_admin
+from app.modules.platform.dependencies import require_platform_admin
 
 from . import (
     stats,

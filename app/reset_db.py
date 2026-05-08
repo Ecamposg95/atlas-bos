@@ -7,7 +7,7 @@ from sqlalchemy import text
 # Add root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.database import engine, Base
+from app.core.database import engine, Base
 from app.models import * 
 # Import the new modular scripts
 from app.init_db import init_db

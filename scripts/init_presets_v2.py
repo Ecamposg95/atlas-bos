@@ -7,7 +7,7 @@ import logging
 sys.path.append(os.getcwd())
 
 from sqlalchemy.orm import Session
-from app.database import SessionLocal
+from app.core.database import SessionLocal
 from app.models.modules import IndustryPreset, Module, ModuleScope, ModuleStatus
 
 logging.basicConfig(level=logging.INFO)

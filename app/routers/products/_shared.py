@@ -19,7 +19,7 @@ import csv
 import math
 from datetime import datetime, timedelta
 
-from app.database import get_db
+from app.core.database import get_db
 from app.models import (
     Product, ProductVariant, StockOnHand, User,
     InventoryMovement, MovementType, Department, ProductPrice,
@@ -48,8 +48,8 @@ from app.schemas.departments import (
     DepartmentCreate, DepartmentUpdate, DepartmentResponse,
 )
 from app.schemas.brands import BrandCreate, BrandUpdate, BrandResponse
-from app.security import get_current_user
-from app.dependencies import get_current_active_organization
+from app.core.security import get_current_user
+from app.core.tenant_context import get_current_active_organization
 
 logger = logging.getLogger(__name__)
 
