@@ -226,7 +226,7 @@
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
 }
 
-.startup-page .setup-card.card-dataxpos:hover {
+.startup-page .setup-card.card-atlas-pos:hover {
     border-color: var(--purple-accent);
     background: rgba(138, 43, 226, 0.08);
     box-shadow: 0 25px 60px rgba(88, 28, 135, 0.4);
@@ -267,7 +267,7 @@
     transition: all 0.4s ease;
 }
 
-.startup-page .setup-card.card-dataxpos .icon-box {
+.startup-page .setup-card.card-atlas-pos .icon-box {
     background: rgba(138, 43, 226, 0.15);
     color: var(--purple-accent);
 }

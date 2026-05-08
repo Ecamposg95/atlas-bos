@@ -311,7 +311,7 @@ def get_atlas_pos_nav(role: Role) -> list[dict]:
         "command_center_dashboard.html",  # legacy — reemplazado por hq_operations/reports/control
     }
     # ADMINISTRADOR y DUEÑO ya tienen otros dashboards como punto de entrada;
-    # para los demás roles (CAJERO, GERENTE, VENDEDOR, SOPORTE) dataxpos es el "Inicio".
+    # para los demás roles (CAJERO, GERENTE, VENDEDOR, SOPORTE) atlas-pos es el "Inicio".
     _ROLES_SIN_INICIO = {Role.ADMINISTRADOR, Role.DUEÑO}
     if lookup_key not in _ROLES_SIN_INICIO:
         _EXCLUDED_FROM_NAV.discard("atlas-pos.html")

@@ -72,7 +72,7 @@ ORDER BY key;
 \echo 'Si todas las queries devuelven 0 filas → safe para Phase B (BD cleanup).'
 \echo 'Si alguna query devuelve filas → migrar antes:'
 \echo '  - Industries droppadas: UPDATE organization SET industry_type = NULL'
-\echo '    (o reasignar a CUSTOM/DATAXPOS según el caso).'
+\echo '    (o reasignar a CUSTOM/ATLAS_POS según el caso).'
 \echo '  - Módulos habilitados: UPDATE organization_modules SET is_enabled = false'
 \echo '    o DELETE FROM organization_modules para esos rows.'
 \echo '  - industry_presets/modules rows: DELETE manual tras lo anterior.'

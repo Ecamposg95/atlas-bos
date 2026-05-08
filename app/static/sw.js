@@ -1,6 +1,6 @@
-// Atlas DataXPOS — Service Worker
+// Atlas POS — Service Worker
 // Estrategia: Network-first para API, Cache-first para assets estáticos
-const CACHE_NAME = 'dataxpos-v1';
+const CACHE_NAME = 'atlas-pos-v1';
 const STATIC_ASSETS = [
   '/static/css/base.css',
   '/static/theme.css',

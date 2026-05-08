@@ -235,7 +235,7 @@ function PresetCard({ type, title, description, highlighted, busy, onPick, onHov
   return (
     <button
       type="button"
-      className={`setup-card${highlighted ? ' card-dataxpos' : ''}${busy ? ' is-dimmed' : ''}`}
+      className={`setup-card${highlighted ? ' card-atlas-pos' : ''}${busy ? ' is-dimmed' : ''}`}
       onClick={() => onPick(type)}
       onMouseEnter={onHover}
       onMouseLeave={onLeave}

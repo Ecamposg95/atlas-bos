@@ -36,7 +36,7 @@ MOD_MENU = "menu"
 # fallback dict solo se consulta si la query a `industry_presets` no
 # devuelve nada para una industria dada.
 INDUSTRY_PRESETS = {
-    IndustryType.DATAXPOS: [
+    IndustryType.ATLAS_POS: [
         MOD_CORE, MOD_POS, MOD_CASH, MOD_INVENTORY, MOD_CATALOG, MOD_BRANCH_CATALOG,
         MOD_RETURNS, MOD_PRICING, MOD_PROMOTIONS, MOD_PAYMENTS, MOD_CRM, MOD_REPORTS
     ],

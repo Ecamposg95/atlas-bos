@@ -4,7 +4,7 @@
  *
  * Depends on: SalesApi (pos_core.js), window.cartManager, window.paymentManager
  *             (set up by pos.html DOMContentLoaded before calling initPosSession),
- *             POSFormatters (pos_core.js), window.POS_USER (base_daxpos.html)
+ *             POSFormatters (pos_core.js), window.POS_USER (set by host page)
  *
  * Exposes on window:
  *   window.initPosSession   — called by pos.html's DOMContentLoaded after managers are ready

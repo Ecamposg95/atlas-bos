@@ -285,15 +285,15 @@ def initialize_modules(db, organization):
     
     # ATLAS_POS module keys — alineado con scripts/init_presets_v2.py preset
     # canónico (Wave 2: removidos purchasing/fulfillment/documents/
-    # sales_pipeline/invoicing/quotes que no son parte del preset DAXPOS).
-    dataxpos_modules = [
+    # sales_pipeline/invoicing/quotes que no son parte del preset Atlas POS).
+    atlas_pos_modules = [
         "core", "pos", "cash_management", "inventory", "catalog",
         "branch_catalog_enablement", "returns", "pricing", "promotions",
         "payments", "crm", "reports",
     ]
-    
+
     modules_created = 0
-    for module_key in dataxpos_modules:
+    for module_key in atlas_pos_modules:
         # Check if module exists in catalog
         module = db.query(Module).filter(Module.key == module_key).first()
         if not module:

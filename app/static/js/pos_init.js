@@ -1,5 +1,5 @@
 /**
- * pos_init.js — Bootstrap / orchestration module for the DataXPOS POS interface.
+ * pos_init.js — Bootstrap / orchestration module for the Atlas POS interface.
  *
  * Responsibilities:
  *   - Auth guard (redirect to /auth if no token)

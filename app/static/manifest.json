@@ -1,8 +1,8 @@
 {
-  "name": "DataXPOS — Atlas ERP",
-  "short_name": "DataXPOS",
+  "name": "Atlas POS — Atlas ERP",
+  "short_name": "Atlas POS",
   "description": "Sistema ERP & Punto de Venta · Atlas Tech",
-  "start_url": "/dataxpos",
+  "start_url": "/atlas-pos",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",

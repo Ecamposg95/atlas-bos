@@ -198,7 +198,7 @@ aside {
 }
 
 /* --- 3. DAX-CARD (HQ variant) -------------------------------- */
-/* La variant DAXPOS con hover animado vive en base_daxpos.html.
+/* La variant Atlas POS con hover animado vive en atlas-pos.css.
    Esta es la variante HQ: más sutil, sin transform. */
 .dax-card {
     background: var(--atlas-surface);

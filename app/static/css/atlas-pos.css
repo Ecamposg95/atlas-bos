@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════
-   DataXPOS Layout CSS — base_daxpos.html
+   Atlas POS Layout CSS
    Cargado como link fijo para que los templates hijos no
    puedan borrarlo accidentalmente al sobreescribir extra_css.
    ══════════════════════════════════════════════════════════ */
@@ -45,7 +45,7 @@ html:not(.dark) #app-root {
     background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 100%) !important;
 }
 
-/* Override standard main for DataXPOS aesthetics */
+/* Override standard main for Atlas POS aesthetics */
 #main-content {
     background: transparent !important;
     transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
