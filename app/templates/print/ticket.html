@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket - {{ sale.series }}-{{ sale.folio }}</title>
+    <style>
+        @page {
+            margin: 0;
+            size: 80mm auto;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 9pt;
+            line-height: 1.15;
+            width: 80mm;
+            margin: 0 auto;
+            padding: 0 1mm;
+            color: #000;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .header {
+            margin-bottom: 6px;
+        }
+
+        .logo {
+            max-width: 35mm;
+            margin-bottom: 3px;
+        }
+
+        .separator {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            border-bottom: 1px solid #000;
+        }
+
+        .items {
+            font-size: 8pt;
+        }
+
+        .items td {
+            vertical-align: top;
+            padding: 0.3mm 0.5mm;
+        }
+
+        .items th {
+            padding: 0.3mm 0.5mm;
+        }
+
+        .totals {
+            margin-top: 6px;
+        }
+
+        .totals-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5mm 0;
+        }
+
+        .totals-grand {
+            font-weight: bold;
+            font-size: 11pt;
+            border-top: 1px solid #000;
+            padding-top: 1mm;
+            margin-top: 1mm;
+        }
+
+        .footer {
+            margin-top: 10px;
+            font-size: 8pt;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+
+            body {
+                width: 100%;
+                padding: 0 1mm;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="no-print" style="background: #f0f0f0; padding: 10px; text-align: center; margin-bottom: 20px;">
+        <button onclick="tryPrint()" style="padding: 8px 16px; cursor: pointer;">Imprimir Ticket</button>
+        <button onclick="window.close()" style="padding: 8px 16px; cursor: pointer;">Cerrar</button>
+    </div>
+
+    <div class="header text-center">
+        {% if organization.logo_url %}
+        <img src="{{ organization.logo_url }}" alt="Logo" class="logo"><br>
+        {% endif %}
+        <span class="bold" style="font-size: 12pt;">{{ organization.name }}</span><br>
+        {% if organization.tax_id %}
+        <span style="font-size: 10px;">RFC: {{ organization.tax_id }}</span><br>
+        {% endif %}
+        {% if organization.legal_name and organization.legal_name != organization.name %}
+        <span style="font-size: 10px;">{{ organization.legal_name }}</span><br>
+        {% endif %}
+        {% if organization.tax_regime %}
+        <span style="font-size: 9px;">Reg: {{ organization.tax_regime }}</span><br>
+        {% endif %}
+        {% if branch %}
+        <span>Sucursal: {{ branch.name }}</span><br>
+        {% if branch.address_line1 %}
+        <span style="font-size: 10px;">{{ branch.address_line1 }}{% if branch.address_line2 %}, {{ branch.address_line2 }}{% endif %}</span><br>
+        {% if branch.neighborhood or branch.city %}
+        <span style="font-size: 10px;">{% if branch.neighborhood %}{{ branch.neighborhood }}, {% endif %}{{ branch.city or '' }}{% if branch.state %} {{ branch.state }}{% endif %}{% if branch.postal_code %} CP {{ branch.postal_code }}{% endif %}</span><br>
+        {% endif %}
+        {% elif branch.address %}
+        <span style="font-size: 10px;">{{ branch.address }}</span><br>
+        {% endif %}
+        {% if branch.phone %}
+        <span>Tel: {{ branch.phone }}</span><br>
+        {% endif %}
+        {% else %}
+        {% if organization.address %}
+        <span style="font-size: 10px;">{{ organization.address }}</span><br>
+        {% endif %}
+        {% endif %}
+
+        <div class="separator"></div>
+        <span class="bold">{% if approved_returns %}TICKET CON DEVOLUCIÓN{% else %}NOTA DE VENTA{% endif %}</span><br>
+        <span>Folio: {{ sale.series }}-{{ sale.folio }}</span><br>
+        <span>Fecha: {{ sale.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+    </div>
+
+    <div class="details">
+        <span>Cliente: {{ sale.customer_name or 'Público General' }}</span><br>
+        <span>Cajero: {{ seller.username if seller else 'N/A' }}</span>
+    </div>
+
+    {% if sale.requires_invoice %}
+    <div style="background: #000; color: #fff; text-align: center; padding: 3px; font-size: 10px; font-weight: bold; margin: 5px 0;">
+        *** FACTURA SOLICITADA ***
+    </div>
+    {% endif %}
+
+    <div class="separator"></div>
+
+    <table class="items">
+        <thead>
+            <tr>
+                <th style="width: 10%;">Cant</th>
+                <th style="width: 45%;">Producto</th>
+                <th style="width: 20%;" class="text-right">P.Unit</th>
+                <th style="width: 25%;" class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {# Setup variables for recalculated totals #}
+            {% set net_subtotal = [0] %}
+            {% set net_articles = [0] %}
+
+            {% for line in sale.lines %}
+            {# Calculate total returned for this variant #}
+            {% set returned_qty = [0] %}
+            {% if approved_returns %}
+            {% for ret in approved_returns %}
+            {% for r_item in ret.items %}
+            {% if r_item.variant_id == line.variant_id %}
+            {% if returned_qty.append(returned_qty.pop() + r_item.quantity) %}{% endif %}
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+            {% endif %}
+
+            {% set current_returned = returned_qty[0] %}
+            {% set remaining_qty = line.quantity - current_returned %}
+
+            {% if remaining_qty > 0 %}
+            {% set line_price = line.unit_price %}
+            {% set line_total = remaining_qty * line_price %}
+            {% if net_subtotal.append(net_subtotal.pop() + line_total) %}{% endif %}
+            {% if net_articles.append(net_articles.pop() + remaining_qty) %}{% endif %}
+
+            <tr>
+                <td>{{ remaining_qty|round(2) }}</td>
+                <td>{{ line.description }}</td>
+                <td class="text-right">${{ line.unit_price|round(2) }}</td>
+                <td class="text-right">${{ line_total|round(2) }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="text-align: right; font-size: 10px; margin-top: 2px;">
+        Artículos: {{ net_articles[0]|round|int }}
+    </div>
+
+    <div class="separator"></div>
+
+    {% set final_subtotal = net_subtotal[0] %}
+    {% set tax_rate = (sale.tax_amount / sale.subtotal) if sale.subtotal > 0 else 0 %}
+    {% set final_tax = final_subtotal * tax_rate %}
+    {% set final_total = final_subtotal + final_tax %}
+
+    {% set paid_acc = [0] %}
+    {% for p in sale.payments %}
+    {% if paid_acc.append(paid_acc.pop() + p.amount) %}{% endif %}
+    {% endfor %}
+    {% set total_paid = paid_acc[0] %}
+    {% set cambio = total_paid - final_total if total_paid > final_total else 0 %}
+
+    <div class="totals">
+        <div class="totals-line"><span>Subtotal:</span><span>${{ final_subtotal|round(2) }}</span></div>
+        {% if final_tax and final_tax > 0 %}
+        <div class="totals-line"><span>IVA:</span><span>${{ final_tax|round(2) }}</span></div>
+        {% endif %}
+        <div class="totals-line totals-grand"><span>TOTAL:</span><span>${{ final_total|round(2) }}</span></div>
+        <div class="totals-line"><span>Pagado:</span><span>${{ total_paid|round(2) }}</span></div>
+        <div class="totals-line"><span>Cambio:</span><span>${{ cambio|round(2) }}</span></div>
+    </div>
+
+    {% if approved_returns %}
+    <div class="separator"></div>
+    <div class="footer text-center" style="font-size: 9px; margin-top: 5px; background: #eee; padding: 5px;">
+        <span class="bold">AVISO: TICKET REESTRUCTURADO</span><br>
+        <span>Este comprobante refleja el estado final de la compra tras devoluciones aprobadas.</span>
+    </div>
+    {% endif %}
+
+    <div class="separator"></div>
+
+    <div class="payment-info text-center">
+        {% for payment in sale.payments %}
+        {% set method_labels = {'CASH': 'EFECTIVO', 'CARD': 'TARJETA', 'TRANSFER': 'TRANSFERENCIA', 'OTHER': 'OTRO'} %}
+        <span>MÉTODO: {{ method_labels.get(payment.method.value if payment.method.value is defined else payment.method, payment.method) }} - ${{ payment.amount|round(2) }}</span>{% if payment.reference %}<span style="font-size: 10px;"> | Ref: {{ payment.reference }}</span>{% endif %}<br>
+        {% endfor %}
+    </div>
+
+    {% if sale.notes %}
+    <div class="separator"></div>
+    <div style="font-size: 10px; margin: 5px 0;">
+        <span class="bold">Observaciones:</span><br>
+        {{ sale.notes }}
+    </div>
+    {% endif %}
+
+    <div class="footer text-center">
+        {% if branch and branch.ticket_footer %}
+        {{ branch.ticket_footer }}
+        {% elif organization.ticket_footer %}
+        {{ organization.ticket_footer }}
+        {% endif %}
+        <br><br>
+        <span>Software: Atlas ERPPOS</span><br>
+        <span>www.rmazh.mx</span>
+    </div>
+
+    <script>
+        async function tryPrint() {
+            const saleId = "{{ sale.id }}";
+            const token = sessionStorage.getItem('ACCESS_TOKEN');
+
+            try {
+                // Request base64 from server
+                const res = await fetch(`/api/printer/reprint-ticket/${saleId}?mode=return_base64`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.content_base64 && data.printer_target) {
+                        // Send to agent
+                        const localRes = await fetch("https://localhost:9100/print", {
+                            method: 'POST',
+                            mode: 'cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                content_base64: data.content_base64,
+                                printer_name: data.printer_target
+                            })
+                        });
+                        if (localRes.ok) return; // Success!
+                    }
+                }
+            } catch (e) { console.error("Agent print failed", e); }
+
+            // Fallback to browser print
+            window.print();
+        }
+    </script>
+</body>
+
+</html>

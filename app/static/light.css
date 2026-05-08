@@ -1,0 +1,132 @@
+/* LIGHT THEME OVERRIDES (Professional) */
+
+/* Override Root Tokens for Light Mode */
+:root {
+    --bg: #c7c9d3 !important;
+    --surface: #FFFFFF !important;
+    --surface-2: #F1F3F8 !important;
+    --border: rgba(15, 23, 42, 0.12) !important;
+
+    --text: #0F172A !important;
+    /* Slate 900 */
+    --text-muted: #475569 !important;
+    /* Slate 600 */
+    --text-faint: #64748B !important;
+    /* Slate 500 */
+    --primary: #10b981 !important;
+    /* Emerald 500 (Clean) */
+
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+}
+
+body {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    font-weight: 500 !important;
+}
+
+/* Force Light Backgrounds */
+.bg-slate-900,
+.bg-slate-950,
+.dark\:bg-slate-900,
+.dark\:bg-slate-950,
+.bg-gray-900,
+.dark\:bg-gray-900 {
+    background-color: var(--surface) !important;
+}
+
+/* Fix Input/Select backgrounds */
+input,
+select,
+textarea {
+    background-color: #fff !important;
+    border: 1px solid var(--border) !important;
+    color: var(--text) !important;
+    font-weight: 500;
+}
+
+/* Glass Cards -> Clean White Cards */
+.glass-card,
+.glass-panel {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow) !important;
+    backdrop-filter: none !important;
+}
+
+/* TABLE STYLES (Modern Light) */
+table thead tr {
+    background-color: var(--surface-2) !important;
+    border-bottom: 1px solid var(--border) !important;
+}
+
+table thead th {
+    color: var(--text-muted) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+table tbody tr {
+    border-bottom: 1px solid var(--border) !important;
+    transition: background-color 0.15s ease;
+}
+
+table tbody tr:hover {
+    background-color: #F8FAFC !important;
+    /* Extremely subtle hover */
+}
+
+table td {
+    color: var(--text);
+    font-weight: 500;
+}
+
+/* HIGH CONTRAST STATUS CHIPS */
+/* Paid */
+.text-emerald-400 {
+    color: #037713 !important;
+    /* Emerald 700 */
+}
+
+.bg-emerald-400\/10 {
+    background-color: #ecfdf5 !important;
+    /* Emerald 50 */
+    border: 1px solid #d1fae5;
+}
+
+/* Pending/Refunded */
+.text-amber-400 {
+    color: #aa4a01 !important;
+    /* Amber 700 */
+}
+
+.bg-amber-400\/10 {
+    background-color: #fffbeb !important;
+    /* Amber 50 */
+    border: 1px solid #fef3c7;
+}
+
+/* Headers */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text) !important;
+    font-weight: 600 !important;
+}
+
+/* Text Overrides */
+.text-slate-300,
+.text-slate-400,
+.text-slate-500 {
+    color: var(--text-muted) !important;
+}
+
+/* Action Buttons */
+button {
+    font-weight: 500 !important;
+}

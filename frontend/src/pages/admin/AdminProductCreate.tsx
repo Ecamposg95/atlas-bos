@@ -1,0 +1,202 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { productsApi } from '../../api/products'
+import { organizationApi } from '../../api/organization'
+import { DaxCard } from '../../components/ui/DaxCard'
+import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
+import { ProductBasicsSection } from '../../components/products/ProductBasicsSection'
+import { ProductCommercialSection } from '../../components/products/ProductCommercialSection'
+import { ProductBranchMatrixSection } from '../../components/products/ProductBranchMatrixSection'
+import { ProductInitialStockSection } from '../../components/products/ProductInitialStockSection'
+import { ProductTieredPricesSection } from '../../components/products/ProductTieredPricesSection'
+import {
+  EMPTY_PRODUCT_FORM,
+  type BranchActivation,
+  type Brand,
+  type Branch,
+  type Department,
+  type PriceRow,
+  type ProductErrors,
+  type ProductFormValue,
+} from '../../components/products/types'
+
+export function AdminProductCreate() {
+  const navigate = useNavigate()
+
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
+  const [form, setForm] = useState<ProductFormValue>(EMPTY_PRODUCT_FORM)
+  const [branchActivation, setBranchActivation] = useState<Record<number, BranchActivation>>({})
+  const [prices, setPrices] = useState<PriceRow[]>([])
+  const [errors, setErrors] = useState<ProductErrors>({})
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([
+      productsApi.getDepartments(),
+      productsApi.getBrands(),
+      organizationApi.getBranches(),
+    ])
+      .then(([depts, brs, bchs]) => {
+        if (cancelled) return
+        setDepartments(depts)
+        setBrands(brs)
+        setBranches(bchs)
+        const init: Record<number, BranchActivation> = {}
+        for (const b of bchs) {
+          init[b.id] = { enabled: false, is_active_pos: true, is_active_hq: false, is_visible: true }
+        }
+        setBranchActivation(init)
+      })
+      .catch(() => toast.error('No se pudo cargar el formulario.'))
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  const setField = <K extends keyof ProductFormValue>(key: K, value: ProductFormValue[K]) => {
+    setForm((f) => ({ ...f, [key]: value }))
+    if (errors[key as string]) setErrors((e) => { const { [key as string]: _, ...rest } = e; return rest })
+  }
+
+  const toggleBranch = (branchId: number, patch: Partial<BranchActivation>) => {
+    setBranchActivation((prev) => ({ ...prev, [branchId]: { ...prev[branchId], ...patch } }))
+    if (patch.enabled === false && Number(form.initial_stock_branch_id) === branchId) {
+      setForm((f) => ({ ...f, initial_stock_branch_id: '' }))
+    }
+  }
+
+  const setAllBranches = (enabled: boolean) => {
+    setBranchActivation((prev) => {
+      const next: Record<number, BranchActivation> = {}
+      for (const id of Object.keys(prev)) {
+        next[Number(id)] = { ...prev[Number(id)], enabled }
+      }
+      return next
+    })
+    if (!enabled) setForm((f) => ({ ...f, initial_stock_branch_id: '' }))
+  }
+
+  const enabledBranchIds = Object.entries(branchActivation)
+    .filter(([, v]) => v.enabled)
+    .map(([k]) => Number(k))
+
+  const validate = (): ProductErrors => {
+    const e: ProductErrors = {}
+    if (!form.name.trim()) e.name = 'Requerido'
+    if (!form.sku.trim()) e.sku = 'Requerido'
+    const priceNum = Number(form.price)
+    const costNum = Number(form.cost)
+    if (!Number.isFinite(priceNum) || priceNum < 0) e.price = 'Número ≥ 0'
+    if (!Number.isFinite(costNum) || costNum < 0) e.cost = 'Número ≥ 0'
+    const stockNum = Number(form.initial_stock || '0')
+    if (!Number.isFinite(stockNum) || stockNum < 0) e.initial_stock = 'Número ≥ 0'
+    if (stockNum > 0 && !form.initial_stock_branch_id) e.initial_stock_branch_id = 'Requerido con stock > 0'
+    if (enabledBranchIds.length === 0) e.target_branch_ids = 'Activa al menos una sucursal'
+    return e
+  }
+
+  const handleSubmit = async () => {
+    const clientErrors = validate()
+    if (Object.keys(clientErrors).length > 0) {
+      setErrors(clientErrors)
+      toast.error('Revisa los campos marcados.')
+      return
+    }
+    setSubmitting(true)
+    const stockNum = Number(form.initial_stock || '0')
+    const payload = {
+      name: form.name.trim(),
+      sku: form.sku.trim(),
+      barcode: form.barcode.trim() || null,
+      unit: form.unit,
+      description: form.description.trim() || null,
+      image_url: form.image_url.trim() || null,
+      department_id: form.department_id || null,
+      brand_id: form.brand_id || null,
+      price: Number(form.price),
+      cost: Number(form.cost),
+      has_iva: form.has_iva,
+      tax_rate: form.has_iva ? Number(form.tax_rate) : 0,
+      initial_stock: stockNum,
+      branch_id: stockNum > 0 ? Number(form.initial_stock_branch_id) : null,
+      target_branch_ids: enabledBranchIds,
+      uses_inventory: true,
+      prices: prices.map((p) => ({
+        price_name: p.price_name,
+        min_quantity: Number(p.min_quantity),
+        unit_price: Number(p.unit_price),
+      })),
+    }
+    try {
+      await productsApi.create(payload)
+      toast.success('Producto creado.')
+      navigate('/admin/catalog')
+    } catch (err: any) {
+      const status = err?.response?.status
+      const detail = err?.response?.data?.detail
+      if (status === 409 || (typeof detail === 'string' && detail.toLowerCase().includes('sku'))) {
+        setErrors((e) => ({ ...e, sku: typeof detail === 'string' ? detail : 'SKU duplicado' }))
+      }
+      toast.error(typeof detail === 'string' ? detail : 'No se pudo crear el producto.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64"><Spinner size="lg" /></div>
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center gap-3">
+        <i className="fa-solid fa-plus text-indigo-400 text-xl" />
+        <h1 className="text-2xl font-black text-white">Nuevo producto — Administración</h1>
+      </div>
+      <DaxCard>
+        <div className="p-4 space-y-6">
+          <ProductBasicsSection value={form} onChange={setField} errors={errors} />
+          <ProductCommercialSection
+            value={form} onChange={setField} errors={errors}
+            departments={departments} brands={brands}
+          />
+          <ProductTieredPricesSection
+            prices={prices}
+            onChange={setPrices}
+            help="Para precios por cantidad (mayoreo, promo). Se aplica sobre el precio base."
+          />
+          <ProductBranchMatrixSection
+            branches={branches} activation={branchActivation}
+            onToggle={toggleBranch} onSetAll={setAllBranches} errors={errors}
+          />
+          <ProductInitialStockSection
+            value={form} onChange={setField} errors={errors}
+            branches={branches} enabledBranchIds={enabledBranchIds}
+            footer="Para stock en múltiples sucursales, usa el módulo de inventario tras crear."
+          />
+
+          <p className="text-[11px] text-slate-500">
+            Precios escalonados y empaques se configuran desde el catálogo tras crear el producto.
+          </p>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+            <button type="button" className="dax-btn-secondary text-xs"
+              onClick={() => navigate('/admin/catalog')} disabled={submitting}>
+              Cancelar
+            </button>
+            <button type="button" className="dax-btn-primary text-xs inline-flex items-center gap-1.5"
+              onClick={handleSubmit} disabled={submitting}>
+              {submitting ? <Spinner size="sm" /> : <i className="fa-solid fa-save" />}
+              Crear producto
+            </button>
+          </div>
+        </div>
+      </DaxCard>
+    </div>
+  )
+}

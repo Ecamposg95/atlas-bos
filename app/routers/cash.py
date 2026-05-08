@@ -1,0 +1,864 @@
+# app/routers/cash.py
+import logging
+from typing import Optional, List
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import func, desc
+from decimal import Decimal
+from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    from backports.zoneinfo import ZoneInfo
+
+MX_TZ = ZoneInfo("America/Mexico_City")
+
+from app.database import get_db
+from app.models import CashSession, CashSessionStatus, Payment, PaymentMethod, SalesDocument, DocumentStatus, CashMovement
+from app.schemas.cash import CashSessionCreate, CashSessionRead, CashSessionClose, CashMovementCreate, CashMovementRead, CashSessionCloseGuided
+from app.security import get_current_user, User
+from app.models.users import Role
+from app.dependencies import get_current_active_organization
+
+router = APIRouter()
+
+@router.get("/status", response_model=Optional[CashSessionRead])
+def get_current_session(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Devuelve la sesión abierta actual del usuario, o null si no hay."""
+    session = db.query(CashSession).filter(
+        CashSession.user_id == current_user.id,
+        CashSession.branch_id == current_user.branch_id,
+        CashSession.status == CashSessionStatus.OPEN
+    ).first()
+    return session
+
+@router.get("/history", response_model=List[CashSessionRead])
+def read_cash_history(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Historial de cortes de caja de la sucursal (ATS-7: solo usuarios con sucursal asignada)"""
+    if not current_user.branch_id:
+        # Usuarios HQ no operan caja; redirigir a reportes por sucursal
+        raise HTTPException(403, "Los usuarios HQ no tienen historial de caja. Consulte los reportes por sucursal.")
+    return db.query(CashSession).filter(
+        CashSession.branch_id == current_user.branch_id
+    ).order_by(CashSession.opened_at.desc()).offset(skip).limit(limit).all()
+
+@router.post("/open", response_model=CashSessionRead)
+def open_session(
+    session_in: CashSessionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 2. Validar Sucursal primero (necesitamos branch_id para el guard)
+    if not current_user.branch_id:
+        raise HTTPException(400, "Tu usuario no tiene una sucursal asignada. Contacte al administrador.")
+
+    # 1. Idempotente: si ya hay sesión OPEN del usuario en esta sucursal,
+    # retornarla en lugar de error. Esto soporta el modelo "1 cajero opera
+    # 1-3 PCs simultáneamente, todas comparten la misma sesión de caja
+    # porque el efectivo va a una sola caja física" (Track 1 bug-fix).
+    active = db.query(CashSession).filter(
+        CashSession.user_id == current_user.id,
+        CashSession.branch_id == current_user.branch_id,
+        CashSession.status == CashSessionStatus.OPEN
+    ).first()
+    if active:
+        logger.info(
+            "CASH_OPEN_IDEMPOTENT: returning existing session_id=%s user_id=%s branch_id=%s",
+            active.id, current_user.id, current_user.branch_id
+        )
+        return active
+
+    # 3. Crear Sesión — organization_id derivado del branch para cumplir multi-tenancy
+    from app.models.organization import Branch as _Branch
+    branch = db.query(_Branch).filter(_Branch.id == current_user.branch_id).first()
+    if not branch:
+        raise HTTPException(400, "Sucursal inválida.")
+    new_session = CashSession(
+        organization_id=branch.organization_id,
+        branch_id=current_user.branch_id,
+        user_id=current_user.id,
+        status=CashSessionStatus.OPEN,
+        opening_balance=session_in.opening_balance,
+        opened_at=datetime.now(timezone.utc)
+    )
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+
+    logger.info(
+        "CASH_OPEN: session_id=%s user_id=%s username=%s branch_id=%s opening_balance=%s",
+        new_session.id, current_user.id, current_user.username,
+        current_user.branch_id, session_in.opening_balance
+    )
+    return new_session
+
+def _apply_close_to_session(
+    db: Session,
+    session: CashSession,
+    current_user: User,
+    closing_balance: Decimal,
+    notes: Optional[str],
+) -> CashSession:
+    if closing_balance is None or closing_balance < 0:
+        raise HTTPException(400, "El saldo de cierre debe ser mayor o igual a cero.")
+
+    # H-7: Bloquear cierre si quedan tickets pausados sin convertir asociados
+    # a esta sesión. ParkedTicket no tiene cash_session_id, así que se infiere
+    # via (user_id, branch_id, created_at >= session.opened_at). Active =
+    # deleted_at IS NULL AND (expires_at IS NULL OR expires_at > now), igual
+    # que `list_parked_tickets` en sales.py.
+    from app.models import ParkedTicket
+    now_check = datetime.now(timezone.utc)
+    pending_parked = db.query(ParkedTicket).filter(
+        ParkedTicket.user_id == session.user_id,
+        ParkedTicket.branch_id == session.branch_id,
+        ParkedTicket.created_at >= session.opened_at,
+        ParkedTicket.deleted_at == None,  # noqa: E711
+        ((ParkedTicket.expires_at == None) | (ParkedTicket.expires_at > now_check)),  # noqa: E711
+    ).count()
+    if pending_parked > 0:
+        raise HTTPException(
+            409,
+            f"Hay {pending_parked} tickets pausados sin convertir. "
+            "Reanude o descarte antes de cerrar turno."
+        )
+
+    # Fórmula de `expected` consolidada en `app/services/cash_reconciliation.py`.
+    # Misma fuente que `get_session_audit_data` (UI dashboard) — el cajero ve
+    # exactamente el número que se persiste como `difference`.
+    from app.services.cash_reconciliation import compute_expected_cash, compute_closure_warnings
+    breakdown = compute_expected_cash(db, session)
+    diff = Decimal(str(closing_balance)) - breakdown.expected
+
+    # F2: structured warnings (non-blocking — cajero ya decidió contar) +
+    # logged for audit. Returned in HTTP response so UI puede mostrarlas.
+    closure_warnings = compute_closure_warnings(breakdown, Decimal(str(closing_balance)))
+    if closure_warnings:
+        for w in closure_warnings:
+            logger.warning(
+                "CASH_CLOSE_WARNING: session_id=%s code=%s severity=%s actual=%s threshold=%s",
+                session.id, w["code"], w["severity"], w["actual"], w["threshold"],
+            )
+
+    # Actualizar y Cerrar
+    now_utc = datetime.now(timezone.utc)
+    session.status = CashSessionStatus.CLOSED
+    session.closed_at = now_utc
+    session.closing_balance = closing_balance
+    session.total_cash_sales = breakdown.net_cash
+    session.total_change_given = breakdown.change_given
+    session.difference = diff
+    session.notes = notes
+
+    # F3: audit row BEFORE commit so it's atomic with the close.
+    from app.services.cash_audit import audit_cash_event
+    from app.models.cash_audit import CashAuditEvent
+    audit_cash_event(
+        db,
+        event_type=CashAuditEvent.SESSION_CLOSED,
+        organization_id=session.organization_id,
+        session_id=session.id,
+        branch_id=session.branch_id,
+        user_id=current_user.id,
+        amount=Decimal(str(closing_balance)),
+        related_table="cash_sessions",
+        related_id=str(session.id),
+        expected_running_total=breakdown.expected,
+        payload={
+            "closing_balance": float(closing_balance),
+            "expected": float(breakdown.expected),
+            "difference": float(diff),
+            "warnings": closure_warnings,
+            "breakdown": {
+                "opening": float(breakdown.opening),
+                "gross_cash": float(breakdown.gross_cash),
+                "change_given": float(breakdown.change_given),
+                "net_cash": float(breakdown.net_cash),
+                "manual_inflows": float(breakdown.manual_inflows),
+                "manual_outflows": float(breakdown.manual_outflows),
+                "refund_cash_outflows": float(breakdown.refund_cash_outflows),
+            },
+        },
+    )
+
+    db.commit()
+    db.refresh(session)
+
+    logger.info(
+        "CASH_CLOSE: session_id=%s user_id=%s username=%s branch_id=%s "
+        "closing_balance=%s expected=%s difference=%s",
+        session.id, current_user.id, current_user.username,
+        current_user.branch_id, closing_balance, breakdown.expected, diff
+    )
+    return session
+
+
+@router.post("/close", response_model=CashSessionRead)
+def close_session(
+    close_data: CashSessionClose,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # Buscar sesión activa de esta sucursal (ATS-3: branch_id evita cerrar sesión equivocada)
+    session = db.query(CashSession).filter(
+        CashSession.user_id == current_user.id,
+        CashSession.branch_id == current_user.branch_id,
+        CashSession.status == CashSessionStatus.OPEN
+    ).first()
+    if not session:
+        raise HTTPException(400, "No hay sesión abierta para cerrar.")
+    return _apply_close_to_session(db, session, current_user, close_data.closing_balance, close_data.notes)
+
+
+@router.post("/sessions/{session_id}/close-guided", response_model=CashSessionRead)
+def close_session_guided(
+    session_id: int,
+    payload: CashSessionCloseGuided,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    organization_id: int = Depends(get_current_active_organization),
+):
+    from app.models.organization import Branch
+    session = (
+        db.query(CashSession)
+        .join(Branch, Branch.id == CashSession.branch_id)
+        .filter(
+            CashSession.id == session_id,
+            Branch.organization_id == organization_id,
+        )
+        .first()
+    )
+    if not session:
+        raise HTTPException(status_code=404, detail="session not found")
+    if session.closed_at is not None:
+        raise HTTPException(status_code=409, detail="session already closed")
+    if session.user_id != current_user.id and current_user.role != Role.GERENTE:
+        raise HTTPException(status_code=403, detail="only the shift owner or branch GERENTE can close")
+    return _apply_close_to_session(db, session, current_user, payload.counted_cash, payload.notes)
+
+# --------------------------------------------------------------------------
+# MOVIMIENTOS DE CAJA (Entrada / Salida)
+# --------------------------------------------------------------------------
+
+@router.post("/movements", response_model=CashMovementRead)
+def register_cash_movement(
+    payload: CashMovementCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Registra una entrada (IN) o salida (OUT) de efectivo en la sesión activa."""
+    session = db.query(CashSession).filter(
+        CashSession.id == payload.session_id,
+        CashSession.user_id == current_user.id,
+        CashSession.status == CashSessionStatus.OPEN
+    ).first()
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión de caja no encontrada o cerrada")
+
+    if payload.type not in ("IN", "OUT"):
+        raise HTTPException(status_code=400, detail="Tipo debe ser 'IN' o 'OUT'")
+
+    # Track 1: bloquear montos no positivos. Antes aceptaba 0 y negativos.
+    if payload.amount is None or payload.amount <= 0:
+        raise HTTPException(status_code=400, detail="El monto debe ser mayor a 0.")
+
+    movement = CashMovement(
+        session_id=session.id,
+        type=payload.type,
+        amount=payload.amount,
+        reason=payload.concept or ("Entrada de efectivo" if payload.type == "IN" else "Salida de efectivo")
+    )
+    db.add(movement)
+    db.commit()
+    db.refresh(movement)
+    return movement
+
+def get_session_audit_data(db: Session, session_id: int):
+    """
+    Centraliza el cálculo de métricas financieras para una sesión de caja.
+    Utilizado por la UI, Ticket Térmico y PDF.
+    """
+    session = db.query(CashSession).filter(CashSession.id == session_id).first()
+    if not session:
+        return None
+
+    # Fetch Organization
+    from app.models.organization import Organization
+    org = db.query(Organization).filter(Organization.id == session.branch.organization_id).first()
+    org_name = org.name if org else "Atlas ERP"
+    session_org_id = session.branch.organization_id
+
+    # Filtro de ventas asociado a la sesión (con fallback legacy) — viene del
+    # mismo helper que usa `_apply_close_to_session` para garantizar que el
+    # esperado mostrado en UI = esperado persistido al cerrar.
+    from app.services.cash_reconciliation import (
+        compute_expected_cash,
+        session_sales_filter,
+        CASH_INCLUDED_STATUSES,
+    )
+
+    _session_filter = session_sales_filter(session)
+    close_limit = session.closed_at or datetime.now(timezone.utc)
+
+    # 1. Desglose detallado por Métodos de Pago (Pagadas + Devueltas).
+    # Incluimos REFUNDED_PARTIAL/TOTAL: las Payment rows reflejan la entrada
+    # física al cajón en su momento, y los refunds salen como CashMovement
+    # OUT separados. Excluirlas aquí "borra" la entrada original mientras se
+    # sigue restando el OUT → expected_cash negativo en días con devoluciones.
+    payment_stats = db.query(
+        Payment.method,
+        func.count(Payment.id).label("count"),
+        func.sum(Payment.amount).label("total")
+    ).join(SalesDocument).filter(
+        _session_filter,
+        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+    ).group_by(Payment.method).all()
+
+    methods_map = {p.method: {"total": float(p.total), "count": p.count} for p in payment_stats}
+
+    # 2. Impuestos y Subtotal (NETOS post-refund).
+    # approve_return reescribe sale.tax_amount y sale.subtotal al valor neto
+    # tras la devolución, así que sumar incluyendo REFUNDED_* da el revenue
+    # neto del día. PAID-only "perdería" la contribución parcial de las ventas
+    # devueltas → ticket muestra impuestos < real cuando hay refunds.
+    invoice_stats = db.query(
+        func.sum(SalesDocument.tax_amount).label("taxes"),
+        func.sum(SalesDocument.subtotal).label("subtotal")
+    ).filter(
+        _session_filter,
+        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+    ).first()
+
+    total_taxes = float(invoice_stats.taxes or 0)
+    total_subtotal = float(invoice_stats.subtotal or 0)
+
+    # 3b. Devoluciones aprobadas en esta sesión (para UI / counts; el efecto
+    # monetario sobre `expected` se calcula vía CashMovement OUT en el helper).
+    from app.models.returns import SaleReturn as SaleReturnModel
+    session_returns = db.query(SaleReturnModel).filter(
+        SaleReturnModel.cash_session_id == session.id,
+        SaleReturnModel.status == "APPROVED"
+    ).all()
+
+    total_returns_count = len(session_returns)
+    total_returns_amount = float(sum(r.total_refunded for r in session_returns))
+
+    # 4. Cálculo de KPIs
+    # Ventas Totales NETAS post-refund — sale.total_amount está actualizado
+    # por approve_return. Incluir REFUNDED_* para que el ticket muestre el
+    # revenue real del día (PAID-only saltearía las ventas con devoluciones).
+    total_sales_query = db.query(func.sum(SalesDocument.total_amount)).filter(
+        _session_filter,
+        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+    ).scalar()
+    grand_total_sales = float(total_sales_query or 0)
+
+    # Tickets: sí cuentan ventas con devolución parcial (sigue siendo un ticket
+    # vendido). REFUNDED_TOTAL técnicamente es venta cancelada pero el cliente
+    # SÍ recorrió el flujo de checkout — para fines de "tickets atendidos" en
+    # el corte cuenta como ticket. Coherente con grand_total_sales.
+    total_tickets = db.query(func.count(SalesDocument.id)).filter(
+        _session_filter,
+        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+    ).scalar() or 0
+    avg_ticket = grand_total_sales / total_tickets if total_tickets > 0 else 0
+
+    # Actividad más reciente
+    last_payment = db.query(Payment.created_at).join(SalesDocument).filter(
+        SalesDocument.seller_id == session.user_id,
+        SalesDocument.branch_id == session.branch_id,
+        Payment.created_at >= session.opened_at,
+        Payment.created_at <= close_limit
+    ).order_by(desc(Payment.created_at)).first()
+
+    last_activity = last_payment[0] if last_payment else session.opened_at
+
+    # 5. Reconciliación canónica — single source of truth.
+    breakdown = compute_expected_cash(db, session)
+    total_inflows = breakdown.manual_inflows
+    total_outflows = breakdown.manual_outflows
+    total_cash_refunds = breakdown.refund_cash_outflows
+    manual_movements = breakdown.manual_movements
+    expected_cash = breakdown.expected
+
+    # Ajustar efectivo bruto → neto (restar cambio entregado) en methods_map.
+    if PaymentMethod.CASH in methods_map:
+        methods_map[PaymentMethod.CASH]["total"] = float(breakdown.net_cash)
+
+    # Format Activity (Local)
+    last_act_mx = last_activity.astimezone(MX_TZ) if last_activity.tzinfo else last_activity.replace(tzinfo=timezone.utc).astimezone(MX_TZ)
+
+    return {
+        "session": {
+            "id": session.id,
+            "opened_at": session.opened_at.astimezone(MX_TZ) if session.opened_at.tzinfo else session.opened_at.replace(tzinfo=timezone.utc).astimezone(MX_TZ),
+            "closed_at": session.closed_at.astimezone(MX_TZ) if session.closed_at and session.closed_at.tzinfo else (session.closed_at.replace(tzinfo=timezone.utc).astimezone(MX_TZ) if session.closed_at else None),
+            "opening_balance": float(session.opening_balance),
+            "closing_balance": float(session.closing_balance or 0),
+            "last_activity": last_act_mx,
+            "user_name": session.user.full_name or session.user.username,
+            "branch_name": session.branch.name if session.branch else "Principal",
+            "organization_name": org_name
+        },
+        "payments": {
+            "cash":         methods_map.get(PaymentMethod.CASH,     {"total": 0.0, "count": 0}),
+            "card":         methods_map.get(PaymentMethod.CARD,     {"total": 0.0, "count": 0}),
+            "transfer":     methods_map.get(PaymentMethod.TRANSFER, {"total": 0.0, "count": 0}),
+            # Use string keys for methods not in the imported PaymentMethod enum
+            "store_credit": methods_map.get("STORE_CREDIT",         {"total": 0.0, "count": 0}),
+            "check":        methods_map.get("CHECK",                {"total": 0.0, "count": 0}),
+            "others":       methods_map.get(PaymentMethod.OTHER,    {"total": 0.0, "count": 0}),
+        },
+        "movements": {
+            "inflows": float(total_inflows),
+            "outflows": float(total_outflows),
+            "list": [
+                {
+                    "time": (m.created_at.astimezone(MX_TZ) if m.created_at.tzinfo else m.created_at.replace(tzinfo=timezone.utc).astimezone(MX_TZ)).strftime('%H:%M'),
+                    "type": m.type,
+                    "amount": float(m.amount),
+                    "reason": m.reason
+                } for m in manual_movements
+            ]
+        },
+        "returns": {
+            "count":        total_returns_count,
+            "total":        total_returns_amount,
+            "cash_refunds": float(total_cash_refunds),
+        },
+        "kpis": {
+            "total_sales": float(grand_total_sales),
+            "total_tickets": total_tickets,
+            "avg_ticket": float(avg_ticket),
+            "total_taxes": total_taxes,
+            "subtotal": total_subtotal
+        },
+        "expected": {
+            "cash_physical": float(expected_cash),
+            "total_system": float(
+                Decimal(str(grand_total_sales))
+                + Decimal(str(session.opening_balance or 0))
+                + total_inflows
+                - total_outflows
+                - total_cash_refunds
+            )
+        },
+        "reconciliation": {
+            "reported": float(session.closing_balance or 0),
+            # Recalcular difference vivo (no leer session.difference persistido).
+            # Sesiones cerradas antes del fix de devoluciones tienen `difference`
+            # persistido con el cálculo viejo (REFUNDED_* excluidas) → el ticket
+            # reimpreso mostraba `expected` correcto pero `difference` viejo y
+            # la matemática (reported - expected ≠ difference) confundía al
+            # cajero. El campo persistido queda como histórico de auditoría.
+            "difference": float(
+                Decimal(str(session.closing_balance or 0)) - expected_cash
+            ),
+            "diff_percent": float(((session.closing_balance or 0) / expected_cash - 1) * 100) if expected_cash > 0 else 0
+        }
+    }
+
+@router.get("/summary")
+def get_cash_summary(
+    session_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Resumen detallado de la caja (UI Dashboard).
+
+    Sin `session_id`: usa la sesión OPEN del usuario en su sucursal.
+    Con `session_id`: devuelve la sesión específica si pertenece a la
+    sucursal del usuario (cualquier estado). Permite consultar el resumen
+    del turno cerrado del día sin reabrirlo.
+    """
+    if session_id is not None:
+        session = db.query(CashSession).filter(
+            CashSession.id == session_id,
+            CashSession.branch_id == current_user.branch_id,
+        ).first()
+        if not session:
+            raise HTTPException(404, "Sesión no encontrada en esta sucursal.")
+    else:
+        session = db.query(CashSession).filter(
+            CashSession.user_id == current_user.id,
+            CashSession.branch_id == current_user.branch_id,
+            CashSession.status == CashSessionStatus.OPEN
+        ).first()
+        if not session:
+            raise HTTPException(400, "No hay sesión abierta.")
+
+    return get_session_audit_data(db, session.id)
+
+@router.post("/inflow")
+def register_inflow(
+    amount: float,
+    reason: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if amount <= 0:
+        raise HTTPException(400, "El monto debe ser mayor a cero.")
+    session = db.query(CashSession).filter(
+        CashSession.user_id == current_user.id,
+        CashSession.branch_id == current_user.branch_id,
+        CashSession.status == CashSessionStatus.OPEN
+    ).first()
+    if not session:
+        raise HTTPException(400, "No hay sesión de caja abierta.")
+
+    new_move = CashMovement(
+        session_id=session.id,
+        type="IN",
+        amount=Decimal(str(amount)),
+        reason=reason.strip() or "Entrada de efectivo",
+        created_at=datetime.now(timezone.utc)
+    )
+    db.add(new_move)
+    db.flush()
+    # F3: audit row
+    from app.services.cash_audit import audit_cash_event
+    from app.models.cash_audit import CashAuditEvent
+    audit_cash_event(
+        db, event_type=CashAuditEvent.MANUAL_INFLOW,
+        organization_id=session.organization_id,
+        session_id=session.id, branch_id=session.branch_id,
+        user_id=current_user.id, amount=Decimal(str(amount)),
+        related_table="cash_movements", related_id=str(new_move.id),
+        payload={"reason": new_move.reason},
+    )
+    db.commit()
+    return {"message": "Entrada registrada", "amount": amount}
+
+@router.post("/outflow")
+def register_outflow(
+    amount: float,
+    reason: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if amount <= 0:
+        raise HTTPException(400, "El monto debe ser mayor a cero.")
+    session = db.query(CashSession).filter(
+        CashSession.user_id == current_user.id,
+        CashSession.branch_id == current_user.branch_id,
+        CashSession.status == CashSessionStatus.OPEN
+    ).first()
+    if not session:
+        raise HTTPException(400, "No hay sesión de caja abierta.")
+
+    new_move = CashMovement(
+        session_id=session.id,
+        type="OUT",
+        amount=Decimal(str(amount)),
+        reason=reason.strip() or "Salida de efectivo",
+        created_at=datetime.now(timezone.utc)
+    )
+    db.add(new_move)
+    db.flush()
+    # F3: audit row
+    from app.services.cash_audit import audit_cash_event
+    from app.models.cash_audit import CashAuditEvent
+    audit_cash_event(
+        db, event_type=CashAuditEvent.MANUAL_OUTFLOW,
+        organization_id=session.organization_id,
+        session_id=session.id, branch_id=session.branch_id,
+        user_id=current_user.id, amount=Decimal(str(amount)),
+        related_table="cash_movements", related_id=str(new_move.id),
+        payload={"reason": new_move.reason},
+    )
+    db.commit()
+    return {"message": "Salida registrada", "amount": amount}
+
+# --------------------------------------------------------------------------
+# REPORTES DE CORTE (PDF & TICKET)
+# --------------------------------------------------------------------------
+from fastapi import Response
+from app.utils.pdf_generator import generate_cash_cut_pdf
+
+def _verify_session_access(db: Session, session_id: int, current_user: User) -> CashSession:
+    """Verifica que el usuario tiene acceso a la sesion de caja (misma org, mismo branch si aplica)."""
+    from app.models.users import UserOrganization
+    session = db.query(CashSession).filter(CashSession.id == session_id).first()
+    if not session:
+        raise HTTPException(404, "Sesión no encontrada")
+    # Verificar organizacion via membership (User no tiene organization_id directo)
+    user_org = db.query(UserOrganization.organization_id).filter(
+        UserOrganization.user_id == current_user.id,
+        UserOrganization.is_active == True
+    ).first()
+    if not user_org or session.branch.organization_id != user_org.organization_id:
+        raise HTTPException(403, "No tienes acceso a esta sesión")
+    if current_user.branch_id and session.branch_id != current_user.branch_id:
+        raise HTTPException(403, "No tienes acceso a esta sesión")
+    return session
+
+@router.get("/{session_id}/audit-log")
+def get_session_audit_log(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """F3: full event timeline for a cash session.
+
+    ADMIN/DUEÑO/GERENTE-only. Returns chronological list of events with
+    payload for inspection (replaces ad-hoc psql for discrepancy debugging).
+    """
+    if str(current_user.role.value) not in ("ADMINISTRADOR", "DUEÑO", "GERENTE"):
+        raise HTTPException(403, "Solo administradores pueden consultar el audit log")
+    session = _verify_session_access(db, session_id, current_user)
+    from app.models.cash_audit import CashAuditLog
+    rows = db.query(CashAuditLog).filter(
+        CashAuditLog.session_id == session_id,
+    ).order_by(CashAuditLog.id.asc()).all()
+    return {
+        "session_id": session_id,
+        "branch_id": session.branch_id,
+        "events": [
+            {
+                "id": r.id,
+                "ts": r.ts.astimezone(MX_TZ).isoformat() if r.ts and r.ts.tzinfo
+                       else (r.ts.replace(tzinfo=timezone.utc).astimezone(MX_TZ).isoformat() if r.ts else None),
+                "event_type": r.event_type,
+                "amount": float(r.amount) if r.amount is not None else None,
+                "user_id": r.user_id,
+                "related_table": r.related_table,
+                "related_id": r.related_id,
+                "payload": r.payload_json,
+                "expected_running_total": (
+                    float(r.expected_running_total)
+                    if r.expected_running_total is not None else None
+                ),
+            }
+            for r in rows
+        ],
+    }
+
+
+@router.get("/{session_id}/pdf")
+def get_cash_cut_pdf(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    _verify_session_access(db, session_id, current_user)
+    audit_data = get_session_audit_data(db, session_id)
+    if not audit_data:
+        raise HTTPException(404, "Sesión no encontrada")
+
+    pdf_bytes = generate_cash_cut_pdf(audit_data)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=Corte_{session_id}.pdf"}
+    )
+
+@router.get("/{session_id}/ticket")
+def get_cash_cut_ticket(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retorna un JSON estructurado para que el Frontend (JS) lo formatee
+    y lo mande a la impresora térmica (ESC/POS).
+    """
+    _verify_session_access(db, session_id, current_user)
+    audit_data = get_session_audit_data(db, session_id)
+    if not audit_data:
+        raise HTTPException(404, "Sesión no encontrada")
+
+    return audit_data
+
+
+@router.get("/branch-summary")
+def get_branch_cash_summary(
+    branch_id: int = None,
+    date: str = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    org_id: int = Depends(get_current_active_organization)
+):
+    """
+    Corte global de sucursal: consolida todos los cortes individuales de cajeros
+    para una sucursal y fecha dada. Solo ADMINISTRADOR/DUEÑO/GERENTE.
+    """
+    from app.models.organization import Branch
+    from datetime import date as date_type
+
+    if current_user.role not in ("ADMINISTRADOR", "DUEÑO", "GERENTE"):
+        raise HTTPException(403, "Solo administradores, dueños o gerentes pueden ver el corte global.")
+
+    target_branch = branch_id or current_user.branch_id
+    if not target_branch:
+        raise HTTPException(400, "No se especificó sucursal.")
+
+    branch = db.query(Branch).filter(Branch.id == target_branch, Branch.organization_id == org_id).first()
+    if not branch:
+        raise HTTPException(404, "Sucursal no encontrada.")
+
+    # Parse date or use today (Mexico City timezone)
+    if date:
+        try:
+            target_date = date_type.fromisoformat(date)
+        except ValueError:
+            raise HTTPException(400, "Formato de fecha inválido. Use YYYY-MM-DD.")
+    else:
+        target_date = datetime.now(MX_TZ).date()
+
+    # Build UTC range for the target date in MX timezone
+    from datetime import time as time_type
+    day_start_mx = datetime.combine(target_date, time_type.min, tzinfo=MX_TZ)
+    day_end_mx = datetime.combine(target_date, time_type.max, tzinfo=MX_TZ)
+    day_start_utc = day_start_mx.astimezone(timezone.utc)
+    day_end_utc = day_end_mx.astimezone(timezone.utc)
+
+    # All sessions for this branch on this date
+    sessions = db.query(CashSession).filter(
+        CashSession.branch_id == target_branch,
+        CashSession.opened_at >= day_start_utc,
+        CashSession.opened_at <= day_end_utc,
+    ).order_by(CashSession.opened_at.desc()).all()
+
+    if not sessions:
+        return {
+            "branch_id": target_branch,
+            "branch_name": branch.name,
+            "date": str(target_date),
+            "sessions_count": 0,
+            "cashiers": [],
+            "totals": {
+                "sales": 0, "tickets": 0, "cash": 0, "card": 0, "transfer": 0,
+                "inflows": 0, "outflows": 0, "cash_refunds": 0,
+                "opening_total": 0, "closing_total": 0, "difference_total": 0,
+            }
+        }
+
+    # Consolidate each session
+    cashiers = []
+    totals = {
+        "sales": Decimal(0), "tickets": 0, "cash": Decimal(0),
+        "card": Decimal(0), "transfer": Decimal(0),
+        "inflows": Decimal(0), "outflows": Decimal(0),
+        "cash_refunds": Decimal(0),
+        "opening_total": Decimal(0), "closing_total": Decimal(0),
+        "difference_total": Decimal(0),
+    }
+
+    # Canonical reconciliation — single source of truth para todos los cálculos.
+    # Antes este loop replicaba la fórmula con sutiles divergencias:
+    #   - sales_total/ticket_count filtraban PAID-only mientras payment_stats
+    #     usaba CASH_INCLUDED_STATUSES → ventas con devolución desaparecían
+    #     del agregado pero seguían sumando en pagos.
+    #   - difference se leía de s.difference persistido (stale del cálculo
+    #     viejo en sesiones cerradas antes del fix de devoluciones).
+    # Ahora todo deriva de compute_expected_cash + session_sales_filter.
+    from app.services.cash_reconciliation import (
+        CASH_INCLUDED_STATUSES,
+        compute_expected_cash,
+        session_sales_filter,
+    )
+
+    # Perf 2026-05-07: pre-cargar todos los Users de las sesiones en 1 query
+    # en lugar de N (uno por sesión dentro del loop).
+    _user_ids = list({s.user_id for s in sessions if s.user_id})
+    _users_by_id = {
+        u.id: u for u in db.query(User).filter(User.id.in_(_user_ids)).all()
+    } if _user_ids else {}
+
+    for s in sessions:
+        breakdown = compute_expected_cash(db, s)
+        sales_filter = session_sales_filter(s)
+
+        sales_total = db.query(func.sum(SalesDocument.total_amount)).filter(
+            sales_filter,
+            SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+        ).scalar() or Decimal(0)
+
+        ticket_count = db.query(func.count(SalesDocument.id)).filter(
+            sales_filter,
+            SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+        ).scalar() or 0
+
+        payment_stats = db.query(
+            Payment.method,
+            func.sum(Payment.amount).label("total")
+        ).join(SalesDocument).filter(
+            sales_filter,
+            SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+        ).group_by(Payment.method).all()
+
+        methods = {p.method: Decimal(str(p.total)) for p in payment_stats}
+        card_amt = methods.get(PaymentMethod.CARD, Decimal(0))
+        transfer_amt = methods.get(PaymentMethod.TRANSFER, Decimal(0))
+
+        # Cash refund consolidado para sucursales (dato faltante hasta ahora).
+        from app.models.returns import SaleReturn as SaleReturnModel
+        returns_count = db.query(func.count(SaleReturnModel.id)).filter(
+            SaleReturnModel.cash_session_id == s.id,
+            SaleReturnModel.status == "APPROVED",
+        ).scalar() or 0
+
+        # Difference live (no leer s.difference persistido) — coherente con
+        # el endpoint single-session y con la UI/ticket actuales.
+        live_difference = Decimal(str(s.closing_balance or 0)) - breakdown.expected
+
+        user = _users_by_id.get(s.user_id)
+
+        cashier_data = {
+            "session_id": s.id,
+            "user_id": s.user_id,
+            "username": user.username if user else f"User #{s.user_id}",
+            "full_name": user.full_name if user else None,
+            "status": s.status.value if hasattr(s.status, 'value') else str(s.status),
+            "opened_at": s.opened_at.isoformat() if s.opened_at else None,
+            "closed_at": s.closed_at.isoformat() if s.closed_at else None,
+            "opening_balance": float(s.opening_balance or 0),
+            "closing_balance": float(s.closing_balance or 0),
+            "difference": float(live_difference),
+            "expected_cash": float(breakdown.expected),
+            "sales": float(sales_total),
+            "tickets": ticket_count,
+            "cash": float(breakdown.net_cash),
+            "card": float(card_amt),
+            "transfer": float(transfer_amt),
+            "change_given": float(breakdown.change_given),
+            "inflows": float(breakdown.manual_inflows),
+            "outflows": float(breakdown.manual_outflows),
+            "cash_refunds": float(breakdown.refund_cash_outflows),
+            "returns_count": returns_count,
+        }
+        cashiers.append(cashier_data)
+
+        totals["sales"] += sales_total
+        totals["tickets"] += ticket_count
+        totals["cash"] += breakdown.net_cash
+        totals["card"] += card_amt
+        totals["transfer"] += transfer_amt
+        totals["inflows"] += breakdown.manual_inflows
+        totals["outflows"] += breakdown.manual_outflows
+        totals["cash_refunds"] += breakdown.refund_cash_outflows
+        totals["opening_total"] += Decimal(str(s.opening_balance or 0))
+        totals["closing_total"] += Decimal(str(s.closing_balance or 0))
+        totals["difference_total"] += live_difference
+
+    return {
+        "branch_id": target_branch,
+        "branch_name": branch.name,
+        "date": str(target_date),
+        "sessions_count": len(sessions),
+        "cashiers": cashiers,
+        "totals": {k: float(v) for k, v in totals.items()},
+    }

@@ -1,0 +1,509 @@
+/* ══════════════════════════════════════════════════════════
+   DataXPOS Layout CSS — base_daxpos.html
+   Cargado como link fijo para que los templates hijos no
+   puedan borrarlo accidentalmente al sobreescribir extra_css.
+   ══════════════════════════════════════════════════════════ */
+
+/* ══════════════════ DARK MODE TOKENS (default) ══════════════════ */
+:root {
+    --dax-bg: #050508;
+    --dax-card: rgba(20, 15, 35, 0.4);
+    --dax-accent: #6366f1;
+    --dax-accent-glow: rgba(99, 102, 241, 0.3);
+    --dax-border: rgba(99, 102, 241, 0.15);
+    --dax-text: #f8fafc;
+    --dax-text-muted: rgba(248, 250, 252, 0.5);
+    --dax-text-faint: rgba(248, 250, 252, 0.25);
+    --sidebar-width: 260px;
+    --sidebar-collapsed-width: 80px;
+}
+
+/* ══════════════════ LIGHT MODE TOKENS ══════════════════ */
+html:not(.dark) {
+    --dax-bg: #f0f4ff;
+    --dax-card: #ffffff;
+    --dax-accent: #4f46e5;
+    --dax-accent-glow: rgba(79, 70, 229, 0.15);
+    --dax-border: rgba(79, 70, 229, 0.1);
+    --dax-text: #0f172a;
+    --dax-text-muted: rgba(15, 23, 42, 0.5);
+    --dax-text-faint: rgba(15, 23, 42, 0.28);
+}
+
+body {
+    background-color: var(--dax-bg) !important;
+    color: var(--dax-text);
+}
+
+#app-root {
+    background: radial-gradient(circle at 15% 15%, #0d1535 0%, #050508 100%) !important;
+    position: relative;
+}
+
+/* ══════════════════ LIGHT MODE STRUCTURAL OVERRIDES ══════════════════ */
+html:not(.dark) #app-root {
+    background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 100%) !important;
+}
+
+/* Override standard main for DataXPOS aesthetics */
+#main-content {
+    background: transparent !important;
+    transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+header {
+    background: rgba(0, 0, 0, 0.2) !important;
+    backdrop-filter: blur(10px);
+    height: 80px !important;
+    border-bottom-color: rgba(255, 255, 255, 0.03) !important;
+}
+
+html:not(.dark) header {
+    background: rgba(255, 255, 255, 0.92) !important;
+    border-bottom-color: rgba(79, 70, 229, 0.1) !important;
+    backdrop-filter: blur(12px);
+    color: #0f172a;
+}
+
+.dax-sidebar {
+    width: var(--sidebar-width);
+    background: #000000 !important;
+    border-right: 1px solid var(--dax-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+    height: 100%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* ══════════════════ MOBILE SIDEBAR (< lg) ══════════════════ */
+@media (max-width: 1023px) {
+    .dax-sidebar {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        height: 100% !important;
+        width: var(--sidebar-width) !important;
+        transform: translateX(-100%);
+        z-index: 60;
+    }
+    .dax-sidebar.mobile-open {
+        transform: translateX(0);
+        box-shadow: 4px 0 40px rgba(0, 0, 0, 0.6);
+    }
+    /* Hide desktop collapse toggle on mobile */
+    .toggle-sidebar-btn { display: none; }
+    /* Never apply desktop collapsed state on mobile */
+    .dax-sidebar.collapsed {
+        width: var(--sidebar-width) !important;
+    }
+    .dax-sidebar.collapsed .sidebar-text,
+    .dax-sidebar.collapsed .sidebar-header-text,
+    .dax-sidebar.collapsed .sidebar-footer-text { display: unset; }
+    .dax-sidebar.collapsed .nav-item-dax { justify-content: flex-start; padding-left: 25px; padding-right: 25px; }
+    .dax-sidebar.collapsed .nav-pinned-item { justify-content: flex-start; border-color: transparent; background: transparent; padding-left: 16px; padding-right: 16px; }
+    .dax-sidebar.collapsed .sidebar-header-container { padding-left: 2rem; padding-right: 2rem; justify-content: flex-start; }
+    .dax-sidebar.collapsed .orb-branding { margin: unset; }
+    .dax-sidebar.collapsed .pos-cta-item { margin: 10px 15px; width: unset; height: unset; justify-content: flex-start; padding: 15px 20px !important; border-radius: 16px; }
+    .dax-sidebar.collapsed .nav-group-toggle-dax { display: flex; }
+    .dax-sidebar.collapsed .nav-group-items-dax { max-height: 600px !important; opacity: 1 !important; }
+
+    /* Compact header on mobile */
+    header {
+        height: 64px !important;
+    }
+}
+
+.dax-sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+}
+
+.dax-sidebar.collapsed .sidebar-text,
+.dax-sidebar.collapsed .sidebar-header-text,
+.dax-sidebar.collapsed .sidebar-footer-text {
+    display: none;
+}
+
+.dax-sidebar.collapsed .nav-item-dax {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.dax-sidebar.collapsed .orb-branding {
+    margin: 0 auto;
+}
+
+.dax-sidebar.collapsed .sidebar-header-container {
+    padding-left: 0;
+    padding-right: 0;
+    justify-content: center;
+}
+
+.dax-sidebar.collapsed .pos-cta-item {
+    margin: 10px 10px;
+    width: 50px;
+    height: 50px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 12px;
+}
+
+.toggle-sidebar-btn {
+    position: absolute;
+    right: -12px;
+    top: 34px;
+    width: 24px;
+    height: 24px;
+    background: var(--dax-accent);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    box-shadow: 0 0 10px var(--dax-accent-glow);
+    transition: transform 0.3s ease;
+}
+
+.dax-sidebar.collapsed .toggle-sidebar-btn {
+    transform: rotate(180deg);
+}
+
+.dax-card {
+    background: var(--dax-card);
+    border: 1px solid var(--dax-border);
+    backdrop-filter: blur(15px);
+    border-radius: 28px;
+    padding: 30px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 0 20px rgba(99, 102, 241, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+html:not(.dark) .dax-card {
+    backdrop-filter: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(79, 70, 229, 0.05);
+}
+
+html:not(.dark) .dax-card:hover {
+    border-color: rgba(79, 70, 229, 0.3) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 20px var(--dax-accent-glow) !important;
+}
+
+.dax-card::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+}
+
+.dax-card:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 30px var(--dax-accent-glow);
+    transform: translateY(-4px);
+}
+
+.dax-card:hover::after {
+    opacity: 1;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.98) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.animate-dax-entry {
+    animation: fadeInScale 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.dax-btn-pill {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+}
+
+.dax-btn-pill:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--dax-accent);
+}
+
+.nav-item-dax {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 25px;
+    color: rgba(255, 255, 255, 0.85);
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.nav-item-dax.active {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.12) 0%, transparent 100%);
+    border-left-color: var(--dax-accent);
+}
+
+.nav-item-dax:hover:not(.active) {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ══════════════════ PINNED TOP SECTION ══════════════════ */
+.nav-pinned-item {
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+}
+.nav-pinned-item:hover {
+    color: #fff;
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.35);
+    transform: translateX(2px);
+}
+.nav-pinned-icon {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--dax-accent);
+}
+.nav-pinned-item:hover .nav-pinned-icon {
+    background: rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+.nav-pinned-active {
+    color: #fff !important;
+    background: rgba(99, 102, 241, 0.2) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+}
+.nav-pinned-active .nav-pinned-icon {
+    background: var(--dax-accent) !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+}
+/* Icon-only sidebar: center the pinned item */
+.dax-sidebar.collapsed .nav-pinned-item {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+    border-color: transparent;
+    background: transparent;
+}
+.dax-sidebar.collapsed .nav-pinned-item:hover {
+    background: rgba(99, 102, 241, 0.15);
+}
+
+/* Branch grid: icon-only 1-col when sidebar is collapsed */
+.dax-sidebar.collapsed .dax-branch-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 0 8px;
+}
+.dax-sidebar.collapsed .dax-branch-grid > a {
+    justify-content: center;
+    padding: 10px 0;
+    border-radius: 12px;
+}
+
+/* Footer buttons: center icon when collapsed */
+.dax-sidebar.collapsed .dax-footer-btn {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+.dax-sidebar.collapsed .dax-footer-icon {
+    margin: 0 auto;
+}
+
+/* POS Emphasis Styling */
+.pos-cta-item {
+    background: linear-gradient(135deg, #6366f1 0%, #312e81 100%) !important;
+    color: white !important;
+    margin: 10px 15px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.1);
+    padding: 15px 20px !important;
+    border-left: none !important;
+}
+
+.pos-cta-item:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 25px rgba(99, 102, 241, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.pos-cta-item i {
+    color: white !important;
+    font-size: 14px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+
+.pos-cta-item span {
+    font-weight: 900 !important;
+    letter-spacing: 0.15em !important;
+}
+
+.orb-branding {
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 20px var(--dax-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--dax-border);
+    border-radius: 10px;
+}
+
+/* ══════════════════ COLLAPSIBLE NAV GROUPS ══════════════════ */
+.nav-group-items-dax {
+    overflow: hidden;
+    max-height: 600px;
+    opacity: 1;
+    transition: max-height 0.28s ease, opacity 0.2s ease;
+}
+.nav-group-items-dax.nav-collapsed {
+    max-height: 0 !important;
+    opacity: 0;
+}
+.nav-group-toggle-dax .nav-chevron-dax {
+    transition: transform 0.28s ease;
+}
+.nav-group-toggle-dax.nav-closed .nav-chevron-dax {
+    transform: rotate(-90deg);
+}
+/* When sidebar is icon-only: hide toggles, show all items */
+.dax-sidebar.collapsed .nav-group-toggle-dax {
+    display: none;
+}
+.dax-sidebar.collapsed .nav-group-items-dax {
+    max-height: 600px !important;
+    opacity: 1 !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LIGHT MODE: Text & Utility Overrides for #main-content
+   Scope to main content only — sidebar stays always dark
+   ══════════════════════════════════════════════════════════ */
+
+html:not(.dark) #main-content .text-white:not([class*="bg-primary"]):not([class*="from-primary"]):not([class*="bg-gradient"]) {
+    color: #0f172a !important;
+}
+
+html:not(.dark) #main-content [class*="text-white\/"] {
+    color: rgba(15, 23, 42, 0.55) !important;
+}
+html:not(.dark) #main-content .text-white\/60 {
+    color: rgba(15, 23, 42, 0.65) !important;
+}
+html:not(.dark) #main-content .text-white\/40 {
+    color: rgba(15, 23, 42, 0.50) !important;
+}
+html:not(.dark) #main-content .text-white\/30 {
+    color: rgba(15, 23, 42, 0.38) !important;
+}
+html:not(.dark) #main-content .text-white\/20 {
+    color: rgba(15, 23, 42, 0.28) !important;
+}
+
+html:not(.dark) #main-content [class*="border-white\/"] {
+    border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+html:not(.dark) #main-content [class*="divide-white\/"] > :not([hidden]) ~ :not([hidden]) {
+    border-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+html:not(.dark) #main-content [class*="bg-white\/"] {
+    background-color: rgba(15, 23, 42, 0.04) !important;
+}
+
+html:not(.dark) #main-content tr:hover td {
+    background-color: rgba(79, 70, 229, 0.03) !important;
+}
+
+html:not(.dark) header .text-white {
+    color: #0f172a !important;
+}
+html:not(.dark) header [class*="text-white\/"] {
+    color: rgba(15, 23, 42, 0.5) !important;
+}
+html:not(.dark) header [class*="bg-white\/"] {
+    background-color: rgba(15, 23, 42, 0.05) !important;
+}
+html:not(.dark) header [class*="border-white\/"] {
+    border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+html:not(.dark) .dax-btn-pill {
+    background: rgba(79, 70, 229, 0.06);
+    border-color: rgba(79, 70, 229, 0.2);
+    color: #374151;
+}
+html:not(.dark) .dax-btn-pill:hover {
+    background: rgba(79, 70, 229, 0.1);
+    border-color: var(--dax-accent);
+    color: #0f172a;
+}
+
+html:not(.dark) .toggle-sidebar-btn {
+    background: var(--dax-accent);
+    box-shadow: 0 0 10px rgba(79, 70, 229, 0.3);
+}
+
+html:not(.dark) #main-content .text-primary-400,
+html:not(.dark) header .text-primary-400 {
+    color: #4f46e5 !important;
+}
+html:not(.dark) #main-content .text-primary-300 {
+    color: #6366f1 !important;
+}
+
+html:not(.dark) .nav-item-dax.active {
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.08) 0%, transparent 100%);
+    border-left-color: var(--dax-accent);
+    color: #0f172a;
+}
+html:not(.dark) .nav-item-dax:hover:not(.active) {
+    background: rgba(79, 70, 229, 0.04);
+    color: rgba(15, 23, 42, 0.9);
+}

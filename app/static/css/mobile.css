@@ -1,0 +1,99 @@
+/* ─── Shared Mobile Styles (Dashboard, Profile, Sales, Query) ─── */
+body {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.4);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.pulse-purple {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+    animation: pulse-purple 2s infinite;
+}
+
+@keyframes pulse-purple {
+    0% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+    }
+}
+
+/* ─── Profile-specific ─── */
+.input-dax {
+    width: 100%;
+    background-color: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 1rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    color: #f8fafc !important;
+    outline: none !important;
+    transition: all 0.2s ease !important;
+}
+
+.input-dax:focus {
+    border-color: #8B5CF6 !important;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2) !important;
+}
+
+.label-dax {
+    display: block;
+    font-size: 10px;
+    font-weight: 900;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding-left: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.pulse-violet {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+    animation: pulse-violet 2s infinite;
+}
+
+@keyframes pulse-violet {
+    0% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(139, 92, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+    }
+}
+
+/* ─── Query-specific ─── */
+.animate-slideUp {
+    animation: slideUp 0.3s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}

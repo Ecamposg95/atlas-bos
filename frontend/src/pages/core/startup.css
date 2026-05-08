@@ -1,0 +1,289 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
+
+.startup-page {
+    --bg-dark: #050807;
+    --accent: #2ecc71;
+    --accent-glow: rgba(46, 204, 113, 0.4);
+    --purple-accent: #8a2be2;
+    --purple-glow: rgba(138, 43, 226, 0.4);
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+
+    background-color: var(--bg-dark);
+    color: #f0f0f0;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.8s ease;
+    z-index: 1000;
+}
+
+.startup-page .bg-glow {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, #11261a 0%, #050807 100%);
+    z-index: -1;
+    transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.startup-page.purple-mode .bg-glow {
+    background: radial-gradient(circle at 50% 50%, #2e0a4d 0%, #050807 100%);
+}
+
+/* --- Orb Master --- */
+.startup-page .orb-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 1.2s cubic-bezier(0.6, 0.05, 0.1, 0.99);
+    z-index: 50;
+}
+
+.startup-page.state-idle .orb-container {
+    transform: translateY(-40px) scale(0.7);
+}
+
+.startup-page .orb-wrapper {
+    width: 180px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: orb-float 8s ease-in-out infinite;
+}
+
+@keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(10px, -15px) rotate(2deg); }
+    66% { transform: translate(-10px, -5px) rotate(-2deg); }
+}
+
+.startup-page .orb-core {
+    width: 60px;
+    height: 60px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 35px 15px var(--accent-glow), 0 0 80px 10px var(--accent-glow);
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: orb-breathe 4s ease-in-out infinite;
+    transition: box-shadow 0.8s ease, transform 0.5s ease;
+}
+
+.startup-page .logo-a {
+    width: 30px;
+    height: 30px;
+    fill: #11261a;
+    transition: fill 0.8s ease;
+}
+
+.startup-page.purple-mode .orb-core {
+    box-shadow: 0 0 35px 15px var(--purple-glow), 0 0 80px 10px var(--purple-glow);
+}
+
+.startup-page.purple-mode .logo-a {
+    fill: #2e0a4d;
+}
+
+.startup-page .orb-ring {
+    position: absolute;
+    border: 1px solid rgba(46, 204, 113, 0.15);
+    border-radius: 50%;
+    animation: rotate var(--speed) linear infinite;
+    transition: border-color 0.8s ease;
+}
+
+.startup-page.purple-mode .orb-ring {
+    border-color: rgba(138, 43, 226, 0.2);
+}
+
+.startup-page .ring-1 {
+    width: 100px;
+    height: 100px;
+    --speed: 8s;
+    border-top: 3px solid var(--accent);
+}
+
+.startup-page .ring-2 {
+    width: 140px;
+    height: 140px;
+    --speed: 15s;
+    border-right: 1px solid var(--accent);
+    border-style: dashed;
+}
+
+.startup-page .ring-3 {
+    width: 180px;
+    height: 180px;
+    --speed: 30s;
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.startup-page.purple-mode .ring-1 { border-top-color: var(--purple-accent); }
+.startup-page.purple-mode .ring-2 { border-right-color: var(--purple-accent); }
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes orb-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+/* --- Welcome Text --- */
+.startup-page .welcome-content {
+    text-align: center;
+    z-index: 20;
+    transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.startup-page.state-idle .welcome-content {
+    transform: translateY(-60px);
+}
+
+.startup-page .main-message {
+    font-size: 2.5rem;
+    font-weight: 200;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 1s ease 0.5s;
+}
+
+.startup-page .sub-message {
+    font-size: 0.95rem;
+    color: var(--accent);
+    letter-spacing: 0.15rem;
+    opacity: 0;
+    transition: all 1s ease 0.8s;
+    text-transform: uppercase;
+}
+
+.startup-page.purple-mode .sub-message {
+    color: #a855f7;
+}
+
+.startup-page .main-message.visible,
+.startup-page .sub-message.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Grid & Cards --- */
+.startup-page .setup-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1100px;
+    width: 90%;
+    margin-top: 2rem;
+    opacity: 0;
+    transform: translateY(50px);
+    pointer-events: none;
+    transition: all 1s cubic-bezier(0.19, 1, 0.22, 1) 0.6s;
+}
+
+.startup-page.state-idle .setup-grid {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.startup-page .setup-card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(25px);
+    padding: 2.5rem 2rem;
+    border-radius: 32px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    color: inherit;
+    font-family: inherit;
+}
+
+.startup-page .setup-card:hover {
+    border-color: var(--accent);
+    background: rgba(46, 204, 113, 0.05);
+    transform: translateY(-10px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+.startup-page .setup-card.card-dataxpos:hover {
+    border-color: var(--purple-accent);
+    background: rgba(138, 43, 226, 0.08);
+    box-shadow: 0 25px 60px rgba(88, 28, 135, 0.4);
+}
+
+.startup-page .setup-card.is-dimmed {
+    opacity: 0.2;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.startup-page .setup-card[disabled] {
+    cursor: not-allowed;
+}
+
+.startup-page .setup-card h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 0.75rem;
+}
+
+.startup-page .setup-card p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.6;
+}
+
+.startup-page .icon-box {
+    width: 48px;
+    height: 48px;
+    background: rgba(46, 204, 113, 0.1);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    color: var(--accent);
+    transition: all 0.4s ease;
+}
+
+.startup-page .setup-card.card-dataxpos .icon-box {
+    background: rgba(138, 43, 226, 0.15);
+    color: var(--purple-accent);
+}
+
+.startup-page.is-launching {
+    filter: brightness(1.5);
+}
+
+@media (max-width: 768px) {
+    .startup-page .setup-grid {
+        grid-template-columns: 1fr;
+        max-height: 45vh;
+        overflow-y: auto;
+        padding-bottom: 4rem;
+    }
+    .startup-page .main-message {
+        font-size: 1.8rem;
+    }
+}

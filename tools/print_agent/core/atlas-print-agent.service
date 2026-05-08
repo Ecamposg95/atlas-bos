@@ -1,0 +1,37 @@
+[Unit]
+Description=Atlas POS Local Print Agent
+Documentation=https://github.com/Ecamposg95/Atlas-API/blob/main/context/contexto_agente_impresion_linux.md
+After=network-online.target cups.service
+Wants=cups.service
+
+[Service]
+# %i = nombre de usuario bajo el que corre el agente (p.ej. cajero, rmazh).
+# Se invoca como: sudo systemctl enable --now atlas-print-agent@<usuario>
+User=%i
+Group=%i
+
+# El working dir es donde vive main.py; ajusta si lo pones en otra ruta.
+# El script install_systemd.sh genera este valor a partir de la ruta actual.
+WorkingDirectory={WORKDIR}
+ExecStart={WORKDIR}/venv/bin/python3 {WORKDIR}/main.py
+
+# Env que el agente lee (opcional):
+Environment=ATLAS_AGENT_HOST=127.0.0.1
+Environment=ATLAS_AGENT_PORT=9100
+
+# Que systemd reinicie si el proceso muere.
+Restart=always
+RestartSec=5
+
+# Guarda logs bajo journal (además del agent.log del WorkingDirectory).
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atlas-print-agent
+
+# Hardening razonable — NO lockdown completo porque el agente corre subprocess
+# lpadmin/cupsenable/lp que necesitan acceso a sockets CUPS.
+NoNewPrivileges=true
+ProtectSystem=true
+
+[Install]
+WantedBy=multi-user.target

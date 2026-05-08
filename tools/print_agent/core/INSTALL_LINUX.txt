@@ -1,0 +1,117 @@
+════════════════════════════════════════════════════════════════════
+  ATLAS PRINT AGENT — INSTALACIÓN EN LINUX
+════════════════════════════════════════════════════════════════════
+
+Este documento explica cómo instalar el agente de impresión como
+servicio systemd para que:
+
+  • Arranque automáticamente al prender la PC (sin login).
+  • Se reinicie solo si se cae (Restart=always, cada 5 segundos).
+  • Corra en segundo plano (sobrevive cerrar la terminal / logout).
+
+
+────────────────────────────────────────────────────────────────────
+  PREREQUISITOS
+────────────────────────────────────────────────────────────────────
+
+  • Linux con systemd (Ubuntu 20.04+, Debian 11+, Fedora, etc.)
+  • Python 3.10 o superior
+  • CUPS instalado y corriendo:
+        sudo apt install cups
+        sudo systemctl enable --now cups
+  • Acceso sudo
+
+
+────────────────────────────────────────────────────────────────────
+  INSTALACIÓN (1 comando)
+────────────────────────────────────────────────────────────────────
+
+  1. Descomprime el ZIP descargado y entra a la carpeta:
+
+         cd print_agent
+
+  2. Ejecuta el instalador (vive dentro de core/):
+
+         sudo ./core/instalar-servicio-linux.sh
+
+  Eso crea el venv, genera el certificado HTTPS local, instala el
+  servicio en /etc/systemd/system/atlas-print-agent.service y lo
+  habilita para el arranque. En ~15 segundos está corriendo.
+
+  Para instalar bajo un usuario específico (ej. "cajero"):
+
+         sudo ./core/instalar-servicio-linux.sh cajero
+
+
+────────────────────────────────────────────────────────────────────
+  VERIFICAR QUE ESTÁ CORRIENDO
+────────────────────────────────────────────────────────────────────
+
+         systemctl status atlas-print-agent
+
+  Debe mostrar:  "Active: active (running)"  y  "enabled"
+
+
+────────────────────────────────────────────────────────────────────
+  COMANDOS ÚTILES
+────────────────────────────────────────────────────────────────────
+
+  Ver logs en vivo:
+         journalctl -u atlas-print-agent -f
+
+  Reiniciar:
+         sudo systemctl restart atlas-print-agent
+
+  Detener temporalmente:
+         sudo systemctl stop atlas-print-agent
+
+  Desinstalar (desactivar boot + parar):
+         sudo systemctl disable --now atlas-print-agent
+
+
+────────────────────────────────────────────────────────────────────
+  MODO MANUAL (solo para testing, NO usar en producción)
+────────────────────────────────────────────────────────────────────
+
+  Si solo quieres probar el agente sin instalarlo como servicio:
+
+         bash impresora_linux.sh
+
+  Esto lo corre en primer plano. Al cerrar la terminal se detiene.
+
+
+────────────────────────────────────────────────────────────────────
+  CREAR ACCESO DIRECTO (OPCIONAL)
+────────────────────────────────────────────────────────────────────
+
+  Para crear un acceso directo en el escritorio que inicie el agente:
+
+  1. Copia el archivo de acceso directo a tu carpeta de aplicaciones:
+
+         cp core/atlas-print-agent.desktop ~/.local/share/applications/
+
+     (o usa /usr/share/applications/ para disponibilidad global)
+
+  2. Hazlo ejecutable:
+
+         chmod +x ~/.local/share/applications/atlas-print-agent.desktop
+
+  3. Actualiza la base de datos de aplicaciones:
+
+         update-desktop-database ~/.local/share/applications/
+
+  Después verás "Atlas Print Agent" en el menú de aplicaciones de tu
+  escritorio, y podrás hacerle clic para iniciar el agente.
+
+
+────────────────────────────────────────────────────────────────────
+  SIGUIENTE PASO — ACEPTAR CERTIFICADO
+────────────────────────────────────────────────────────────────────
+
+  Abre en el navegador:
+
+         https://127.0.0.1:9100/health
+
+  El navegador dirá "no es seguro" — es normal, el certificado es
+  local. Haz clic en "Avanzado" → "Continuar de todos modos".
+  Después el POS podrá detectar las impresoras del agente.

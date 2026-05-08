@@ -1,0 +1,486 @@
+/* ================================================================================== */
+/* ===========================  ATLAS POS GLOBAL THEME  ============================= */
+/* ================================================================================== */
+
+/* --- 1. DESIGN TOKENS --- */
+:root {
+    /* LIGHT MODE (Default) */
+    --bg: #F6F7FB;
+    --surface: #FFFFFF;
+    --surface-2: #F1F3F8;
+    /* Table Headers, Secondary Panels */
+    --border: rgba(15, 23, 42, 0.12);
+
+    --text: #0F172A;
+    /* Slate 900 */
+    --text-muted: #475569;
+    /* Slate 600 */
+    --text-faint: #64748B;
+    /* Slate 500 */
+
+    --primary: #7c3aed;
+    --primary-dark: #6d28d9;
+
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+    /* Sidebar: mismo en light y dark mode — siempre slate oscuro */
+    --sidebar-bg: #0f172a;
+    /* Slate 900 */
+    --sidebar-border: rgba(255, 255, 255, 0.05);
+    /* Dark mode border */
+    --sidebar-item-text: #94a3b8;
+    /* Slate 400 */
+    --sidebar-item-hover: #f1f5f9;
+    /* Slate 50 */
+    --sidebar-item-hover-bg: rgba(255, 255, 255, 0.03);
+    --sidebar-item-active-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-item-active-text: #ffffff;
+}
+
+html.dark {
+    /* DARK MODE */
+    --bg: #020617;
+    --surface: rgba(15, 23, 42, 0.6);
+    --surface-2: #1e293b;
+    --border: rgba(255, 255, 255, 0.08);
+
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-faint: #64748B;
+
+    --primary: #818cf8;
+    --primary-dark: #6366f1;
+
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+
+    /* Sidebar Dark - Blue-slate (not purple) */
+    --sidebar-bg: #0f172a;
+    --sidebar-border: rgba(255, 255, 255, 0.05);
+    --sidebar-item-text: #94a3b8;
+    --sidebar-item-hover: #f1f5f9;
+    --sidebar-item-hover-bg: rgba(255, 255, 255, 0.03);
+    --sidebar-item-active-bg: rgba(255, 255, 255, 0.1);
+    --sidebar-item-active-text: #ffffff;
+}
+
+/* --- 2. GLOBAL TYPOGRAPHY --- */
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Force light mode text colors to strict token adherence (overriding Tailwind) */
+html:not(.dark) .text-white {
+    color: var(--text) !important;
+}
+
+html:not(.dark) .text-slate-200,
+html:not(.dark) .text-slate-300,
+html:not(.dark) .text-slate-400 {
+    color: var(--text-muted) !important;
+}
+
+html:not(.dark) .text-slate-500 {
+    color: var(--text-muted) !important;
+}
+
+html:not(.dark) .text-slate-600 {
+    color: var(--text-faint) !important;
+}
+
+/* --- 3. SIDEBAR (Unified Structure) --- */
+aside {
+    background-color: #0a0514 !important;  /* siempre negro, no cambia con el tema */
+    border-right: 1px solid rgba(139, 92, 246, 0.10) !important;
+    transition: width 0.3s ease;
+}
+
+/* --- 3b. SIDEBAR TEXT PROTECTION ---
+   Cuando html.dark se remueve (light mode global), los overrides de theme.css
+   atacan el sidebar. Estas reglas preservan los colores correctos en aside. */
+html:not(.dark) aside .text-white               { color: #ffffff !important; }
+html:not(.dark) aside .text-slate-400,
+html:not(.dark) aside .text-slate-500           { color: #94a3b8 !important; }
+html:not(.dark) aside .text-slate-600           { color: #64748b !important; }
+html:not(.dark) aside .hover\:text-white:hover  { color: #ffffff !important; }
+html:not(.dark) aside .hover\:text-slate-400:hover { color: #94a3b8 !important; }
+html:not(.dark) aside .hover\:bg-white\/5:hover { background-color: rgba(255,255,255,0.05) !important; }
+
+.nav-item {
+    display: flex;
+    align-items: center;
+
+    /* Layout / Spacing */
+    margin: 4px 10px;
+    /* Consistent horizontal margin */
+    padding: 12px 14px;
+    /* Generous internal padding */
+    border-radius: 12px;
+    /* Pill shape */
+
+    /* Typography (High Legibility) */
+    color: var(--sidebar-item-text);
+    font-size: 0.95rem;
+    /* ~15.2px */
+    font-weight: 600;
+    /* SemiBold */
+    letter-spacing: 0.01em;
+
+    transition: all 0.2s ease-out;
+    justify-content: center;
+    /* Mobile/Collapsed Default */
+}
+
+@media (min-width: 1024px) {
+    .nav-item {
+        justify-content: flex-start;
+    }
+}
+
+/* States */
+.nav-item:hover {
+    color: var(--sidebar-item-hover);
+    background-color: var(--sidebar-item-hover-bg);
+}
+
+.nav-item.active {
+    background-color: var(--sidebar-item-active-bg) !important;
+    color: var(--sidebar-item-active-text) !important;
+    font-weight: 700;
+    /* Bold for Active */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    /* Subtle lift */
+}
+
+.nav-item svg {
+    width: 22px;
+    /* Slightly larger icons */
+    height: 22px;
+    margin-right: 0;
+    flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+    .nav-item svg {
+        margin-right: 12px;
+    }
+}
+
+/* Sidebar Specifics */
+aside .border-t {
+    border-color: var(--sidebar-border) !important;
+    margin: 12px 16px;
+}
+
+aside p.uppercase {
+    color: var(--text-faint) !important;
+    font-weight: 700;
+    font-size: 0.75rem;
+    /* 12px */
+    margin-left: 18px;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+}
+
+
+/* --- 4. TOOLTIPS (Collapsed State) --- */
+/* Show tooltip on hover when text is hidden (assumed via .group logic or screen size) */
+/* We can use [aria-label] if we add it to the links */
+.nav-item[aria-label]:hover::after {
+    content: attr(aria-label);
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e293b;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    z-index: 100;
+    margin-left: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    animation: tooltipFade 0.2s forwards;
+    pointer-events: none;
+    display: none;
+}
+
+@media (max-width: 1023px) {
+
+    /* Show on small screens/collapsed */
+    .nav-item[aria-label]:hover::after {
+        display: block;
+    }
+}
+
+@keyframes tooltipFade {
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* --- 5. CARDS & PANELS --- */
+.glass-card,
+.glass-panel {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: var(--shadow) !important;
+    backdrop-filter: blur(12px);
+    /* Keep Blur for Dark */
+}
+
+html:not(.dark) .glass-card,
+html:not(.dark) .glass-panel {
+    backdrop-filter: none !important;
+    /* Clean for Light - allow Tailwind classes to define background */
+    background: #ffffff;
+    border-color: #e2e8f0;
+}
+
+/* --- 5b. MODULE GRID CARDS --- */
+.module-grid-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+}
+
+.module-grid-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.module-grid-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--primary) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 0;
+}
+
+.module-grid-card:hover::before {
+    opacity: 0.05;
+}
+
+.module-icon-container {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.module-grid-card:hover .module-icon-container {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.module-grid-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+
+/* --- 6. TABLES (Modern) --- */
+table thead tr {
+    background-color: var(--surface-2) !important;
+    border-bottom: 2px solid var(--border) !important;
+    /* Stronger header border */
+}
+
+table thead th {
+    color: var(--text-muted) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    padding: 12px 16px;
+}
+
+table tbody tr {
+    border-bottom: 1px solid var(--border) !important;
+    transition: background-color 0.15s ease;
+}
+
+table tbody tr:hover {
+    background-color: rgba(125, 125, 125, 0.03) !important;
+}
+
+table td {
+    color: var(--text);
+    padding: 12px 16px;
+    font-weight: 500;
+}
+
+
+/* --- 7. UTILS & OVERRIDES --- */
+.bg-slate-900,
+.bg-slate-950 {
+    background-color: var(--surface) !important;
+    /* Map dark backgrounds to surface in light mode */
+}
+
+html.dark .bg-slate-900 {
+    background-color: #08071a !important;
+}
+
+/* Restore in dark */
+html.dark .bg-slate-950 {
+    background-color: #020617 !important;
+}
+
+/* Status Chips High Contrast (Light Mode) */
+html:not(.dark) .text-emerald-400 {
+    color: #047857 !important;
+}
+
+html:not(.dark) .bg-emerald-400\/10 {
+    background-color: #ecfdf5 !important;
+    border: 1px solid #a7f3d0;
+}
+
+html:not(.dark) .text-amber-400 {
+    color: #b45309 !important;
+}
+
+html:not(.dark) .bg-amber-400\/10 {
+    background-color: #fffbeb !important;
+    border: 1px solid #fde68a;
+}
+
+html:not(.dark) .text-rose-500 {
+    color: #be123c !important;
+}
+
+/* bg-slate-800 / bg-slate-700 light mode */
+html:not(.dark) .bg-slate-800 {
+    background-color: var(--surface-2) !important;
+}
+
+html:not(.dark) .bg-slate-700 {
+    background-color: var(--surface-2) !important;
+}
+
+html:not(.dark) .border-slate-700,
+html:not(.dark) .border-slate-800 {
+    border-color: var(--border) !important;
+}
+
+html:not(.dark) .text-slate-300 {
+    color: var(--text-muted) !important;
+}
+
+/* Form inputs & selects — light mode */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+html:not(.dark) select,
+html:not(.dark) textarea {
+    background-color: var(--surface) !important;
+    border-color: var(--border) !important;
+    color: var(--text) !important;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+    color: var(--text-faint) !important;
+}
+
+/* ── FASE 0: OVERRIDES GLOBALES LIGHT MODE ───────────────────────────── */
+
+/* hover:text-white — en light mode el hover debe usar text oscuro */
+html:not(.dark) .hover\:text-white:hover { color: var(--text) !important; }
+
+/* border-slate con opacidad */
+html:not(.dark) .border-slate-800\/50 { border-color: var(--border) !important; }
+html:not(.dark) .border-slate-700\/50 { border-color: var(--border) !important; }
+
+/* bg-slate-950/20 — no cubierto por los valores /30-/80 */
+html:not(.dark) .bg-slate-950\/20 { background-color: var(--surface-2) !important; }
+
+/* border-white/* con opacidad — ~60 instancias en templates */
+html:not(.dark) .border-white\/5  { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/8  { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/10 { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/20 { border-color: var(--border) !important; }
+html:not(.dark) .border-white\/30 { border-color: var(--border) !important; }
+
+/* bg-white/* con opacidad — ~20 instancias */
+html:not(.dark) .bg-white\/2  { background-color: var(--surface-2) !important; }
+html:not(.dark) .bg-white\/3  { background-color: var(--surface-2) !important; }
+html:not(.dark) .bg-white\/5  { background-color: var(--surface-2) !important; }
+html:not(.dark) .bg-white\/10 { background-color: rgba(0,0,0,0.05) !important; }
+
+/* bg-slate con opacidad (no cubiertas por overrides planos) — ~30 instancias */
+html:not(.dark) .bg-slate-800\/30,
+html:not(.dark) .bg-slate-800\/40,
+html:not(.dark) .bg-slate-800\/50,
+html:not(.dark) .bg-slate-800\/60,
+html:not(.dark) .bg-slate-800\/80 { background-color: var(--surface-2) !important; }
+
+html:not(.dark) .bg-slate-900\/20,
+html:not(.dark) .bg-slate-900\/30,
+html:not(.dark) .bg-slate-900\/40,
+html:not(.dark) .bg-slate-900\/50,
+html:not(.dark) .bg-slate-900\/60,
+html:not(.dark) .bg-slate-900\/80 { background-color: var(--surface) !important; }
+
+html:not(.dark) .bg-slate-950\/30,
+html:not(.dark) .bg-slate-950\/40,
+html:not(.dark) .bg-slate-950\/50,
+html:not(.dark) .bg-slate-950\/80 { background-color: var(--surface) !important; }
+
+/* divide-* — separadores de tabla — ~18 instancias */
+html:not(.dark) .divide-slate-800 > * + *,
+html:not(.dark) .divide-slate-700 > * + * { border-color: var(--border) !important; }
+html:not(.dark) .divide-slate-800\/50 > * + * { border-color: var(--border) !important; }
+html:not(.dark) .divide-white\/5  > * + *,
+html:not(.dark) .divide-white\/10 > * + * { border-color: var(--border) !important; }
+
+/* text-white/* con opacidad — jerarquía tipográfica dark-only */
+html:not(.dark) .text-white\/15,
+html:not(.dark) .text-white\/20,
+html:not(.dark) .text-white\/25 { color: var(--text-faint) !important; }
+html:not(.dark) .text-white\/30,
+html:not(.dark) .text-white\/40 { color: var(--text-faint) !important; }
+html:not(.dark) .text-white\/50 { color: var(--text-muted) !important; }
+html:not(.dark) .text-white\/70,
+html:not(.dark) .text-white\/80 { color: var(--text-muted) !important; }
+
+/* hover: variantes con opacidad — usadas en JS innerHTML */
+html:not(.dark) .hover\:bg-white\/5:hover  { background-color: var(--surface-2) !important; }
+html:not(.dark) .hover\:bg-white\/10:hover { background-color: rgba(0,0,0,0.05) !important; }
+html:not(.dark) .hover\:bg-slate-800\/30:hover,
+html:not(.dark) .hover\:bg-slate-800\/40:hover,
+html:not(.dark) .hover\:bg-slate-800\/50:hover,
+html:not(.dark) .hover\:bg-slate-800\/60:hover { background-color: var(--surface-2) !important; }
+
+/* Sidebar excluido: aside tiene !important con valores fijos — estos overrides no afectan */
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--text-faint);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}

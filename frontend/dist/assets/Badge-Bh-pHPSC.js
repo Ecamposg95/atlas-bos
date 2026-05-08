@@ -1,0 +1,1 @@
+import{j as x}from"./charts-DitnBe9z.js";const g={green:"dax-badge dax-badge-green",red:"dax-badge dax-badge-red",yellow:"dax-badge dax-badge-yellow",blue:"dax-badge dax-badge-blue",slate:"dax-badge dax-badge-slate"};function s({variant:a="slate",children:e,className:d=""}){return x.jsx("span",{className:`${g[a]} ${d}`,children:e})}export{s as B};

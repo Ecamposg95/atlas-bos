@@ -1,0 +1,1 @@
+const c=new Map;function m(t,n){const e=`${t}:${n}`;let r=c.get(e);return r||(r=new Intl.NumberFormat(t,{style:"currency",currency:n}),c.set(e,r)),r}function i(t,n={}){const{locale:e="es-MX",currency:r="MXN",fallback:o="$0.00"}=n;if(t==null||t==="")return o;const f=typeof t=="number"?t:Number(t);return Number.isFinite(f)?m(e,r).format(f):o}export{i as f};

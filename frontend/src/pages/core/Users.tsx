@@ -1,0 +1,193 @@
+import { useEffect, useState, useCallback } from 'react'
+import { usersApi, type SystemUser, type CreateUserPayload, type UpdateUserPayload } from '../../api/users'
+import { organizationApi, type Branch } from '../../api/organization'
+import { DaxCard } from '../../components/ui/DaxCard'
+import { Spinner } from '../../components/ui/Spinner'
+import { Badge } from '../../components/ui/Badge'
+
+const ROLES = ['ADMINISTRADOR', 'DUEÑO', 'GERENTE', 'CAJERO', 'VENDEDOR', 'SOPORTE_OPERATIVO']
+const roleVariant = (r: string) =>
+  r === 'ADMINISTRADOR' ? 'red' : r === 'DUEÑO' ? 'yellow' : r === 'GERENTE' ? 'blue' : r === 'CAJERO' ? 'green' : 'slate'
+
+interface UserForm {
+  username: string; password: string; full_name: string
+  role: string; branch_id: string; is_active: boolean
+}
+
+const EMPTY_FORM: UserForm = { username: '', password: '', full_name: '', role: 'CAJERO', branch_id: '', is_active: true }
+
+export function Users() {
+  const [users, setUsers] = useState<SystemUser[]>([])
+  const [branches, setBranches] = useState<Branch[]>([])
+  const [loading, setLoading] = useState(true)
+  const [modal, setModal] = useState<'create' | 'edit' | null>(null)
+  const [editing, setEditing] = useState<SystemUser | null>(null)
+  const [form, setForm] = useState<UserForm>(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await usersApi.getAll()
+      setUsers(data)
+    } catch { setUsers([]) } finally { setLoading(false) }
+  }, [])
+
+  useEffect(() => {
+    organizationApi.getBranches().then(setBranches).catch(() => {})
+    load()
+  }, [])
+
+  const openCreate = () => { setForm(EMPTY_FORM); setEditing(null); setModal('create') }
+  const openEdit = (u: SystemUser) => {
+    setForm({ username: u.username, password: '', full_name: u.full_name ?? '', role: u.role, branch_id: u.branch_id ? String(u.branch_id) : '', is_active: u.is_active })
+    setEditing(u); setModal('edit')
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      if (modal === 'create') {
+        const payload: CreateUserPayload = {
+          username: form.username, password: form.password, full_name: form.full_name || undefined,
+          role: form.role, branch_id: form.branch_id ? Number(form.branch_id) : null,
+        }
+        await usersApi.create(payload)
+      } else if (editing) {
+        const payload: UpdateUserPayload = {
+          full_name: form.full_name || undefined, role: form.role,
+          branch_id: form.branch_id ? Number(form.branch_id) : null,
+          is_active: form.is_active,
+        }
+        if (form.password) payload.password = form.password
+        await usersApi.update(editing.id, payload)
+      }
+      setModal(null); load()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error al guardar'
+      alert(msg)
+    } finally { setSaving(false) }
+  }
+
+  const handleToggle = async (u: SystemUser) => {
+    try {
+      await usersApi.update(u.id, { is_active: !u.is_active })
+      load()
+    } catch { alert('Error') }
+  }
+
+  const f = (field: keyof UserForm, val: string | boolean) => setForm((prev) => ({ ...prev, [field]: val }))
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
+          <i className="fa-solid fa-users-cog text-indigo-400 text-xl" />
+          <h1 className="text-2xl font-black text-white">Usuarios</h1>
+        </div>
+        <button onClick={openCreate} className="dax-btn-primary text-xs">
+          <i className="fa-solid fa-plus" /> Nuevo Usuario
+        </button>
+      </div>
+
+      <DaxCard padding={false}>
+        {loading ? <Spinner text="Cargando usuarios..." /> : users.length === 0 ? (
+          <div className="p-12 text-center text-slate-600">Sin usuarios</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="dax-table w-full">
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Nombre</th>
+                  <th>Rol</th>
+                  <th>Sucursal</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td className="font-mono text-indigo-400 text-sm">{u.username}</td>
+                    <td className="text-slate-300">{u.full_name ?? '—'}</td>
+                    <td><Badge variant={roleVariant(u.role) as 'red' | 'yellow' | 'blue' | 'green' | 'slate'}>{u.role}</Badge></td>
+                    <td className="text-slate-400 text-sm">{u.branch_name ?? 'HQ'}</td>
+                    <td>
+                      <button onClick={() => handleToggle(u)}
+                        className={`text-xs font-semibold ${u.is_active ? 'text-emerald-400' : 'text-slate-600'}`}>
+                        <i className={`fa-solid ${u.is_active ? 'fa-circle-check' : 'fa-circle-xmark'} mr-1`} />
+                        {u.is_active ? 'Activo' : 'Inactivo'}
+                      </button>
+                    </td>
+                    <td>
+                      <button onClick={() => openEdit(u)} className="text-slate-500 hover:text-white text-xs">
+                        <i className="fa-solid fa-pen" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </DaxCard>
+
+      {/* Modal crear/editar */}
+      {modal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(null)}>
+          <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-black text-white">{modal === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}</h3>
+              <button onClick={() => setModal(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="dax-label">Username</label>
+                <input value={form.username} onChange={(e) => f('username', e.target.value)}
+                  disabled={modal === 'edit'} className="dax-input w-full disabled:opacity-50" placeholder="usuario123" />
+              </div>
+              <div>
+                <label className="dax-label">Nombre completo</label>
+                <input value={form.full_name} onChange={(e) => f('full_name', e.target.value)} className="dax-input w-full" placeholder="Juan Pérez" />
+              </div>
+              <div>
+                <label className="dax-label">{modal === 'edit' ? 'Nueva contraseña (opcional)' : 'Contraseña'}</label>
+                <input type="password" value={form.password} onChange={(e) => f('password', e.target.value)} className="dax-input w-full" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="dax-label">Rol</label>
+                  <select value={form.role} onChange={(e) => f('role', e.target.value)} className="dax-input w-full">
+                    {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="dax-label">Sucursal</label>
+                  <select value={form.branch_id} onChange={(e) => f('branch_id', e.target.value)} className="dax-input w-full">
+                    <option value="">HQ / Global</option>
+                    {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              {modal === 'edit' && (
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="active-chk" checked={form.is_active} onChange={(e) => f('is_active', e.target.checked)} className="w-4 h-4" />
+                  <label htmlFor="active-chk" className="text-sm text-slate-400">Usuario activo</label>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 mt-5">
+              <button onClick={() => setModal(null)} className="dax-btn-secondary flex-1">Cancelar</button>
+              <button onClick={handleSave} disabled={saving || !form.username || (modal === 'create' && !form.password)} className="dax-btn-primary flex-1 justify-center disabled:opacity-40">
+                {saving ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-check" /> Guardar</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

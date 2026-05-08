@@ -1,0 +1,425 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ══════════════════════════════════════════
+     PALETA ATLAS — invariante (ambos temas)
+  ══════════════════════════════════════════ */
+  :root {
+    --atlas-primary-400: #a5b4fc;
+    --atlas-primary-500: #818cf8;
+    --atlas-primary-600: #6366f1;
+    --atlas-primary-700: #4f46e5;
+    --atlas-secondary-400: #c4b5fd;
+    --atlas-secondary-500: #8b5cf6;
+    --atlas-secondary-600: #7c3aed;
+    --atlas-success:  #34d399;
+    --atlas-warning:  #fbbf24;
+    --atlas-danger:   #fb7185;
+
+    /* ── MODO CLARO (default) — contraste reforzado para cajeras ── */
+    --dax-bg:          #f5f5f5;
+    --dax-surface:     #fafafa;
+    --dax-card:        #ffffff;
+    --dax-card-solid:  #ffffff;
+    --dax-accent:      #4f46e5;
+    --dax-accent-glow: rgba(79, 70, 229, 0.12);
+    --dax-violet-glow: rgba(139, 92, 246, 0.10);
+    --dax-border:      rgba(30, 27, 75, 0.28);
+    --dax-border-dim:  rgba(30, 27, 75, 0.18);
+    --dax-text:        #1e1b4b;
+    --dax-text-muted:  #475569;
+    --dax-text-faint:  #64748b;
+    --dax-shadow:      0 4px 24px rgba(99,102,241,0.10), 0 1px 3px rgba(30,27,75,0.06);
+    --dax-shadow-lg:   0 8px 32px rgba(99,102,241,0.14), 0 2px 8px rgba(30,27,75,0.08);
+    --dax-modal-backdrop:  rgba(30, 27, 75, 0.45);
+    --dax-row-border:      rgba(99, 102, 241, 0.15);
+    --dax-elevated:        rgba(99, 102, 241, 0.06);
+
+    /* ── PLATFORM (SUPERADMIN) — v2 mono-acento azul, dark profundo ── */
+    --p-bg:        #0A0A0F;   /* página */
+    --p-surface:   #15151B;   /* cards, panels */
+    --p-surface-2: #1F1F26;   /* hover, inputs, sub-panels */
+    --p-sidebar:   #08080C;   /* sidebar más oscura que el lienzo */
+    --p-border:    #26262E;
+    --p-text:      #E8E8EA;
+    --p-muted:     #6B6B78;
+    --p-hint:      #44444E;
+
+    /* Accent ÚNICO — azul */
+    --p-accent:        #3B82F6;
+    --p-accent-hover:  #2563EB;
+    --p-accent-soft:   rgba(59,130,246,0.12);
+
+    /* Semánticos (estado, NO decorativos) */
+    --p-success:   #22C55E;
+    --p-warning:   #F59E0B;
+    --p-danger:    #EF4444;
+    --p-info:      #3B82F6;
+
+    /* Reservados para uso muy puntual (badge SUPERADMIN, etc.) */
+    --p-magenta:   #C026D3;
+    --p-purple:    #7B2FBE;
+
+    /* DEPRECATED v1 — mantenidos para no romper builds existentes.
+       NO usar en código nuevo. Migrar a --p-accent o quitar. */
+    --p-teal:      #3B82F6;   /* alias a accent */
+    --p-cyan:      #3B82F6;   /* alias a accent */
+    --p-gradient:  var(--p-accent);  /* sin gradient — color sólido */
+
+    /* ── v2 design pack additions (context/Atlas API UI) ── */
+    --p-border-2:      #1B1B22;                    /* hairline interno */
+    --p-accent-line:   rgba(59,130,246,0.35);
+    --font-sans:       "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Montserrat", sans-serif;
+    --font-display:    "Inter Tight", "Inter", "Montserrat", sans-serif;
+    --font-mono:       "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 18px;
+
+    /* ── SIDEBAR (siempre negro — invariante, ignora tema) ── */
+    --sb-bg:          #08080d;
+    --sb-border:      rgba(255, 255, 255, 0.07);
+    --sb-text:        rgba(255, 255, 255, 0.82);
+    --sb-text-hover:  #ffffff;
+    --sb-hover-bg:    rgba(255, 255, 255, 0.07);
+    --sb-active-bg:   rgba(139, 92, 246, 0.22);
+    --sb-active-text: #c4b5fd;
+    --sb-active-icon: #a78bfa;
+  }
+
+  /* ── MODO OSCURO (override) ── */
+  .dark {
+    --dax-bg:          #050508;
+    --dax-surface:     #0c0f1a;
+    --dax-card:        rgba(15, 23, 42, 0.75);
+    --dax-card-solid:  #0f172a;
+    --dax-accent:      #818cf8;
+    --dax-accent-glow: rgba(99, 102, 241, 0.35);
+    --dax-violet-glow: rgba(139, 92, 246, 0.28);
+    --dax-border:      rgba(99, 102, 241, 0.22);
+    --dax-border-dim:  rgba(99, 102, 241, 0.12);
+    --dax-text:        #ffffff;
+    --dax-text-muted:  rgba(203, 213, 225, 0.90);
+    --dax-text-faint:  rgba(148, 163, 184, 0.70);
+    --dax-shadow:      0 4px 24px rgba(0,0,0,0.3);
+    --dax-shadow-lg:   0 8px 32px rgba(0,0,0,0.4);
+    --dax-modal-backdrop:  rgba(0, 0, 0, 0.72);
+    --dax-row-border:      rgba(51, 65, 85, 0.7);
+    --dax-elevated:        rgba(255, 255, 255, 0.04);
+
+    --sb-bg:          #08080d;
+    --sb-border:      rgba(255, 255, 255, 0.07);
+    --sb-text:        rgba(255, 255, 255, 0.82);
+    --sb-text-hover:  #ffffff;
+    --sb-hover-bg:    rgba(255, 255, 255, 0.07);
+    --sb-active-bg:   rgba(139, 92, 246, 0.22);
+    --sb-active-text: #c4b5fd;
+    --sb-active-icon: #a78bfa;
+  }
+
+  html {
+    font-family: 'Montserrat', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: 'Montserrat', system-ui, sans-serif;
+    font-weight: 500;
+    background: var(--dax-bg);
+    color: var(--dax-text);
+    min-height: 100vh;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.5); }
+
+  /* ══════════════════════════════════════════════════════
+     LIGHT MODE — Override de clases Tailwind dark-only
+     Arregla bg-slate-*, text-slate-* hardcoded en páginas
+  ══════════════════════════════════════════════════════ */
+
+  /* Backgrounds oscuros → versiones claras */
+  html.light .bg-slate-950,
+  html.light .bg-slate-900  { background-color: #ffffff !important; }
+  html.light .bg-slate-800  { background-color: #f8fafc !important; }
+  html.light .bg-slate-700  { background-color: #f1f5f9 !important; }
+  html.light .bg-slate-600  { background-color: #e2e8f0 !important; }
+
+  /* bg-slate-900 con opacidad — todos los slash variants */
+  html.light .bg-slate-900\/80,
+  html.light .bg-slate-900\/60,
+  html.light .bg-slate-900\/50,
+  html.light .bg-slate-900\/40,
+  html.light .bg-slate-900\/30,
+  html.light .bg-slate-900\/20 { background-color: rgba(248,250,252,0.97) !important; }
+
+  /* bg-slate-800 con opacidad */
+  html.light .bg-slate-800\/80,
+  html.light .bg-slate-800\/60,
+  html.light .bg-slate-800\/50,
+  html.light .bg-slate-800\/40,
+  html.light .bg-slate-800\/30,
+  html.light .bg-slate-800\/20 { background-color: rgba(241,245,249,0.9) !important; }
+
+  /* bg-slate-700 con opacidad */
+  html.light .bg-slate-700\/80,
+  html.light .bg-slate-700\/60,
+  html.light .bg-slate-700\/50,
+  html.light .bg-slate-700\/30,
+  html.light .bg-slate-700\/20 { background-color: rgba(226,232,240,0.8) !important; }
+
+  /* Borders oscuros → claros */
+  html.light .border-slate-700,
+  html.light .border-slate-800,
+  html.light .border-slate-900  { border-color: rgba(196,181,253,0.4) !important; }
+
+  html.light .border-slate-700\/50,
+  html.light .border-slate-700\/30,
+  html.light .border-white\/10,
+  html.light .border-white\/5   { border-color: rgba(196,181,253,0.2) !important; }
+
+  /* Textos claros (para fondos oscuros) → morado oscuro en modo claro */
+  html.light .text-slate-100,
+  html.light .text-slate-200,
+  html.light .text-white        { color: #1e1b4b !important; }
+
+  html.light .text-slate-300    { color: #1e1b4b !important; }
+  html.light .text-slate-400    { color: #3730a3 !important; }
+  html.light .text-slate-500    { color: #4338ca !important; }
+  html.light .text-slate-600    { color: #3730a3 !important; }
+  html.light .text-slate-700    { color: #1e1b4b !important; }
+
+  /* hover:text-* en modo claro */
+  html.light .hover\:text-white:hover     { color: #1e1b4b !important; }
+  html.light .hover\:text-slate-300:hover { color: #1e1b4b !important; }
+  html.light .hover\:text-slate-400:hover { color: #3730a3 !important; }
+
+  /* Hover states de botones/tabs con fondo oscuro */
+  html.light .hover\:bg-slate-700:hover  { background-color: #e2e8f0 !important; }
+  html.light .hover\:bg-slate-800:hover  { background-color: #f1f5f9 !important; }
+  html.light .hover\:bg-slate-600:hover  { background-color: #e2e8f0 !important; }
+  html.light .hover\:bg-white\/5:hover   { background-color: rgba(99,102,241,0.06) !important; }
+  html.light .hover\:bg-white\/10:hover  { background-color: rgba(99,102,241,0.08) !important; }
+
+  /* Ring/focus states */
+  html.light .ring-slate-700,
+  html.light .ring-slate-800    { --tw-ring-color: rgba(196,181,253,0.5) !important; }
+
+  /* Divide lines */
+  html.light .divide-slate-700 > * + *,
+  html.light .divide-slate-800 > * + * { border-color: rgba(196,181,253,0.3) !important; }
+
+  /* Input/select dark backgrounds en páginas */
+  html.light input.bg-slate-900,
+  html.light select.bg-slate-900,
+  html.light textarea.bg-slate-900 {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: rgba(196,181,253,0.4) !important;
+  }
+
+  /* border-slate-700/30, /20, /40, /60 — divisores de filas y secciones */
+  html.light .border-slate-700\/30,
+  html.light .border-slate-700\/20,
+  html.light .border-slate-700\/40,
+  html.light .border-slate-700\/60 { border-color: rgba(196,181,253,0.22) !important; }
+
+  /* border-slate-600 y hover variant */
+  html.light .border-slate-600,
+  html.light .hover\:border-slate-600:hover { border-color: rgba(139,92,246,0.35) !important; }
+
+  /* bg-slate-800/30 y /50 — secciones elevadas en modales */
+  html.light .bg-slate-800\/30  { background-color: rgba(99,102,241,0.06) !important; }
+  html.light .bg-slate-800\/50  { background-color: rgba(99,102,241,0.08) !important; }
+
+  /* bg-black — backdrop de modales (queda negro sin override) */
+  html.light .bg-black\/70,
+  html.light .bg-black\/80 { background-color: rgba(30,27,75,0.40) !important; }
+
+  /* hover:text-white en contexto light */
+  html.light .hover\:text-white:hover { color: var(--dax-text) !important; }
+}
+
+@layer components {
+  /* ─── Card ─────────────────────────────────────── */
+  .dax-card {
+    background: var(--dax-card);
+    border: 1px solid var(--dax-border-dim);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--dax-shadow);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  }
+  .dax-card:hover {
+    border-color: var(--dax-border);
+    box-shadow: var(--dax-shadow-lg);
+  }
+
+  /* ─── Botón primario ────────────────────────────── */
+  .dax-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.5rem 1.1rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .dax-btn-primary:hover:not(:disabled) {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.40), inset 0 1px 0 rgba(255,255,255,0.15);
+    filter: brightness(1.08);
+  }
+  .dax-btn-primary:active:not(:disabled) { transform: scale(0.98); }
+  .dax-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ─── Botón secundario ──────────────────────────── */
+  .dax-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--dax-card);
+    color: var(--dax-text-muted);
+    font-weight: 600;
+    font-size: 0.75rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid var(--dax-border-dim);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .dax-btn-secondary:hover:not(:disabled) {
+    background: var(--dax-surface);
+    color: var(--dax-text);
+    border-color: var(--dax-border);
+  }
+  .dax-btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ─── Botón destructivo ─────────────────────────── */
+  .dax-btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(225, 29, 72, 0.10);
+    color: #fda4af;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.5rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .dax-btn-danger:hover:not(:disabled) {
+    background: #e11d48;
+    color: white;
+    border-color: #e11d48;
+    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.3);
+  }
+  .dax-btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ─── Input ─────────────────────────────────────── */
+  .dax-input {
+    width: 100%;
+    background: var(--dax-card);
+    border: 1px solid var(--dax-border-dim);
+    border-radius: 10px;
+    padding: 0.55rem 0.875rem;
+    color: var(--dax-text);
+    font-size: 0.875rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    transition: all 0.25s ease;
+  }
+  .dax-input::placeholder { color: var(--dax-text-faint); }
+  .dax-input:focus {
+    outline: none;
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  }
+
+  /* ─── Tabla ─────────────────────────────────────── */
+  .dax-table { width: 100%; border-collapse: collapse; }
+  .dax-table th {
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--dax-text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--dax-border-dim);
+    background: var(--dax-surface);
+    text-align: left;
+    white-space: nowrap;
+    transition: background 0.25s ease;
+  }
+  .dax-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    color: var(--dax-text-muted);
+    border-bottom: 1px solid var(--dax-border-dim);
+    transition: background 0.15s ease;
+  }
+  .dax-table tr:hover td { background: var(--dax-accent-glow); }
+  .dax-table tr:last-child td { border-bottom: none; }
+
+  /* ─── Badges ─────────────────────────────────────── */
+  .dax-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+  .dax-badge-green  { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+  .dax-badge-red    { background: rgba(251,113,133,0.12); color: #fb7185; border: 1px solid rgba(251,113,133,0.25); }
+  .dax-badge-yellow { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+  .dax-badge-blue   { background: rgba(99,102,241,0.15);  color: #a5b4fc; border: 1px solid rgba(99,102,241,0.30); }
+  .dax-badge-slate  { background: rgba(100,116,139,0.12); color: var(--dax-text-muted); border: 1px solid var(--dax-border-dim); }
+
+  /* ─── Tipografía corporativa ────────────────────── */
+  .dax-section-title {
+    font-size: 0.6rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--dax-text-faint);
+  }
+  .dax-kpi-label {
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--dax-text-faint);
+  }
+  .dax-kpi-value {
+    font-size: 1.75rem;
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    color: var(--dax-text);
+  }
+}

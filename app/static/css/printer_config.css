@@ -1,0 +1,13 @@
+/* Scoped al contenido de esta página — sin afectar sidebar ni otros layouts */
+html:not(.dark) #printer-config .dax-card { background: var(--atlas-surface) !important; border-color: var(--atlas-border) !important; }
+html:not(.dark) #printer-config .bg-slate-950,
+html:not(.dark) #printer-config .bg-slate-900  { background-color: var(--atlas-surface-2) !important; }
+html:not(.dark) #printer-config .border-slate-800,
+html:not(.dark) #printer-config .border-slate-700 { border-color: var(--atlas-border) !important; }
+html:not(.dark) #printer-config input,
+html:not(.dark) #printer-config select,
+html:not(.dark) #printer-config textarea {
+    background-color: var(--atlas-surface-2) !important;
+    border-color: var(--atlas-border) !important;
+    color: var(--atlas-text) !important;
+}

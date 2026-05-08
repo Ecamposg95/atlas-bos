@@ -1,0 +1,198 @@
+/**
+ * Offline queue para ventas POS usando IndexedDB nativo.
+ *
+ * Cuando `POST /api/sales` falla por error de red (no por 4xx/5xx del backend),
+ * la venta se persiste aquí y se reintenta al reconectar.
+ *
+ * IDEMPOTENCIA: el backend no expone idempotency key hoy. Para minimizar el
+ * riesgo de duplicados, `flushPending` ignora entradas con menos de 2 min de
+ * antigüedad, dando tiempo a que el POST original (que pudo haber llegado al
+ * servidor justo antes de que la red se corte) complete.
+ */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+const DB_NAME = 'atlas_pos_offline'
+const DB_VERSION = 1
+const STORE = 'pending_sales'
+
+/** Mínimo tiempo de espera antes de reintentar una venta encolada (ms). */
+export const REPLAY_MIN_AGE_MS = 2 * 60 * 1000 // 2 min
+
+export interface PendingSale {
+  id: string // UUID v4 generado en cliente
+  payload: unknown // body tal como se mandaría a POST /api/sales
+  enqueued_at: number // epoch ms
+  attempts: number
+  last_error?: string
+}
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'id' })
+      }
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error ?? new Error('IndexedDB open failed'))
+  })
+}
+
+function tx(db: IDBDatabase, mode: IDBTransactionMode): IDBObjectStore {
+  return db.transaction(STORE, mode).objectStore(STORE)
+}
+
+function uuid(): string {
+  // crypto.randomUUID es estándar en navegadores modernos; fallback seguro.
+  const c: any = globalThis.crypto
+  if (c?.randomUUID) return c.randomUUID()
+  // RFC4122 v4 fallback
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (ch) => {
+    const r = (Math.random() * 16) | 0
+    const v = ch === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
+export async function enqueueSale(payload: unknown): Promise<PendingSale> {
+  const entry: PendingSale = {
+    id: uuid(),
+    payload,
+    enqueued_at: Date.now(),
+    attempts: 0,
+  }
+  const db = await openDB()
+  await new Promise<void>((resolve, reject) => {
+    const req = tx(db, 'readwrite').add(entry)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
+  db.close()
+  return entry
+}
+
+export async function listPending(): Promise<PendingSale[]> {
+  const db = await openDB()
+  const items = await new Promise<PendingSale[]>((resolve, reject) => {
+    const req = tx(db, 'readonly').getAll()
+    req.onsuccess = () => resolve((req.result ?? []) as PendingSale[])
+    req.onerror = () => reject(req.error)
+  })
+  db.close()
+  return items.sort((a, b) => a.enqueued_at - b.enqueued_at)
+}
+
+export async function removePending(id: string): Promise<void> {
+  const db = await openDB()
+  await new Promise<void>((resolve, reject) => {
+    const req = tx(db, 'readwrite').delete(id)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
+  db.close()
+}
+
+async function updatePending(entry: PendingSale): Promise<void> {
+  const db = await openDB()
+  await new Promise<void>((resolve, reject) => {
+    const req = tx(db, 'readwrite').put(entry)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+  })
+  db.close()
+}
+
+/**
+ * Detecta si un error de Axios es de red (no respuesta HTTP del server).
+ * Solo estos deben encolar o mantener la venta en la cola.
+ */
+export function isNetworkError(err: any): boolean {
+  if (!err) return false
+  // Axios: si hay response, el servidor respondió (aunque sea 4xx/5xx).
+  if (err.response) return false
+  const code = err.code as string | undefined
+  if (code === 'ECONNABORTED' || code === 'ERR_NETWORK' || code === 'ETIMEDOUT') return true
+  const msg = (err.message ?? '').toString().toLowerCase()
+  if (msg.includes('network error') || msg.includes('timeout') || msg.includes('failed to fetch')) return true
+  // offline según el navegador
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true
+  return false
+}
+
+export interface FlushResult {
+  sent: number
+  dropped: number // 4xx (inválidas o duplicadas) — se quitan y se loggea
+  kept: number // siguen pendientes (sin red aún o muy recientes)
+}
+
+/**
+ * Recorre la cola y reintenta cada venta vía `poster`.
+ * - 200 OK → remove
+ * - 4xx   → remove + console.warn (likely duplicate/invalid)
+ * - 5xx   → keep (backend problem, retry later)
+ * - network error → keep (still offline)
+ * - edad < REPLAY_MIN_AGE_MS → skip (kept)
+ */
+export async function flushPending(
+  poster: (payload: unknown) => Promise<unknown>,
+): Promise<FlushResult> {
+  const result: FlushResult = { sent: 0, dropped: 0, kept: 0 }
+  let pending: PendingSale[]
+  try {
+    pending = await listPending()
+  } catch (e) {
+    console.warn('[offlineQueue] listPending failed:', e)
+    return result
+  }
+
+  const now = Date.now()
+  for (const entry of pending) {
+    // Defensive: si la venta fue encolada hace <2min, deja que el POST online
+    // que acaba de disparar el usuario (si lo hubo) termine primero.
+    if (now - entry.enqueued_at < REPLAY_MIN_AGE_MS) {
+      result.kept++
+      continue
+    }
+    try {
+      await poster(entry.payload)
+      await removePending(entry.id)
+      result.sent++
+    } catch (err: any) {
+      if (isNetworkError(err)) {
+        // Sin conexión, no hay nada que hacer. Mantén para el próximo intento.
+        try {
+          await updatePending({
+            ...entry,
+            attempts: entry.attempts + 1,
+            last_error: 'network',
+          })
+        } catch {}
+        result.kept++
+      } else {
+        const status = err?.response?.status as number | undefined
+        if (status && status >= 400 && status < 500) {
+          // 4xx: payload inválido o duplicado. No tiene sentido reintentar.
+          console.warn(
+            `[offlineQueue] dropping sale ${entry.id} (HTTP ${status}):`,
+            err?.response?.data,
+          )
+          await removePending(entry.id).catch(() => {})
+          result.dropped++
+        } else {
+          // 5xx u otro: mantén para reintento posterior.
+          try {
+            await updatePending({
+              ...entry,
+              attempts: entry.attempts + 1,
+              last_error: status ? `HTTP ${status}` : 'unknown',
+            })
+          } catch {}
+          result.kept++
+        }
+      }
+    }
+  }
+  return result
+}
