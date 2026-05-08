@@ -1,2 +1,79 @@
-"""S0.1 shim — re-exports from legacy app.dependencies. Body moves in S0.2."""
-from app.dependencies import get_current_active_organization  # noqa: F401
+"""Atlas BOS core/tenant_context — active organization resolver.
+
+`get_current_active_organization` is the canonical FastAPI dependency for
+multi-tenant requests. Resolves org_id from X-Organization-ID header, support
+cookie override, user membership, or single-org fallback. Raises 403 if the
+user has no access. Used by ~31 routers.
+"""
+from typing import Optional
+
+from fastapi import Depends, Header, HTTPException, Request
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.core.security.auth import get_current_user
+from app.models.users import PlatformRole, User, UserOrganization
+
+
+def get_current_active_organization(
+    request: Request,
+    x_organization_id: Optional[int] = Header(None, alias="X-Organization-ID"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> int:
+    """Resolve the active organization for the request.
+
+    Order of precedence:
+      1. X-Organization-ID header (or `support_org_id` cookie for support staff).
+      2. User's first active organization membership.
+      3. Single-org fallback (only when exactly one org exists in the system).
+
+    SUPERADMIN must always provide an explicit context header.
+    """
+    from app.models.organization import Organization
+
+    resolved_org_id = x_organization_id or request.cookies.get("support_org_id")
+
+    if resolved_org_id:
+        try:
+            resolved_org_id = int(resolved_org_id)
+        except (TypeError, ValueError):
+            resolved_org_id = None
+
+    if resolved_org_id:
+        if current_user.platform_role == PlatformRole.SUPERADMIN:
+            return resolved_org_id
+
+        assoc = db.query(UserOrganization).filter(
+            UserOrganization.user_id == current_user.id,
+            UserOrganization.organization_id == resolved_org_id,
+            UserOrganization.is_active == True,  # noqa: E712
+        ).first()
+        if not assoc:
+            raise HTTPException(status_code=403, detail="No access to this organization")
+        return resolved_org_id
+
+    assoc = db.query(UserOrganization).filter(
+        UserOrganization.user_id == current_user.id,
+        UserOrganization.is_active == True,  # noqa: E712
+    ).first()
+    if assoc:
+        return assoc.organization_id
+
+    if current_user.platform_role == PlatformRole.SUPERADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Superadmin requires X-Organization-ID header for tenant context",
+        )
+
+    org_count = db.query(Organization).count()
+    if org_count == 1:
+        default_org = db.query(Organization).first()
+        is_linked = db.query(UserOrganization).filter(
+            UserOrganization.user_id == current_user.id,
+            UserOrganization.organization_id == default_org.id,
+        ).first()
+        if is_linked and is_linked.is_active:
+            return default_org.id
+
+    raise HTTPException(status_code=403, detail="User belongs to no active organizations")
