@@ -171,7 +171,7 @@ No new commands. The redesign is pure layout reshuffling within existing primiti
    - Long product name (>20 chars) → truncation behavior.
    - Reprint flag set → `*** REIMPRESION ***` shown.
 2. **Manual smoke** on the 80mm USB Epson at HQ: print the 6 cases above and visually verify column alignment, bold on TOTAL, logo size ≈27mm wide.
-3. **DataXPOS preset must remain functional** — existing tests in `tests/test_excel_logic.py` and `tests/stress_test.py` should still pass (those don't exercise the printer directly but validate the sale model the printer reads from).
+3. **Atlas POS preset must remain functional** — existing tests in `tests/test_excel_logic.py` and `tests/stress_test.py` should still pass (those don't exercise the printer directly but validate the sale model the printer reads from).
 
 ---
 

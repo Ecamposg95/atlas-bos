@@ -33,7 +33,7 @@
 | `GET /api/products/stats/branch-kpis` | `products.py:56` | ✓ | ✓ (usa `branch_id` param) | ✓ (`is_active_pos=True`) | ✓ | N/A | ✗ | N/A | **MED** | No valida que `user.branch_id == branch_id` para no-admin | `if user.branch_id and user.branch_id != branch_id and role not in [ADMIN,DUEÑO]: 403` |
 | `POST /api/products/batch-action` | `products.py:1474` | ✓ | N/A | N/A | ✓ (`_MANAGER_ROLES`) | N/A | N/A | N/A | **LOW** | GERENTE puede actuar sobre IDs de cualquier sucursal | Restringir GERENTE a IDs de su branch vía PBS |
 | `GET /admin/catalog` (Jinja) | `daxpos.py:54` | N/A | N/A | N/A | N/A | N/A | N/A | N/A | **OK** | `check_view_permission("admin_catalog.html")` bloquea CAJERO/GERENTE | — |
-| RBAC `admin_catalog.html` | `role_permissions.py:16,55` | N/A | N/A | N/A | N/A | N/A | N/A | N/A | **OK** | Solo ADMINISTRADOR y DUEÑO en `DATAXPOS_ROLE_VIEWS` | — |
+| RBAC `admin_catalog.html` | `role_permissions.py:16,55` | N/A | N/A | N/A | N/A | N/A | N/A | N/A | **OK** | Solo ADMINISTRADOR y DUEÑO en `ATLAS_POS_ROLE_VIEWS` | — |
 
 Leyenda severidad: **CRIT**=fuga activa entre sucursales, **HIGH**=exfiltración o IDOR, **MED**=visibilidad lateral o check faltante, **LOW**=endurecer defensa.
 
@@ -135,7 +135,7 @@ Propuesto: si `role not in [ADMIN, DUEÑO]` y `user.branch_id`, forzar `branch_i
 
 ## 4. RBAC matrix para `/admin/catalog`
 
-Verificación en `app/core/role_permissions.py` (`DATAXPOS_ROLE_VIEWS`):
+Verificación en `app/core/role_permissions.py` (`ATLAS_POS_ROLE_VIEWS`):
 
 | Rol | Línea | Incluye `admin_catalog.html` | Estado |
 |---|---|---|---|
@@ -147,7 +147,7 @@ Verificación en `app/core/role_permissions.py` (`DATAXPOS_ROLE_VIEWS`):
 | SOPORTE_OPERATIVO | 117-126 | **No** | OK |
 | CLIENTE | 128-132 | **No** | OK |
 
-`TEMPLATE_METADATA` (l.196) y `_NAV_GROUP` (l.153) mapean `admin_catalog.html` al grupo "Catálogo" con URL `/admin/catalog`. `get_dataxpos_nav()` solo lo entrega si está en la lista del rol → CAJERO/GERENTE no lo ven en sidebar.
+`TEMPLATE_METADATA` (l.196) y `_NAV_GROUP` (l.153) mapean `admin_catalog.html` al grupo "Catálogo" con URL `/admin/catalog`. `get_atlas-pos_nav()` solo lo entrega si está en la lista del rol → CAJERO/GERENTE no lo ven en sidebar.
 
 **Conclusión:** sin regresión RBAC. El gate de `/admin/catalog` (Jinja) descansa íntegramente en `check_view_permission("admin_catalog.html")` (`daxpos.py:55`).
 

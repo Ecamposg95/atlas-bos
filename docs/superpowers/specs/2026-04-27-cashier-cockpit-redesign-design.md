@@ -36,7 +36,7 @@ In practice, ADMINISTRADOR and DUEÑO rarely visit stores. The cashier acts as t
 
 Three layers, no new shell:
 
-1. **Cockpit (DataXPOS rediseñado)** — Mandatory home for branch users on login. Every widget links into the deep page.
+1. **Cockpit (Atlas POS rediseñado)** — Mandatory home for branch users on login. Every widget links into the deep page.
 2. **Role-aware page variants** — Each cashier-consumed page (`POS`, `SalesHistory`, `CashHistory`, `Returns`, `Products`) detects `role ∈ {CAJERO, GERENTE}` + context `BRANCH` and renders a `*BranchView` component. Otherwise it renders the existing HQ view. Same route, same parent file, internal branch by role.
 3. **Sidebar reorganisation** — Same routes, new labels and order driven by cashier workflow.
 
@@ -46,14 +46,14 @@ No new routes. No duplicated endpoints. One new aggregator endpoint (`/api/branc
 ┌──────────────────────────────────────────────┐
 │  Login (CAJERO/GERENTE)                      │
 │         ↓                                    │
-│  /dataxpos  ←  Cockpit (5 zones)             │
+│  /atlas-pos  ←  Cockpit (5 zones)             │
 │         ↓ deep links                         │
 │  /pos · /sales · /cash-history ·             │
 │  /returns · /products  ←  *BranchView        │
 └──────────────────────────────────────────────┘
 ```
 
-## 5. Cockpit (DataXPOS) — 5 zones
+## 5. Cockpit (Atlas POS) — 5 zones
 
 Single page, vertical scroll, ordered by frequency of use.
 
@@ -128,7 +128,7 @@ Each parent file detects `role ∈ {CAJERO, GERENTE}` + context `BRANCH` → ren
 Same routes, new labels and order. Branch sidebar (CAJERO + GERENTE) becomes:
 
 ```
-1. Mi día        → /dataxpos          (Cockpit, default landing)
+1. Mi día        → /atlas-pos          (Cockpit, default landing)
 2. Cobrar        → /pos               (pinned)
 ─────────
 3. Mi caja       → /cash-history
@@ -148,7 +148,7 @@ Same routes, new labels and order. Branch sidebar (CAJERO + GERENTE) becomes:
 ```python
 TEMPLATE_LABEL_OVERRIDES_BY_ROLE: dict[Role, dict[str, str]] = {
     Role.CAJERO: {
-        "dataxpos.html":      "Mi día",
+        "atlas-pos.html":      "Mi día",
         "pos.html":           "Cobrar",
         "cash_history.html":  "Mi caja",
         "sales.html":         "Mis ventas",
@@ -255,7 +255,7 @@ Mandatory glossary. All cashier-visible labels use the right column. Applies to 
 | Branch                   | Sucursal                   |
 | Reports                  | Reportes                   |
 | Printer settings         | Impresora                  |
-| Dashboard / DataXPOS     | Mi día                     |
+| Dashboard / Atlas POS     | Mi día                     |
 | Goal                     | Meta del día               |
 | Avg ticket               | Ticket promedio            |
 | Loading…                 | Cargando…                  |
@@ -293,9 +293,9 @@ The repo uses runnable script-style tests under `tests/`. No pytest formal suite
 
 ### Frontend (manual, human executes)
 Smoke checklist (documented here, no test files):
-- Login as CAJERO → lands on `/dataxpos` and sees the cockpit.
+- Login as CAJERO → lands on `/atlas-pos` and sees the cockpit.
 - Sidebar shows the 8 items in §7 order. `/hr/me` not in sidebar but `GET /hr/me` works.
-- Click "Cobrar" → POS. Click "Volver a Mi día" → DataXPOS.
+- Click "Cobrar" → POS. Click "Volver a Mi día" → Atlas POS.
 - Each `*BranchView` loads with branch filter locked to user's branch.
 - Login as ADMINISTRADOR HQ → original HQ sidebar (no regression).
 - Login as GERENTE → same cockpit as CAJERO.
@@ -304,7 +304,7 @@ Smoke checklist (documented here, no test files):
 - DAXPOS preset (golden rule): test with `superadmin/admin123` org "QA" before merging to `release/qa`.
 
 ### Performance target
-Cockpit on `/dataxpos` loads with **one** principal call (`/api/branch/dashboard`) under 2s on QA Postgres.
+Cockpit on `/atlas-pos` loads with **one** principal call (`/api/branch/dashboard`) under 2s on QA Postgres.
 
 ## 12. Rollout
 

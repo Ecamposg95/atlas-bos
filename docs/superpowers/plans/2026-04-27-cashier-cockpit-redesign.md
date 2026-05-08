@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rebuild DataXPOS as a cashier cockpit, simplify cashier-consumed pages with role-aware variants, reorganise the branch sidebar, and add a single backend aggregator endpoint to power the new home.
+**Goal:** Rebuild Atlas POS as a cashier cockpit, simplify cashier-consumed pages with role-aware variants, reorganise the branch sidebar, and add a single backend aggregator endpoint to power the new home.
 
-**Architecture:** Three layers, no new shell. (1) Cockpit replaces DataXPOS for branch users. (2) Cashier-consumed parent pages internally branch on `role + context` and render `*BranchView` components. (3) Sidebar uses role-aware label overrides. One new endpoint (`GET /api/branch/dashboard`), one new wrapper endpoint (`POST /api/cash/sessions/{id}/close-guided`), one schema change (`Branch.daily_sales_goal`, `Branch.closing_time`).
+**Architecture:** Three layers, no new shell. (1) Cockpit replaces Atlas POS for branch users. (2) Cashier-consumed parent pages internally branch on `role + context` and render `*BranchView` components. (3) Sidebar uses role-aware label overrides. One new endpoint (`GET /api/branch/dashboard`), one new wrapper endpoint (`POST /api/cash/sessions/{id}/close-guided`), one schema change (`Branch.daily_sales_goal`, `Branch.closing_time`).
 
 **Tech Stack:**
 - Backend: FastAPI 0.127, SQLAlchemy 2.0, Pydantic v2, PostgreSQL.
@@ -51,7 +51,7 @@
 - `frontend/src/components/branch/useIsBranchUser.ts` — hook to detect role + context.
 
 ### Frontend — modified files
-- `frontend/src/pages/pos/DataXPOS.tsx` — replace body with `<Cockpit />` for branch users.
+- `frontend/src/pages/pos/Atlas POS.tsx` — replace body with `<Cockpit />` for branch users.
 - `frontend/src/pages/pos/POS.tsx` — add "Volver a Mi día" button + shift indicator.
 - `frontend/src/pages/sales/SalesHistory.tsx` — branch on role.
 - `frontend/src/pages/finance/CashHistory.tsx` — branch on role.
@@ -930,7 +930,7 @@ After `TEMPLATE_METADATA = { ... }` block (around line 190), add:
 # Used by branch users so cashiers see semantic labels while HQ keeps the canonical names.
 TEMPLATE_LABEL_OVERRIDES_BY_ROLE: dict[Role, dict[str, str]] = {
     Role.CAJERO: {
-        "dataxpos.html":      "Mi día",
+        "atlas-pos.html":      "Mi día",
         "pos.html":           "Cobrar",
         "cash_history.html":  "Mi caja",
         "sales.html":         "Mis ventas",
@@ -955,11 +955,11 @@ for _role, _overrides in TEMPLATE_LABEL_OVERRIDES_BY_ROLE.items():
 
 - [ ] **Step 2: Update `_NAV_GROUP` for the new branch order**
 
-Replace the branch block (currently sorts dataxpos `-1`, pos `0`, sales/cash `1`, products/reports `3`, printer `4`) with:
+Replace the branch block (currently sorts atlas-pos `-1`, pos `0`, sales/cash `1`, products/reports `3`, printer `4`) with:
 
 ```python
     # ── BRANCH — GERENTE / CAJERO ─────────────────────────
-    "dataxpos.html":                 (-2, "Mi día"),
+    "atlas-pos.html":                 (-2, "Mi día"),
     "pos.html":                      (-1, "Cobrar"),
     "cash_history.html":             (1, "Mi turno"),
     "sales.html":                    (2, "Mi turno"),
@@ -1565,21 +1565,21 @@ git commit -m "feat(cockpit): container with data fetch and zone assembly"
 
 ---
 
-## Task 17: DataXPOS — render Cockpit for branch users, keep legacy for HQ
+## Task 17: Atlas POS — render Cockpit for branch users, keep legacy for HQ
 
 **Files:**
-- Modify: `frontend/src/pages/pos/DataXPOS.tsx`
+- Modify: `frontend/src/pages/pos/Atlas POS.tsx`
 
 - [ ] **Step 1: Branch on role**
 
-Read `DataXPOS.tsx` and find the top-level component (around line 1, `export default function DataXPOS()`). Wrap its return so the cockpit replaces the body for branch users. Keep the HQ body intact.
+Read `Atlas POS.tsx` and find the top-level component (around line 1, `export default function Atlas POS()`). Wrap its return so the cockpit replaces the body for branch users. Keep the HQ body intact.
 
 ```tsx
 // near the top, with other imports:
 import { useIsBranchUser } from '../../components/branch/useIsBranchUser'
 import { Cockpit } from '../../components/branch/Cockpit'
 
-// inside DataXPOS(), at the very top of the function body:
+// inside Atlas POS(), at the very top of the function body:
 const isBranch = useIsBranchUser()
 if (isBranch) return <Cockpit />
 ```
@@ -1587,13 +1587,13 @@ if (isBranch) return <Cockpit />
 - [ ] **Step 2: Manual smoke**
 
 Start backend (`uvicorn app.main:app --reload`) and frontend (`cd frontend && npm run dev`).
-Login as `superadmin/admin123` first, switch context to a CAJERO of org "QA". Visit `/dataxpos`. Expected: cockpit renders with greeting, KPIs, alerts, quick-access. Login as ADMINISTRADOR. Visit `/dataxpos`. Expected: legacy DataXPOS page is unchanged.
+Login as `superadmin/admin123` first, switch context to a CAJERO of org "QA". Visit `/atlas-pos`. Expected: cockpit renders with greeting, KPIs, alerts, quick-access. Login as ADMINISTRADOR. Visit `/atlas-pos`. Expected: legacy Atlas POS page is unchanged.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add frontend/src/pages/pos/DataXPOS.tsx
-git commit -m "feat(cockpit): wire Cockpit into DataXPOS for branch users"
+git add frontend/src/pages/pos/Atlas POS.tsx
+git commit -m "feat(cockpit): wire Cockpit into Atlas POS for branch users"
 ```
 
 ---
@@ -2091,7 +2091,7 @@ useEffect(() => {
 
 // inside JSX, as the first child of the outer container:
 <div className="flex items-center justify-between px-4 py-2 border-b bg-white">
-  <Link to="/dataxpos" className="text-sm text-slate-700 hover:underline">← {BRANCH_COPY.cockpit.backToHome}</Link>
+  <Link to="/atlas-pos" className="text-sm text-slate-700 hover:underline">← {BRANCH_COPY.cockpit.backToHome}</Link>
   <span className="text-xs text-slate-500">{shiftBadge}</span>
 </div>
 ```
@@ -2126,7 +2126,7 @@ Read the existing `ALL_NAV` to see the `NavItem` shape (icon, label, href, group
 import { useIsBranchUser } from '../branch/useIsBranchUser'
 
 const BRANCH_NAV: NavItem[] = [
-  { label: 'Mi día',     href: '/dataxpos',         icon: 'fa-house',     group: 'Mi día' },
+  { label: 'Mi día',     href: '/atlas-pos',         icon: 'fa-house',     group: 'Mi día' },
   { label: 'Cobrar',     href: '/pos',              icon: 'fa-cash-register', group: 'Cobrar' },
   { label: 'Mi caja',    href: '/cash-history',     icon: 'fa-vault',     group: 'Mi turno' },
   { label: 'Mis ventas', href: '/sales',            icon: 'fa-receipt',   group: 'Mi turno' },
@@ -2201,14 +2201,14 @@ This task is performed by a human reviewer (per the testing decision in the spec
 
 Smoke checklist to give to the human:
 
-- [ ] Login as **CAJERO** (org "QA"). Land on `/dataxpos`. Verify cockpit renders with greeting, KPIs, alerts list, quick-access tiles. No console errors.
+- [ ] Login as **CAJERO** (org "QA"). Land on `/atlas-pos`. Verify cockpit renders with greeting, KPIs, alerts list, quick-access tiles. No console errors.
 - [ ] Sidebar shows 8 items in the order: Mi día, Cobrar, Mi caja, Mis ventas, Devolución, Inventario, Reportes, Impresora. `/hr/me` not in sidebar but `GET /hr/me` returns 200.
-- [ ] Click `Cobrar` → POS. Click "Volver a Mi día" → DataXPOS.
+- [ ] Click `Cobrar` → POS. Click "Volver a Mi día" → Atlas POS.
 - [ ] `/sales` shows `Mis ventas` (today only, branch locked).
 - [ ] `/cash-history` shows current shift + last 7 days.
 - [ ] `/returns`: complete the 3-step wizard against a real sale. Refund recorded.
 - [ ] `/products` is search-first; tile cards appear after typing 2+ chars.
-- [ ] Open shift, set `closing_time` to `now + 30min` on the user's branch, reload `/dataxpos` → closing wizard appears in zone 4. Submit it → shift closes.
+- [ ] Open shift, set `closing_time` to `now + 30min` on the user's branch, reload `/atlas-pos` → closing wizard appears in zone 4. Submit it → shift closes.
 - [ ] Login as **ADMINISTRADOR** (HQ). Sidebar and pages unchanged from before this branch.
 - [ ] Login as **GERENTE**. Same cockpit and views as CAJERO.
 - [ ] DAXPOS preset (golden rule): `superadmin/admin123` → context org "QA" as ADMIN → no regression visible.

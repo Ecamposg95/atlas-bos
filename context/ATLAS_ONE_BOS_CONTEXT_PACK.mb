@@ -1006,3 +1006,12 @@ Atlas POS será el preset ligero, popular y de entrada para ventas, caja, produc
 El repositorio actual del POS se debe clonar una sola vez hacia un nuevo repo llamado `atlas-bos`. Sobre ese repo se hará una refactorización progresiva para convertir el POS actual en una plataforma modular. No se deben crear repos separados por vertical. La estrategia correcta es construir un core común, módulos reutilizables y presets activables por tenant.
 
 La visión final es crear una plataforma comparable en lógica a Odoo, Zoho o NetSuite, pero más ligera, mexicana, enfocada a micronegocios físicos y preparada para IA, automatización, integraciones y verticalización comercial.
+
+---
+
+## 24. Estado de Migración (Actualizado)
+
+**Task Pack 1: Completado**
+- El README ha sido actualizado con la nueva arquitectura (Atlas One, Atlas BOS, Atlas POS).
+- Se renombró globalmente las referencias en código, base de datos (Enums), rutas (de `/dataxpos` a `/atlas-pos`) y UI de `DataXPOS` a `Atlas POS`.
+- Se validó el build del frontend sin errores, manteniendo la funcionalidad del sistema intacta para la siguiente fase de modularización.

@@ -2,7 +2,7 @@
 
 **Date:** 2026-04-28
 **Module:** 1 of 5 in Cashier Pack
-**Target route:** `/dataxpos` (CAJERO/GERENTE only — HQ DataXPOS stays untouched)
+**Target route:** `/atlas-pos` (CAJERO/GERENTE only — HQ Atlas POS stays untouched)
 **Target component:** `frontend/src/components/branch/Cockpit.tsx` and its sub-components
 **PR target:** `release/qa`
 
@@ -10,7 +10,7 @@
 
 ## Context
 
-The cashier-facing landing page at `/dataxpos` renders `<Cockpit />` (HQ users see `DataXPOS.tsx` instead — out of scope). The current cockpit has these gaps:
+The cashier-facing landing page at `/atlas-pos` renders `<Cockpit />` (HQ users see `Atlas POS.tsx` instead — out of scope). The current cockpit has these gaps:
 
 1. **Shift status barely visible** — small amber link inside `ShiftBadge`. Cashiers miss whether their shift is open.
 2. **No way to open a shift** without leaving the page (the existing `ShiftBadge` link sends to `/cash-history`, which itself does not have an open-shift control either).
@@ -32,7 +32,7 @@ This redesign keeps backend contracts mostly intact (one tiny payload field addi
 
 ## Non-goals
 
-- HQ `DataXPOS.tsx` is **not changed**. Only branch-facing `Cockpit` and its sub-components.
+- HQ `Atlas POS.tsx` is **not changed**. Only branch-facing `Cockpit` and its sub-components.
 - No changes to the closing-shift flow (already in POS header / Mi Caja).
 - No avatar photo upload — initials only. Photos can be added later by extending the avatar component with an optional `photoUrl` prop.
 - No changes to `CockpitAlerts` or `CockpitQuickAccess`.
@@ -301,16 +301,16 @@ No new endpoints. One existing endpoint (`POST /cash/open`) is now reachable fro
 
 ## Testing plan
 
-Manual smoke (CAJERO role on `/dataxpos`):
+Manual smoke (CAJERO role on `/atlas-pos`):
 
-1. Login as cashier with no shift open → `/dataxpos` → hero is **orange**, status pill says "Sin turno", CTA says "Abrir turno".
+1. Login as cashier with no shift open → `/atlas-pos` → hero is **orange**, status pill says "Sin turno", CTA says "Abrir turno".
 2. Click "Abrir turno" → modal opens, prefilled $0.00 → enter $200 + "Apertura matutina" → submit → toast success → modal closes → cockpit reloads → hero turns **emerald**, pill says "Turno abierto · 0m", CTA changes to "Cobrar ahora".
 3. Verify avatar circle shows correct initials for current user.
 4. Verify greeting matches local time (morning/afternoon/evening).
 5. Verify subtitle shows `{branch_name} · Cajero`.
 6. Verify TopProducts card shows up to 5 items.
 7. Verify Payment Methods shows exactly 3 cards: CASH, CARD, TRANSFER. If today's sales include only CASH, the CARD and TRANSFER cards still render with $0.00.
-8. Manually log a sale via /pos → return to /dataxpos → verify the corresponding payment-method card increments.
+8. Manually log a sale via /pos → return to /atlas-pos → verify the corresponding payment-method card increments.
 
 ---
 

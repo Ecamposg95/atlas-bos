@@ -109,14 +109,14 @@ After all 5 are in qa:
 1. **Code-reviewer agent — full pack review**: feed all 5 spec files + the diff `release/qa @ post-merge` vs `release/qa @ pre-pack-start (30c88cf)`. Surface any cross-spec inconsistencies, dead code, or merge artifacts.
 
 2. **Smoke test — full cashier flow** (manual, from a fresh CAJERO login):
-   - `/dataxpos` → Mi Día renders hero verde (after open-shift modal), avatar + greeting + role badge correct.
+   - `/atlas-pos` → Mi Día renders hero verde (after open-shift modal), avatar + greeting + role badge correct.
    - `/cash-history` → Mi Caja shows emerald hero, IN/OUT pills, registers a movement, sees it in the movements table.
    - `/products` → Inventario shows 4 KPIs, no Inactivos tab; create a product with 3 colored tiers; import a small Excel with dry-run + commit.
    - `/sales` → Mis Ventas shows 6 KPIs (Método top in Spanish), click a row opens detail, hover reveals 3 actions, reprint works.
    - `/pos` → cart shows bulk-caja button below global discount, scan 2 products, click apply, see counter; restaurar; create sale; receipt prints.
 
 3. **Regression checklist** (existing flows that must still work):
-   - HQ DataXPOS unchanged (no branch redirect on HQ user).
+   - HQ Atlas POS unchanged (no branch redirect on HQ user).
    - HQ CashHistory unchanged.
    - HQ products page unchanged.
    - POS pause/resume → parked_tickets (recent change, not regressed).
