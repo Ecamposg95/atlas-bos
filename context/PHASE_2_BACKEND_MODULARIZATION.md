@@ -268,13 +268,43 @@ Las restantes después de la auditoría:
 
 | Sub-paso | Estado | Commit |
 |---|---|---|
-| **S0.0** Alembic + baseline migration | 🔴 Pendiente | — |
+| **S0.0** Alembic + baseline migration | 🟡 Scaffold listo, falta correr autogenerate | (este commit) |
 | **S0.1** Scaffold `app/core/` + `app/modules/` con shims | ✅ Done | `be6e89e` |
 | **S0.2** Mover bodies (database, security primitives, tenant_context, permissions) | ✅ Done | `de63fa5` |
 | **S0.3** Mover platform-only deps (require_platform_admin, require_superadmin, api_keys) | ✅ Done | `de63fa5` |
 | **S0.4** Rewrite mecánico de los call sites (112 archivos) | ✅ Done | `375afdc` |
 | **S0.5** Borrar shims legacy (`app/database.py`, `app/dependencies.py`, `app/security/*`) | ✅ Done | (este commit) |
 | **S0.5b** Limpieza incidental: `request.state.nav_items/user_json`, `check_view_permission`, `require_platform_admin_html`, `get_*_user_from_cookie` (SSR muerto) | ✅ Done | `de63fa5` |
+
+### S0.0 — How to finalize
+
+El scaffold (`alembic.ini`, `alembic/env.py`, `alembic/script.py.mako`,
+`alembic/versions/`, `alembic/README.md`) ya está commiteado, y `alembic==1.13.2`
+está en `requirements.txt`. Faltan los pasos interactivos contra el DB del
+usuario:
+
+1. **Activar venv e instalar deps**
+   ```bash
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+2. **Generar baseline migration** (compara DB actual vs `Base.metadata`):
+   ```bash
+   alembic revision --autogenerate -m "baseline schema"
+   ```
+   Correr contra un DB con el schema de producción (o un dump reciente) para
+   que la migración refleje lo real.
+3. **Revisar el archivo generado** en `alembic/versions/` antes de aplicarlo.
+   Autogenerate a veces propone `DROP TABLE` para tablas que no reconoce —
+   editar a mano si hace falta.
+4. **Aplicar / stampear**:
+   - DB vacía: `alembic upgrade head`
+   - DB existente con el schema ya creado por `Base.metadata.create_all(...)`:
+     `alembic stamp head` (marca la revisión como aplicada sin correr DDL).
+5. **Día a día**: `alembic current`, `alembic upgrade head`,
+   `alembic downgrade -1`, `alembic revision --autogenerate -m "..."`.
+
+Detalles completos en `alembic/README.md`.
 
 **Próximos pasos concretos:**
 
