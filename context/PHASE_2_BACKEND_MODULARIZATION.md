@@ -264,12 +264,23 @@ Las restantes después de la auditoría:
 
 ---
 
-## 12. Próximos pasos concretos
+## 12. Estado de ejecución
 
-1. **Empezar S0.1 ahora** (creación de scaffold con shims) — no requiere ninguna de las decisiones abiertas, es puro andamiaje.
-2. **S0.0 (Alembic)** después de S0.1 — usuario confirma intent de Alembic.
-3. **S0.2-S0.5** — descomposition completa de dependencies.py + security/.
-4. Iniciar S1 con `auth`, `users`, `tenants`.
+| Sub-paso | Estado | Commit |
+|---|---|---|
+| **S0.0** Alembic + baseline migration | 🔴 Pendiente | — |
+| **S0.1** Scaffold `app/core/` + `app/modules/` con shims | ✅ Done | `be6e89e` |
+| **S0.2** Mover bodies (database, security primitives, tenant_context, permissions) | ✅ Done | `de63fa5` |
+| **S0.3** Mover platform-only deps (require_platform_admin, require_superadmin, api_keys) | ✅ Done | `de63fa5` |
+| **S0.4** Rewrite mecánico de los call sites (112 archivos) | ✅ Done | `375afdc` |
+| **S0.5** Borrar shims legacy (`app/database.py`, `app/dependencies.py`, `app/security/*`) | ✅ Done | (este commit) |
+| **S0.5b** Limpieza incidental: `request.state.nav_items/user_json`, `check_view_permission`, `require_platform_admin_html`, `get_*_user_from_cookie` (SSR muerto) | ✅ Done | `de63fa5` |
+
+**Próximos pasos concretos:**
+
+1. **S0.0 (Alembic)** — bloqueante para S1+ porque S1 mueve modelos. Requiere: instalar `alembic`, `alembic init`, configurar `env.py` para apuntar a `app.core.database.Base`, generar baseline migration capturando schema actual, validar `alembic upgrade head` contra DB vacía.
+2. **S1** — primer módulo: `auth`, `users`, `tenants` (organization). Usar el recipe de §7.
+3. **Hygiene paralela** (cualquier momento): crear `.gitignore` y `git rm -r --cached app/**/__pycache__` para retirar las 124 entradas de bytecode tracked. Aislado de la modularización.
 
 ---
 
