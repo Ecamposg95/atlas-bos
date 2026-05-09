@@ -161,7 +161,7 @@ class TransferOrder(Base, TenantMixin):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    requesting_branch = relationship("app.models.organization.Branch")
+    requesting_branch = relationship("Branch")
     lines = relationship("TransferOrderLine", back_populates="transfer", cascade="all, delete-orphan")
     fulfillments = relationship("TransferFulfillment", back_populates="transfer")
 
@@ -200,7 +200,7 @@ class TransferFulfillment(Base, TenantMixin):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     transfer = relationship("TransferOrder", back_populates="fulfillments")
-    source_branch = relationship("app.models.organization.Branch")
+    source_branch = relationship("Branch")
     lines = relationship("TransferFulfillmentLine", back_populates="fulfillment", cascade="all, delete-orphan")
 
 class TransferFulfillmentLine(Base, TenantMixin):

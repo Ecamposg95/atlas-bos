@@ -46,8 +46,8 @@ class Expense(Base, TenantMixin):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    branch = relationship("app.models.organization.Branch")
-    user = relationship("app.models.users.User")
+    branch = relationship("Branch")
+    user = relationship("User")
 
 
 # ──────────────────────────────────────────────
@@ -78,8 +78,8 @@ class PurchaseOrder(Base, TenantMixin):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
     received_at = Column(DateTime(timezone=True), nullable=True)
 
-    branch = relationship("app.models.organization.Branch")
-    created_by = relationship("app.models.users.User")
+    branch = relationship("Branch")
+    created_by = relationship("User")
     lines = relationship("PurchaseOrderLine", back_populates="purchase_order", cascade="all, delete-orphan")
 
 

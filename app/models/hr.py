@@ -71,7 +71,7 @@ class Employee(Base, TenantMixin):
     clabe = Column(String, nullable=True) # Interbank code MX
     
     user = relationship("User", backref="employee_profile")
-    base_branch = relationship("app.models.organization.Branch")
+    base_branch = relationship("Branch")
     assignments = relationship("BranchAssignment", back_populates="employee")
     attendances = relationship("Attendance", back_populates="employee")
 
@@ -96,7 +96,7 @@ class BranchAssignment(Base):
     notes = Column(String, nullable=True)
 
     employee = relationship("Employee", back_populates="assignments")
-    branch = relationship("app.models.organization.Branch")
+    branch = relationship("Branch")
 
 class Attendance(Base):
     __tablename__ = "attendances"
@@ -122,4 +122,4 @@ class Attendance(Base):
     created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Who performed the scan/entry
 
     employee = relationship("Employee", back_populates="attendances")
-    branch = relationship("app.models.organization.Branch")
+    branch = relationship("Branch")

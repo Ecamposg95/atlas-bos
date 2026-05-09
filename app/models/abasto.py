@@ -37,4 +37,4 @@ class PurchaseRecommendation(Base, UUIDMixin, AuditMixin, TenantMixin):
     
     # Relationships
     variant = relationship("app.models.products.ProductVariant")
-    branch = relationship("app.models.organization.Branch")
+    branch = relationship("Branch")
