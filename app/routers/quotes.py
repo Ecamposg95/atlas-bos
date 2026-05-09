@@ -12,7 +12,8 @@ from app.models import (
     Payment, Customer, Product
 )
 from app.schemas.sales import SaleCreate, SaleRead, QuoteDetailRead
-from app.core.security import get_current_user, User
+from app.core.security import get_current_user
+from app.models import User
 from app.core.tenant_context import get_current_active_organization
 from app.crud.products import get_variant_if_visible
 from app.utils.folios import get_next_folio

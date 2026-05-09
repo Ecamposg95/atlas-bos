@@ -26,7 +26,8 @@ from app.models import (
     ProductVariant, Customer, CashSession, DocumentStatus, CustomerLedgerEntry,
     InboundShipment, Product, StockOnHand, Branch, SaleReturn
 )
-from app.core.security import get_current_user, User
+from app.core.security import get_current_user
+from app.models import User
 from app.models.cash import CashSessionStatus
 from app.models.organization import BranchType
 from app.schemas.reports import AgingReportResponse
