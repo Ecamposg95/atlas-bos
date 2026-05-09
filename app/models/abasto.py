@@ -36,5 +36,5 @@ class PurchaseRecommendation(Base, UUIDMixin, AuditMixin, TenantMixin):
     notes = Column(Text, nullable=True) # User comments
     
     # Relationships
-    variant = relationship("app.models.products.ProductVariant")
+    variant = relationship("ProductVariant")
     branch = relationship("Branch")

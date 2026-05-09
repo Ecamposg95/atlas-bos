@@ -26,7 +26,7 @@ class AccountTransaction(Base, TenantMixin):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
-    customer = relationship("app.models.crm.Customer", backref="account_transactions")
+    customer = relationship("Customer", backref="account_transactions")
 
 
 # ──────────────────────────────────────────────
@@ -98,4 +98,4 @@ class PurchaseOrderLine(Base):
     unit_cost = Column(Numeric(10, 4), nullable=False)
 
     purchase_order = relationship("PurchaseOrder", back_populates="lines")
-    variant = relationship("app.models.products.ProductVariant")
+    variant = relationship("ProductVariant")

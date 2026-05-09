@@ -63,7 +63,7 @@ class ProductPackaging(Base, TenantMixin):
     item_no = Column(String, nullable=True) # "ITEM-001" printed on box
     box_barcode = Column(String, nullable=True) # GTIN-14 etc.
     
-    variant = relationship("app.models.products.ProductVariant")
+    variant = relationship("ProductVariant")
     box_type = relationship("BoxType", back_populates="packagings")
 
 class ContainerLoadCalc(Base, TenantMixin):
@@ -138,7 +138,7 @@ class ShipmentItem(Base, TenantMixin):
     
     shipment = relationship("InboundShipment", back_populates="items")
     box_type = relationship("BoxType")
-    variant = relationship("app.models.products.ProductVariant")
+    variant = relationship("ProductVariant")
 
 from sqlalchemy import Boolean # ensure imported
 
@@ -177,7 +177,7 @@ class TransferOrderLine(Base, TenantMixin):
     qty_received = Column(Numeric(10, 2), default=0)
 
     transfer = relationship("TransferOrder", back_populates="lines")
-    variant = relationship("app.models.products.ProductVariant")
+    variant = relationship("ProductVariant")
 
 class FulfillmentStatus(str, enum.Enum):
     PREPARED = "PREPARED"
