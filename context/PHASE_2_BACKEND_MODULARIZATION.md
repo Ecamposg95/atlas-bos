@@ -178,6 +178,35 @@ S0.5  · DELETE legacy SSR helpers + delete shim files una vez todo compila y te
 
 ---
 
+## 6.5. Trampa SQLAlchemy descubierta en S1 — playbook permanente
+
+S1 Phase B (mover modelos) reveló una trampa: `relationship("app.models.X.ClassName", ...)` usa **dotted-path resolution** del class registry interno de SQLAlchemy, NO del import system de Python. Los shims de re-export en Python cubren `from app.models.X import Y` pero NO cubren la resolución del registry interno.
+
+Síntoma cuando rompe (al primer `db.query(...)` que dispara `configure_mappers()`):
+
+```
+NameError: Module 'models' has no mapped classes registered under the name 'X'
+```
+
+**Regla firme para S2-S7**: ANTES de mover cualquier `app/models/X.py` cuyo nombre figure en relationship strings de OTROS módulos, ejecutar:
+
+```bash
+# 1. Auditar dotted-path strings que apuntan a la clase a mover
+grep -rn 'relationship(\s*"app\.models\.<file>\.' app/ scripts/
+
+# 2. Convertir a simple class name (SQLAlchemy resuelve por registry)
+sed -i 's|"app\.models\.<file>\.<Class>"|"<Class>"|g' <archivo>
+
+# 3. Verify cero quedan
+grep -rn 'relationship(\s*"app\.' app/ scripts/   # debe ser empty
+```
+
+Esto va en commit separado, ANTES del commit que mueve el modelo. Si se hace bien, el move del modelo es seguro.
+
+Este patrón **no aplica** a `back_populates="X"`, `secondary="X"`, o `foreign_keys=...` que ya usan simple names — solo al primer argumento de `relationship()` cuando es dotted.
+
+---
+
 ## 7. Recipe estándar por módulo (S1-S6)
 
 Para cada módulo `<name>`:
