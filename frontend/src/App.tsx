@@ -73,6 +73,14 @@ const MobileSales     = lazy(() => import('./pages/mobile/MobileSales').then(m =
 const MobileProfile   = lazy(() => import('./pages/mobile/MobileProfile').then(m => ({ default: m.MobileProfile })))
 const MobileOwnerDashboard = lazy(() => import('./pages/mobile/MobileOwnerDashboard').then(m => ({ default: m.MobileOwnerDashboard })))
 
+// Atlas One stub modules (Beta — Coming Soon pages, 2026-05-14)
+const AppointmentsComingSoon = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AppointmentsComingSoon })))
+const CommissionsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.CommissionsComingSoon })))
+const MembershipsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.MembershipsComingSoon })))
+const RecipesComingSoon      = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.RecipesComingSoon })))
+const AIComingSoon           = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AIComingSoon })))
+const PurchasingComingSoon   = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.PurchasingComingSoon })))
+
 // Portal (CLIENTE)
 const Portal          = lazy(() => import('./pages/portal/Portal').then(m => ({ default: m.Portal })))
 
@@ -283,6 +291,14 @@ export default function App() {
           <Route path="customers"  element={<Suspense fallback={<PageLoader />}><Customers /></Suspense>} />
           <Route path="hr"         element={<Suspense fallback={<PageLoader />}><HR /></Suspense>} />
           <Route path="hr/me"      element={<Suspense fallback={<PageLoader />}><HRMe /></Suspense>} />
+
+          {/* Atlas One stub modules — Coming Soon (Beta) */}
+          <Route path="appointments" element={<Suspense fallback={<PageLoader />}><AppointmentsComingSoon /></Suspense>} />
+          <Route path="commissions"  element={<Suspense fallback={<PageLoader />}><CommissionsComingSoon /></Suspense>} />
+          <Route path="memberships"  element={<Suspense fallback={<PageLoader />}><MembershipsComingSoon /></Suspense>} />
+          <Route path="recipes"      element={<Suspense fallback={<PageLoader />}><RecipesComingSoon /></Suspense>} />
+          <Route path="ai"           element={<Suspense fallback={<PageLoader />}><AIComingSoon /></Suspense>} />
+          <Route path="purchasing"   element={<Suspense fallback={<PageLoader />}><PurchasingComingSoon /></Suspense>} />
 
           {/* Portal CLIENTE */}
           <Route path="portal" element={<Suspense fallback={<PageLoader />}><Portal /></Suspense>} />
