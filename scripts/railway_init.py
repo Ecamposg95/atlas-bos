@@ -394,8 +394,22 @@ def main():
             # Step 1: Create Superadmin
             create_superadmin(db)
 
-            # Step 2: Initialize Presets
+            # Step 2: Initialize Presets (legacy — keeps DATAXPOS untouched)
             initialize_presets(db)
+
+            # Step 3: Atlas One presets seed (2026-05-13)
+            # Idempotent upsert — adds 6 new modules + 7 Atlas One presets
+            # (ATLAS_POS aligerado + 5 ATLAS_ONE_*) + CUSTOM. Does NOT delete
+            # legacy presets like DATAXPOS / RESTAURANT_QSR — those stay.
+            print("\n🌐 Atlas One — seeding modules & presets...")
+            try:
+                from scripts.init_presets_v2 import seed_modules_and_presets
+                seed_modules_and_presets(db)
+                print("✅ Atlas One seed complete")
+            except Exception as e:
+                print(f"⚠️ Atlas One seed failed (non-fatal): {e}")
+                import traceback
+                traceback.print_exc()
 
             print("\n" + "=" * 60)
             print("✅ INITIALIZATION COMPLETE!")
