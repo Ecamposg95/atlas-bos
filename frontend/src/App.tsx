@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
+import { useEnabledModulesStore } from './store/enabledModulesStore'
 import { ThemeProvider } from './context/ThemeContext'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -73,6 +74,9 @@ const MobileSales     = lazy(() => import('./pages/mobile/MobileSales').then(m =
 const MobileProfile   = lazy(() => import('./pages/mobile/MobileProfile').then(m => ({ default: m.MobileProfile })))
 const MobileOwnerDashboard = lazy(() => import('./pages/mobile/MobileOwnerDashboard').then(m => ({ default: m.MobileOwnerDashboard })))
 
+// Atlas One preset-aware home (2026-05-14)
+const PresetHome = lazy(() => import('./pages/home/PresetHome').then(m => ({ default: m.PresetHome })))
+
 // Atlas One stub modules (Beta — Coming Soon pages, 2026-05-14)
 const AppointmentsComingSoon = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AppointmentsComingSoon })))
 const CommissionsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.CommissionsComingSoon })))
@@ -135,13 +139,16 @@ function PlatformRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Landing path after login for a given role. Admins/owners go to HQ
-// operations; branch/mobile roles keep their specialized dashboards.
-// On mobile viewport, DUEÑO lands on a read-only KPI dashboard since
-// HQ pages don't fit a phone screen.
-function homePathForRole(role?: string | null, isMobile = false): string {
+// Landing path after login for a given role/preset. Admins/owners with an
+// Atlas One vertical preset land on /home (PresetHome). Without an Atlas One
+// preset they fall back to /hq/operations. Branch/mobile roles keep their
+// specialized dashboards.
+function homePathForRole(role?: string | null, isMobile = false, preset?: string | null): string {
   if (role === 'DUEÑO' && isMobile) return '/mobile/owner'
-  if (role === 'ADMINISTRADOR' || role === 'DUEÑO') return '/hq/operations'
+  if (role === 'ADMINISTRADOR' || role === 'DUEÑO') {
+    if (preset && preset.startsWith('ATLAS_ONE_')) return '/home'
+    return '/hq/operations'
+  }
   if (role === 'VENDEDOR' || role === 'SOPORTE_OPERATIVO') return '/mobile/dashboard'
   if (role === 'CLIENTE') return '/portal'
   return '/atlas-pos'
@@ -150,7 +157,20 @@ function homePathForRole(role?: string | null, isMobile = false): string {
 function RoleHomeRedirect() {
   const user = useAuthStore((s) => s.user)
   const isMobile = useIsMobile()
-  return <Navigate to={homePathForRole(user?.role, isMobile)} replace />
+  const { preset, loaded, load } = useEnabledModulesStore()
+  useEffect(() => {
+    if (!loaded) load()
+  }, [loaded, load])
+
+  // While the context is loading, hold off the redirect so HQ-role users with
+  // an Atlas One preset don't briefly land on /hq/operations and flicker over
+  // to /home.
+  if ((user?.role === 'ADMINISTRADOR' || user?.role === 'DUEÑO') && !loaded) {
+    return <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--p-muted)' }}>
+      <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 22 }} />
+    </div>
+  }
+  return <Navigate to={homePathForRole(user?.role, isMobile, preset)} replace />
 }
 
 function AtlasPOSGate({ children }: { children: React.ReactNode }) {
@@ -292,7 +312,8 @@ export default function App() {
           <Route path="hr"         element={<Suspense fallback={<PageLoader />}><HR /></Suspense>} />
           <Route path="hr/me"      element={<Suspense fallback={<PageLoader />}><HRMe /></Suspense>} />
 
-          {/* Atlas One stub modules — Coming Soon (Beta) */}
+          {/* Atlas One preset home + stub modules */}
+          <Route path="home"         element={<Suspense fallback={<PageLoader />}><PresetHome /></Suspense>} />
           <Route path="appointments" element={<Suspense fallback={<PageLoader />}><AppointmentsComingSoon /></Suspense>} />
           <Route path="commissions"  element={<Suspense fallback={<PageLoader />}><CommissionsComingSoon /></Suspense>} />
           <Route path="memberships"  element={<Suspense fallback={<PageLoader />}><MembershipsComingSoon /></Suspense>} />
