@@ -32,6 +32,22 @@ def run_migrations():
     print("\n🔄 Running column migrations...")
     from sqlalchemy import text
 
+    # Atlas One presets expansion 2026-05-13 — enum values for the new
+    # commercial suite. ALTER TYPE ADD VALUE cannot run inside a transaction
+    # block on older Postgres versions; use AUTOCOMMIT.
+    atlas_one_industry_values = [
+        "ATLAS_ONE_RETAIL",
+        "ATLAS_ONE_BEAUTY",
+        "ATLAS_ONE_GASTRO",
+        "ATLAS_ONE_SERVICES",
+        "ATLAS_ONE_ENTERPRISE",
+    ]
+    print("\n  Atlas One — ensuring industrytype enum values…")
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        for v in atlas_one_industry_values:
+            conn.execute(text(f"ALTER TYPE industrytype ADD VALUE IF NOT EXISTS '{v}'"))
+            print(f"  ✓ industrytype value ensured: {v}")
+
     migrations = [
         # (table, column, ddl)
         ("products", "image_url",      "ALTER TABLE products ADD COLUMN image_url VARCHAR;"),
@@ -67,6 +83,9 @@ def run_migrations():
         # da trazabilidad parked → sale.
         ("parked_tickets", "status",                "ALTER TABLE parked_tickets ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE';"),
         ("parked_tickets", "converted_to_sale_id",  "ALTER TABLE parked_tickets ADD COLUMN converted_to_sale_id VARCHAR(36) REFERENCES sales_documents(id);"),
+        # Atlas One presets expansion 2026-05-13 — upsell metadata per module.
+        # Populated by scripts/init_presets_v2.py (run manually post-deploy).
+        ("modules", "upsell_metadata", "ALTER TABLE modules ADD COLUMN upsell_metadata JSON;"),
     ]
 
     # Track 1 — Audit + cleanup de Payment huérfanos antes de NOT NULL.
