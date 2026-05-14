@@ -24,6 +24,7 @@ class Module(Base):
     description = Column(String, nullable=True)
     scope = Column(Enum(ModuleScope), default=ModuleScope.GLOBAL)
     status = Column(Enum(ModuleStatus), default=ModuleStatus.STABLE)
+    upsell_metadata = Column(JSON, nullable=True)
 
 class OrganizationModule(Base):
     """
