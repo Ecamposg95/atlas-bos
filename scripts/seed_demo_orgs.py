@@ -275,31 +275,54 @@ def ensure_products(db, org: Organization, items: list) -> int:
 # ── Main ──────────────────────────────────────────────────────────────────────
 def seed_all(db) -> None:
     logger.info(f"🚀 Seeding {len(DEMOS)} demo organizations...")
+    succeeded = 0
+    failed = []
     for spec in DEMOS:
         logger.info(f"\n▶ {spec['name']} ({spec['industry_type'].value})")
-        org = ensure_organization(db, spec)
-        if org is None:
-            continue  # SKIP — org already existed; we don't touch its branches/users/modules/products
-
-        branch = ensure_branch(db, org, spec["branch_name"])
-        ensure_admin(db, org, branch, spec["admin_username"])
-
         try:
-            apply_industry_preset(db, org.id, spec["industry_type"])
-            db.commit()
-            n_mods = (
-                db.query(OrganizationModule)
-                .filter(OrganizationModule.organization_id == org.id, OrganizationModule.is_enabled == True)  # noqa: E712
-                .count()
-            )
-            logger.info(f"    + preset applied — {n_mods} module(s) enabled")
+            org = ensure_organization(db, spec)
+            if org is None:
+                succeeded += 1  # already existed counts as success
+                continue
+
+            branch = ensure_branch(db, org, spec["branch_name"])
+            ensure_admin(db, org, branch, spec["admin_username"])
+
+            try:
+                apply_industry_preset(db, org.id, spec["industry_type"])
+                db.commit()
+                n_mods = (
+                    db.query(OrganizationModule)
+                    .filter(
+                        OrganizationModule.organization_id == org.id,
+                        OrganizationModule.is_enabled == True,  # noqa: E712
+                    )
+                    .count()
+                )
+                logger.info(f"    + preset applied — {n_mods} module(s) enabled")
+            except Exception as e:
+                db.rollback()
+                logger.error(f"    ✗ preset apply failed: {e}")
+
+            ensure_products(db, org, spec["products"])
+            succeeded += 1
         except Exception as e:
+            # IMPORTANT: roll back so the next iteration starts from a clean
+            # session. Without this, a constraint violation in one org
+            # poisons every subsequent operation with "current transaction
+            # is aborted" errors.
             db.rollback()
-            logger.error(f"    ✗ preset apply failed: {e}")
+            failed.append((spec["name"], str(e)))
+            logger.error(f"    ✗✗ FAILED {spec['name']}: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
 
-        ensure_products(db, org, spec["products"])
-
-    logger.info("\n✅ Demo seed complete.")
+    logger.info("")
+    logger.info(f"✅ Demo seed: {succeeded}/{len(DEMOS)} OK")
+    if failed:
+        logger.warning(f"⚠️  {len(failed)} demo(s) failed:")
+        for name, err in failed:
+            logger.warning(f"   - {name}: {err}")
     logger.info("   Default password for every demo admin: demo1234")
 
 
