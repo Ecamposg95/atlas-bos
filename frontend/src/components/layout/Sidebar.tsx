@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useEnabledModulesStore } from '../../store/enabledModulesStore'
 import { returnsApi } from '../../api/returns'
 import { confirm } from '../ui/ConfirmDialog'
 import { useTheme } from '../../context/ThemeContext'
@@ -39,6 +40,10 @@ function usePendingReturnsCount(role: Role): number {
 
 interface NavItem {
   label: string; icon: string; url: string; group: string; sort: number; short: string
+  /** Optional module gate. If set, the item only appears when the org has
+   *  this module enabled (`OrganizationModule.is_enabled=true`). Items without
+   *  this field are always visible (subject to ROLE_ROUTES). */
+  module?: string
 }
 
 const ALL_NAV: NavItem[] = [
@@ -65,12 +70,12 @@ const ALL_NAV: NavItem[] = [
   { label: 'Usuarios',          short: 'USR', icon: 'fa-users-cog',           url: '/users',            group: 'hq',   sort: 20 },
   { label: 'RRHH',              short: 'HR',  icon: 'fa-user-tie',            url: '/hr',               group: 'hq',   sort: 21 },
   // Atlas One stub modules (Beta — visible when the module is enabled for the org)
-  { label: 'Agenda',            short: 'AGE', icon: 'fa-calendar',            url: '/appointments',     group: 'hq',   sort: 22 },
-  { label: 'Comisiones',        short: 'CMS', icon: 'fa-percent',             url: '/commissions',      group: 'hq',   sort: 23 },
-  { label: 'Membresías',        short: 'MEM', icon: 'fa-id-card',             url: '/memberships',      group: 'hq',   sort: 24 },
-  { label: 'Recetas',           short: 'REC', icon: 'fa-book',                url: '/recipes',          group: 'hq',   sort: 25 },
-  { label: 'IA',                short: 'IA',  icon: 'fa-microchip',           url: '/ai',               group: 'hq',   sort: 26 },
-  { label: 'Pedidos compras',   short: 'OC',  icon: 'fa-truck',               url: '/purchasing',       group: 'hq',   sort: 27 },
+  { label: 'Agenda',            short: 'AGE', icon: 'fa-calendar',            url: '/appointments',     group: 'hq',   sort: 22, module: 'appointments' },
+  { label: 'Comisiones',        short: 'CMS', icon: 'fa-percent',             url: '/commissions',      group: 'hq',   sort: 23, module: 'commissions' },
+  { label: 'Membresías',        short: 'MEM', icon: 'fa-id-card',             url: '/memberships',      group: 'hq',   sort: 24, module: 'memberships' },
+  { label: 'Recetas',           short: 'REC', icon: 'fa-book',                url: '/recipes',          group: 'hq',   sort: 25, module: 'recipes' },
+  { label: 'IA',                short: 'IA',  icon: 'fa-microchip',           url: '/ai',               group: 'hq',   sort: 26, module: 'ai' },
+  { label: 'Pedidos compras',   short: 'OC',  icon: 'fa-truck',               url: '/purchasing',       group: 'hq',   sort: 27, module: 'purchasing' },
   { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/atlas-pos',         group: 'pos',  sort: 0  },
   { label: 'Cobrar',            short: 'POS', icon: 'fa-cash-register',       url: '/pos',              group: 'pos',  sort: 1  },
   { label: 'Mis ventas',        short: 'HST', icon: 'fa-history',             url: '/sales',            group: 'pos',  sort: 2  },
@@ -598,11 +603,20 @@ function IconRail({ items, logout }: { items: NavItem[]; logout: () => void }) {
 
 // ── ROOT ────────────────────────────────────────────────────────
 export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
-  const { user, logout } = useAuthStore()
+  const { user, logout, isAuthenticated } = useAuthStore()
   const role = (user?.role ?? 'CAJERO') as Role
   const allowed = ROLE_ROUTES[role] ?? []
+
+  // Module gating: items with `module` declared only appear when the org has
+  // that module enabled. Items without `module` are always shown.
+  const { enabledModules, loaded, load } = useEnabledModulesStore()
+  useEffect(() => {
+    if (isAuthenticated && !loaded) load()
+  }, [isAuthenticated, loaded, load])
+
   const items = ALL_NAV
     .filter((n) => allowed.includes(n.url))
+    .filter((n) => !n.module || enabledModules.includes(n.module))
     .sort((a, b) => a.sort - b.sort)
 
   const handleLogout = async () => {

@@ -97,6 +97,23 @@ def read_user_context(
     if current_user.role:
         ctx["allowed_templates"] = get_allowed_templates(current_user.role)
 
+    # 5. Enabled modules for the active org (E-gating, 2026-05-14)
+    # Used by the frontend Sidebar to gate Atlas One stub items.
+    # `core` is always considered enabled; other modules respect
+    # OrganizationModule.is_enabled.
+    ctx["enabled_modules"] = ["core"]
+    if org_id:
+        from app.models.modules import OrganizationModule
+        enabled = (
+            db.query(OrganizationModule.module_key)
+            .filter(
+                OrganizationModule.organization_id == org_id,
+                OrganizationModule.is_enabled == True,  # noqa: E712
+            )
+            .all()
+        )
+        ctx["enabled_modules"] = sorted({"core", *(row[0] for row in enabled)})
+
     return ctx
 
 
