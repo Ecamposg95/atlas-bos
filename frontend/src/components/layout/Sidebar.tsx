@@ -233,10 +233,10 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
           </div>
           <div>
             <p style={{ color: 'white', fontWeight: 900, fontSize: '14px', letterSpacing: '-0.02em', lineHeight: 1 }}>
-              data<span style={{ color: '#c4b5fd' }}>X</span>POS
+              Atlas <span style={{ color: '#c4b5fd' }}>One</span>
             </p>
             <p style={{ fontSize: '8px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(148,163,184,0.35)', marginTop: '2px' }}>
-              v2.0 · Atlas ERP
+              v2.0 · Suite Comercial
             </p>
           </div>
         </div>

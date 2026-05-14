@@ -71,7 +71,7 @@ export function Layout() {
     const prefix = Object.keys(ROUTE_TITLES).find(
       k => k.length > 1 && location.pathname.startsWith(k + '/')
     )
-    return prefix ? ROUTE_TITLES[prefix] : 'Atlas ERP'
+    return prefix ? ROUTE_TITLES[prefix] : 'Atlas One'
   }, [location.pathname])
 
   const userInitial = ((user?.full_name || user?.username) ?? 'U').charAt(0).toUpperCase()
@@ -114,7 +114,7 @@ export function Layout() {
               <span
                 style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'var(--dax-text-faint)', lineHeight: 1 }}
               >
-                {org?.name ?? 'Atlas ERP'}
+                {org?.name ?? 'Atlas One'}
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <span

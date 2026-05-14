@@ -11,7 +11,7 @@ import { useAuthStore } from '../../store/authStore'
  * - ATLAS_ONE_RETAIL     → RetailHome
  * - ATLAS_ONE_SERVICES   → ServicesHome
  * - ATLAS_ONE_ENTERPRISE → EnterpriseHome
- * - Anything else (incl. ATLAS_POS, DATAXPOS, null) → redirect to /hq/operations
+ * - Anything else (incl. ATLAS_POS, null) → redirect to /hq/operations
  *
  * Widgets are intentionally lightweight placeholders that CTA into the
  * relevant modules. Real KPIs land when each vertical builds its own widget.

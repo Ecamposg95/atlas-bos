@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { getDeviceId, getDeviceFingerprint } from '../utils/device'
+import { toast } from '../store/toastStore'
 
 const client = axios.create({
   baseURL: '/api',
@@ -24,14 +25,23 @@ client.interceptors.request.use((config) => {
   return config
 })
 
-// 401 → limpia sesión y redirige a login
+// 401 → avisa al usuario, luego limpia sesión y redirige a login.
+// Flag local evita un cascade de N toasts si varias requests fallan a la vez.
+let sessionExpiredShown = false
+
 client.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('atlas_token')
-      localStorage.removeItem('atlas_org_id')
-      window.location.href = '/login'
+      if (!sessionExpiredShown) {
+        sessionExpiredShown = true
+        toast.warning('Tu sesión expiró. Vuelve a iniciar sesión.')
+      }
+      setTimeout(() => {
+        localStorage.removeItem('atlas_token')
+        localStorage.removeItem('atlas_org_id')
+        window.location.href = '/login'
+      }, 1200)
     }
     return Promise.reject(error)
   }

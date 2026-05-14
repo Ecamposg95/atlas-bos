@@ -20,7 +20,7 @@ const wait = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 export function Startup() {
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
-  const [mainMsg, setMainMsg] = useState('Bienvenido al Núcleo')
+  const [mainMsg, setMainMsg] = useState('Bienvenido a Atlas One')
   const [subMsg, setSubMsg] = useState('Sincronizando flujos de inteligencia...')
   const [phase, setPhase] = useState<'booting' | 'idle' | 'launching'>('booting')
   const [purpleMode, setPurpleMode] = useState(false)
@@ -103,7 +103,7 @@ export function Startup() {
         <PresetCard
           type="Atlas POS"
           title="Atlas POS"
-          description="Análisis predictivo y visualización de datos en tiempo real. La inteligencia detrás del punto de venta."
+          description="Análisis predictivo, inteligencia de negocio y control de operaciones en tiempo real."
           highlighted
           onPick={startSetup}
           onHover={() => setPurpleMode(true)}

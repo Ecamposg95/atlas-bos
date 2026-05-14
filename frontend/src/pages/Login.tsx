@@ -5,15 +5,21 @@ import { useAuthStore } from '../store/authStore'
 import './login.css'
 
 const CAPABILITIES = [
-  'Ventas en Tiempo Real', 'Gestión de Inventarios', 'Cierres de Caja',
-  'Facturación Electrónica', 'Reportes de Venta', 'Multi-sucursal', 'Analítica POS',
+  'Ventas en Tiempo Real',
+  'Gestión de Inventarios',
+  'Cierres de Caja',
+  'Reportes Ejecutivos',
+  'Multi-sucursal',
+  'Citas y Agenda (Beta)',
+  'Cocina · KDS (Beta)',
+  'Inteligencia Artificial (Beta)',
 ]
 
 const HERO_MESSAGES = [
-  { title: 'Ventas más fluidas.', emphasis: 'Negocio ágil.' },
+  { title: 'Ventas más fluidas.',    emphasis: 'Negocio ágil.' },
   { title: 'Control de inventario.', emphasis: 'Todo en orden.' },
-  { title: 'Inteligencia en caja.', emphasis: 'Cierre perfecto.' },
-  { title: 'Tu punto de venta.', emphasis: 'El corazón de Atlas.' },
+  { title: 'Inteligencia en caja.',  emphasis: 'Cierre perfecto.' },
+  { title: 'Toda tu operación.',     emphasis: 'En una sola plataforma.' },
 ]
 
 function useLightParticles(canvasRef: RefObject<HTMLCanvasElement>) {
@@ -242,8 +248,8 @@ export function LoginPage() {
 
       {/* Hero */}
       <div className="hero-content">
-        <div className="brand-subtitle">DataxPos</div>
-        <div className="beta-tag">SISTEMA ATLAS V2.5 ONLINE</div>
+        <div className="brand-subtitle">Atlas One</div>
+        <div className="beta-tag">SUITE COMERCIAL · V2.5</div>
 
         <div className="headline-container">
           <h1 className="headline">
@@ -254,8 +260,8 @@ export function LoginPage() {
         </div>
 
         <p className="hero-description">
-          Ventas sin fricción. Nuestra arquitectura DataxPos conecta cada<br />
-          nodo de tu negocio en una interfaz diseñada para la velocidad.
+          Ventas sin fricción. Atlas One conecta cada<br />
+          nodo de tu negocio en una plataforma diseñada para la velocidad.
         </p>
 
         <div className="hero-actions">
