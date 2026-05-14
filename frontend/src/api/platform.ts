@@ -235,6 +235,30 @@ export interface IndustryPreset {
   is_system: boolean
 }
 
+// ── Module Upsell System (2026-05-13) ───────────────────────────────────────
+
+export interface UpsellRecommendation {
+  module_key: string
+  module_name: string
+  description: string | null
+  category: 'base' | 'advanced' | 'vertical' | null
+  status: 'STABLE' | 'BETA'
+  in_recommended_preset: boolean
+  recommended_presets: string[]
+  value_props: string[]
+  upgrade_prompt: string | null
+  icon: string | null
+  sort_hint: number
+}
+
+export interface UpsellResponse {
+  org_id: number
+  active_preset: string | null
+  active_modules: string[]
+  recommendations: UpsellRecommendation[]
+  grouped_by_preset: Record<string, string[]>
+}
+
 // ── Announcements (Sprint 1 · D4) ────────────────────────────────────────────
 
 export type AnnouncementSeverity = 'info' | 'warning' | 'critical' | 'success'
@@ -481,6 +505,11 @@ export const platformApi = {
 
   deletePreset: (id: number) =>
     client.delete(`/platform/presets/${id}`).then((r) => r.data),
+
+  // Upsell recommendations
+  getUpsellRecommendations: (orgId: number) =>
+    client.get<UpsellResponse>(`/platform/organizations/${orgId}/upsell-recommendations`)
+      .then((r) => r.data),
 
   // Audit
   getAuditLogs: (params?: {
