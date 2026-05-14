@@ -1,9 +1,18 @@
+"""
+Atlas One Presets Seed (v3 — 2026-05-13).
 
-import sys
-import os
+Seeds the module catalog (21+ modules) and the 7 Atlas One presets:
+ATLAS_POS, ATLAS_ONE_RETAIL, ATLAS_ONE_BEAUTY, ATLAS_ONE_GASTRO,
+ATLAS_ONE_SERVICES, ATLAS_ONE_ENTERPRISE, CUSTOM.
+
+Idempotent: upserts by key/industry_type. Does NOT delete legacy
+presets (DISTRIBUTOR_POS, RETAIL_CHAIN, RESTAURANT_*, etc.) —
+cleanup is manual via SQL.
+"""
 import logging
+import os
+import sys
 
-# Add project root to path
 sys.path.append(os.getcwd())
 
 from sqlalchemy.orm import Session
@@ -13,160 +22,371 @@ from app.models.modules import IndustryPreset, Module, ModuleScope, ModuleStatus
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def init_presets():
-    """
-    Initializes ALL standard Industry Presets and Base Modules.
-    """
-    db = SessionLocal()
-    try:
-        logger.info("🚀 Initializing Modules & Presets...")
 
-        # 1. Base Modules Catalog
-        # ----------------------------------------------------
-        # Wave 2: catálogo enfocado a POS multi-sucursal. Removidos
-        # `appointments` (solo en SALON/CLINIC/DENTAL — presets eliminados) y
-        # `ecommerce` (solo en ECOMMERCE — preset eliminado). Las filas
-        # existentes en BD quedan inocuas; este seed solo crea/actualiza.
-        modules_catalog = [
-            ("core", "Core", "Funcionalidades base del sistema", ModuleScope.GLOBAL),
-            ("pos", "Punto de Venta", "Ventas mostrador, caja, cortes", ModuleScope.GLOBAL),
-            ("cash_management", "Gestión de Caja", "Cortes de caja, arqueos, control de efectivo", ModuleScope.GLOBAL),
-            ("inventory", "Inventario", "Stock, movimientos, kardex", ModuleScope.GLOBAL),
-            ("catalog", "Catálogo", "Productos, servicios, listas de precio", ModuleScope.GLOBAL),
-            ("branch_catalog_enablement", "Habilitación de Catálogo por Sucursal", "Control de productos disponibles por sucursal", ModuleScope.BRANCH),
-            ("returns", "Devoluciones", "Gestión de devoluciones y notas de crédito", ModuleScope.GLOBAL),
-            ("pricing", "Precios", "Gestión de precios y listas de precios", ModuleScope.GLOBAL),
-            ("promotions", "Promociones", "Descuentos, ofertas y promociones", ModuleScope.GLOBAL),
-            ("payments", "Pagos", "Métodos de pago y procesamiento", ModuleScope.GLOBAL),
-            ("crm", "CRM / Clientes", "Gestión de clientes, crédito, fidelidad", ModuleScope.GLOBAL),
-            ("users", "Usuarios", "Control de acceso y roles", ModuleScope.GLOBAL),
-            ("finance", "Finanzas", "Cuentas por cobrar/pagar, gastos", ModuleScope.GLOBAL),
-            ("reports", "Reportes", "Inteligencia de negocios básica", ModuleScope.GLOBAL),
-            ("quotes", "Cotizaciones", "Generación de presupuestos", ModuleScope.GLOBAL),
-            ("workshops", "Taller / Servicio", "Órdenes de servicio y reparación", ModuleScope.GLOBAL),
-            ("kitchen", "Cocina / KDS", "Display de cocina para restaurantes", ModuleScope.BRANCH),
-            ("tables", "Mesas", "Gestión de plano de mesas", ModuleScope.BRANCH),
-            ("logistics", "Logística", "Envíos, rutas, paquetería", ModuleScope.GLOBAL),
-            ("manufacturing", "Manufactura", "Producción y ensamblaje", ModuleScope.GLOBAL),
-            ("hr", "Recursos Humanos", "Asistencia, nómina básica", ModuleScope.GLOBAL),
-        ]
+# ── Module catalog ────────────────────────────────────────────────────────────
+MODULES_CATALOG = [
+    ("core", "Core", "Funcionalidades base del sistema", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("pos", "Punto de Venta", "Ventas mostrador, caja, cortes", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("cash_management", "Gestión de Caja", "Cortes de caja, arqueos, control de efectivo", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("inventory", "Inventario", "Stock, movimientos, kardex", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("catalog", "Catálogo", "Productos, servicios, listas de precio", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("branch_catalog_enablement", "Habilitación de Catálogo por Sucursal", "Control de productos disponibles por sucursal", ModuleScope.BRANCH, ModuleStatus.STABLE),
+    ("returns", "Devoluciones", "Gestión de devoluciones y notas de crédito", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("pricing", "Precios", "Gestión de precios y listas de precios", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("promotions", "Promociones", "Descuentos, ofertas y promociones", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("payments", "Pagos", "Métodos de pago y procesamiento", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("crm", "CRM / Clientes", "Gestión de clientes, crédito, fidelidad", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("users", "Usuarios", "Control de acceso y roles", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("finance", "Finanzas", "Cuentas por cobrar/pagar, gastos", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("reports", "Reportes", "Inteligencia de negocios básica", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("quotes", "Cotizaciones", "Generación de presupuestos", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("workshops", "Taller / Servicio", "Órdenes de servicio y reparación", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("kitchen", "Cocina / KDS", "Display de cocina para restaurantes", ModuleScope.BRANCH, ModuleStatus.STABLE),
+    ("tables", "Mesas", "Gestión de plano de mesas", ModuleScope.BRANCH, ModuleStatus.STABLE),
+    ("logistics", "Logística", "Envíos, rutas, paquetería", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("manufacturing", "Manufactura", "Producción y ensamblaje", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("hr", "Recursos Humanos", "Asistencia, nómina básica", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    # New (2026-05-13)
+    ("purchasing", "Compras", "OC, proveedores, recepciones", ModuleScope.GLOBAL, ModuleStatus.STABLE),
+    ("appointments", "Agenda", "Citas, disponibilidad, recordatorios", ModuleScope.BRANCH, ModuleStatus.BETA),
+    ("commissions", "Comisiones", "Comisiones por servicio o venta", ModuleScope.GLOBAL, ModuleStatus.BETA),
+    ("memberships", "Membresías", "Paquetes, créditos y suscripciones", ModuleScope.GLOBAL, ModuleStatus.BETA),
+    ("recipes", "Recetas / BOM", "Recetas, ingredientes y costeo por platillo", ModuleScope.GLOBAL, ModuleStatus.BETA),
+    ("ai", "Inteligencia Artificial", "Copilotos, predicciones, automatización", ModuleScope.GLOBAL, ModuleStatus.BETA),
+]
 
-        logger.info("--- Seeding/Updating Modules ---")
-        for key, name, desc, scope in modules_catalog:
-            mod = db.query(Module).get(key)
-            if not mod:
-                mod = Module(key=key, name=name, description=desc, scope=scope, status=ModuleStatus.STABLE)
-                db.add(mod)
-            else:
-                mod.name = name
-                mod.description = desc
-                # mod.scope = scope # Don't override scope blindly if edited
-        db.commit()
 
-        # 2. Industry Presets Definition
-        # ----------------------------------------------------
-        # Modules common to almost everyone
-        core_modules = ["users", "catalog", "finance", "reports", "crm"]
-        
-        # Wave 2: enfoque POS multi-sucursal. Presets de servicios médicos/
-        # belleza, e-commerce puro, B2B/manufactura/3PL/professional services
-        # eliminados — el producto ya no los soporta. Las filas existentes en
-        # `industry_presets` quedan en BD hasta que el operador las depure
-        # manualmente; este seed solo upserts. Industrias kept: ATLAS_POS,
-        # DISTRIBUTOR_POS, RETAIL_CHAIN, RESTAURANT_*, CAFE_BAKERY,
-        # AUTO_REPAIR_SHOP, CUSTOM.
-        presets_data = [
-            # Retail
-            {
-                "id": "ATLAS_POS", "name": "Atlas POS",
-                "desc": "Punto de venta ligero y de alto rendimiento con gestión completa de inventario, catálogo, precios, promociones y CRM",
-                "mods": [
-                    "core",
-                    "pos",
-                    "cash_management",
-                    "inventory",
-                    "catalog",
-                    "branch_catalog_enablement",
-                    "returns",
-                    "pricing",
-                    "promotions",
-                    "payments",
-                    "crm",
-                    "reports"
-                ]
-            },
-            {
-                "id": "DISTRIBUTOR_POS", "name": "Distribuidora Mayorista",
-                "desc": "Venta por volumen, múltiples listas de precio.",
-                "mods": core_modules + ["pos", "inventory", "quotes", "logistics"]
-            },
-            {
-                "id": "RETAIL_CHAIN", "name": "Cadena de Tiendas",
-                "desc": "Gestión multi-sucursal centralizada.",
-                "mods": core_modules + ["pos", "inventory", "hr", "logistics"]
-            },
+# ── Per-module upsell metadata ────────────────────────────────────────────────
+MODULE_UPSELL = {
+    "crm": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL", "ATLAS_ONE_BEAUTY", "ATLAS_ONE_GASTRO", "ATLAS_ONE_SERVICES"],
+        "value_props": [
+            "Base de datos de clientes",
+            "Historial de compras",
+            "Crédito y fidelización",
+        ],
+        "upgrade_prompt": "Activa CRM para conocer y fidelizar a tus clientes.",
+        "icon": "fa-users",
+        "sort_hint": 10,
+    },
+    "purchasing": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL", "ATLAS_ONE_GASTRO"],
+        "value_props": [
+            "Órdenes de compra a proveedores",
+            "Recepciones e ingresos a inventario",
+            "Cuentas por pagar",
+        ],
+        "upgrade_prompt": "Controla compras y proveedores desde Atlas One.",
+        "icon": "fa-truck",
+        "sort_hint": 20,
+    },
+    "promotions": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL"],
+        "value_props": [
+            "Descuentos por temporada",
+            "Promociones 2x1, combos",
+            "Cupones por cliente",
+        ],
+        "upgrade_prompt": "Vende más con promociones inteligentes.",
+        "icon": "fa-tag",
+        "sort_hint": 30,
+    },
+    "quotes": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL", "ATLAS_ONE_SERVICES"],
+        "value_props": [
+            "Presupuestos en PDF",
+            "Seguimiento de oportunidades",
+            "Conversión a venta",
+        ],
+        "upgrade_prompt": "Genera cotizaciones profesionales.",
+        "icon": "fa-file-invoice-dollar",
+        "sort_hint": 40,
+    },
+    "branch_catalog_enablement": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL"],
+        "value_props": [
+            "Catálogo distinto por sucursal",
+            "Productos visibles solo donde aplican",
+        ],
+        "upgrade_prompt": "Personaliza el catálogo de cada sucursal.",
+        "icon": "fa-store",
+        "sort_hint": 50,
+    },
+    "appointments": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_BEAUTY", "ATLAS_ONE_SERVICES"],
+        "value_props": [
+            "Calendario por profesional",
+            "Recordatorios automáticos",
+            "Bloqueos y disponibilidad",
+        ],
+        "upgrade_prompt": "Agenda citas y servicios con tus clientes.",
+        "icon": "fa-calendar",
+        "sort_hint": 60,
+    },
+    "commissions": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_BEAUTY", "ATLAS_ONE_SERVICES"],
+        "value_props": [
+            "Comisiones por servicio o venta",
+            "Reportes por profesional",
+            "Cálculo automático",
+        ],
+        "upgrade_prompt": "Paga comisiones justas y automáticas.",
+        "icon": "fa-percent",
+        "sort_hint": 70,
+    },
+    "memberships": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_BEAUTY"],
+        "value_props": [
+            "Paquetes y créditos",
+            "Renovaciones automáticas",
+            "Vencimientos y alertas",
+        ],
+        "upgrade_prompt": "Vende paquetes y membresías con control.",
+        "icon": "fa-id-card",
+        "sort_hint": 80,
+    },
+    "kitchen": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_GASTRO"],
+        "value_props": [
+            "Pantalla de cocina (KDS)",
+            "Comandas digitales",
+            "Tiempos por platillo",
+        ],
+        "upgrade_prompt": "Acelera la cocina con KDS.",
+        "icon": "fa-utensils",
+        "sort_hint": 90,
+    },
+    "tables": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_GASTRO"],
+        "value_props": [
+            "Plano de mesas",
+            "Estatus por mesa",
+            "Meseros y propinas",
+        ],
+        "upgrade_prompt": "Gestiona mesas y meseros profesionalmente.",
+        "icon": "fa-chair",
+        "sort_hint": 100,
+    },
+    "recipes": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_GASTRO"],
+        "value_props": [
+            "Recetas con costeo",
+            "Consumo automático de insumos",
+            "Margen por platillo",
+        ],
+        "upgrade_prompt": "Conoce el costo real de cada platillo.",
+        "icon": "fa-book",
+        "sort_hint": 110,
+    },
+    "workshops": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_SERVICES"],
+        "value_props": [
+            "Órdenes de trabajo",
+            "Estatus por OT",
+            "Técnicos asignados",
+        ],
+        "upgrade_prompt": "Lleva control de órdenes de servicio.",
+        "icon": "fa-screwdriver-wrench",
+        "sort_hint": 120,
+    },
+    "logistics": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL", "ATLAS_ONE_ENTERPRISE"],
+        "value_props": [
+            "Envíos y rutas",
+            "Cajas y contenedores",
+            "Tracking básico",
+        ],
+        "upgrade_prompt": "Logística integrada al POS.",
+        "icon": "fa-truck-fast",
+        "sort_hint": 130,
+    },
+    "manufacturing": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_ENTERPRISE"],
+        "value_props": [
+            "Producción y ensamblaje",
+            "Consumo de insumos",
+            "BOM y costeo",
+        ],
+        "upgrade_prompt": "Manufactura ligera integrada.",
+        "icon": "fa-industry",
+        "sort_hint": 140,
+    },
+    "hr": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_ENTERPRISE"],
+        "value_props": [
+            "Asistencia",
+            "Nómina básica",
+            "Vacaciones",
+        ],
+        "upgrade_prompt": "Recursos Humanos integrado.",
+        "icon": "fa-users-gear",
+        "sort_hint": 150,
+    },
+    "finance": {
+        "category": "advanced",
+        "recommended_presets": ["ATLAS_ONE_RETAIL", "ATLAS_ONE_ENTERPRISE"],
+        "value_props": [
+            "Cuentas por cobrar y pagar",
+            "Gastos",
+            "Conciliaciones",
+        ],
+        "upgrade_prompt": "Lleva las finanzas dentro de Atlas One.",
+        "icon": "fa-coins",
+        "sort_hint": 160,
+    },
+    "ai": {
+        "category": "vertical",
+        "recommended_presets": ["ATLAS_ONE_ENTERPRISE"],
+        "value_props": [
+            "Copiloto de ventas",
+            "Predicciones de demanda",
+            "Automatizaciones",
+        ],
+        "upgrade_prompt": "Agrega IA a tu operación.",
+        "icon": "fa-microchip",
+        "sort_hint": 170,
+    },
+}
 
-            # Hospitality
-            {
-                "id": "RESTAURANT_QSR", "name": "Comida Rápida (QSR)",
-                "desc": "Fast food, sin meseros, pantalla de cocina.",
-                "mods": core_modules + ["pos", "kitchen", "inventory"]
-            },
-            {
-                "id": "RESTAURANT_FULL", "name": "Restaurante Completo",
-                "desc": "Mesas, comanderos, propinas.",
-                "mods": core_modules + ["pos", "kitchen", "tables", "inventory", "hr"]
-            },
-            {
-                "id": "CAFE_BAKERY", "name": "Cafetería / Panadería",
-                "desc": "Venta ágil + producción ligera.",
-                "mods": core_modules + ["pos", "manufacturing", "inventory"]
-            },
 
-            # Automotriz
-            {
-                "id": "AUTO_REPAIR_SHOP", "name": "Taller Mecánico",
-                "desc": "Recepción de vehículos, órdenes de servicio.",
-                "mods": core_modules + ["workshops", "inventory", "pos"]
-            },
+# ── Preset compositions ───────────────────────────────────────────────────────
+ATLAS_POS_MODS = [
+    "core", "pos", "cash_management", "catalog", "inventory",
+    "returns", "pricing", "payments", "reports",
+]
 
-            # Genérico
-            {
-                "id": "CUSTOM", "name": "Personalizado",
-                "desc": "Configuración manual desde cero.",
-                "mods": core_modules
-            },
-        ]
+PRESETS = [
+    {
+        "id": "ATLAS_POS",
+        "name": "Atlas POS",
+        "desc": "Punto de venta de entrada: ventas, caja, catálogo, inventario, precios, devoluciones y reportes.",
+        "mods": ATLAS_POS_MODS,
+    },
+    {
+        "id": "ATLAS_ONE_RETAIL",
+        "name": "Atlas One Retail",
+        "desc": "Retail multi-sucursal: ferreterías, abarrotes, farmacias, papelerías, refaccionarias.",
+        "mods": ATLAS_POS_MODS + ["crm", "branch_catalog_enablement", "purchasing", "promotions", "quotes"],
+    },
+    {
+        "id": "ATLAS_ONE_BEAUTY",
+        "name": "Atlas One Beauty",
+        "desc": "Barberías, estéticas, spas, estudios de uñas y wellness con agenda, servicios y comisiones.",
+        "mods": [
+            "core", "users", "catalog", "inventory", "payments",
+            "cash_management", "crm", "pos",
+            "appointments", "commissions", "memberships",
+            "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_GASTRO",
+        "name": "Atlas One Gastro",
+        "desc": "Cafés, restaurantes pequeños, taquerías, food trucks y dark kitchens con KDS, mesas y recetas.",
+        "mods": [
+            "core", "users", "catalog", "inventory", "payments",
+            "cash_management", "crm", "pos",
+            "kitchen", "tables", "recipes",
+            "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_SERVICES",
+        "name": "Atlas One Services",
+        "desc": "Talleres, consultorios, mantenimiento, soporte y operaciones con órdenes de trabajo.",
+        "mods": [
+            "core", "users", "catalog", "payments", "crm",
+            "workshops", "appointments", "quotes", "commissions",
+            "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_ENTERPRISE",
+        "name": "Atlas One Enterprise",
+        "desc": "Implementación completa: multi-sucursal avanzado, IA, integraciones y todos los módulos.",
+        "mods": [k for k, *_ in MODULES_CATALOG],
+    },
+    {
+        "id": "CUSTOM",
+        "name": "Personalizado",
+        "desc": "Configuración manual desde cero. Solo módulos base.",
+        "mods": ["core", "users"],
+    },
+]
 
-        logger.info(f"--- Seeding {len(presets_data)} Industry Presets ---")
-        
-        for p in presets_data:
-            existing = db.query(IndustryPreset).filter(IndustryPreset.industry_type == p["id"]).first()
-            if existing:
-                existing.display_name = p["name"]
-                existing.description = p["desc"]
-                existing.modules = p["mods"]
-                existing.is_system = True
-                logger.info(f"Updated: {p['name']}")
-            else:
-                new_preset = IndustryPreset(
+
+def seed_modules_and_presets(db: Session) -> None:
+    """Upsert modules (with upsell_metadata) and the 7 Atlas One presets."""
+    logger.info("--- Seeding Modules ---")
+    for key, name, desc, scope, status in MODULES_CATALOG:
+        mod = db.query(Module).filter(Module.key == key).first()
+        if not mod:
+            mod = Module(key=key, name=name, description=desc, scope=scope, status=status)
+            db.add(mod)
+            logger.info(f"  + module: {key}")
+        else:
+            mod.name = name
+            mod.description = desc
+            mod.status = status
+            logger.info(f"  ~ module: {key}")
+        mod.upsell_metadata = MODULE_UPSELL.get(key)
+    db.commit()
+
+    logger.info(f"--- Seeding {len(PRESETS)} Presets ---")
+    for p in PRESETS:
+        existing = (
+            db.query(IndustryPreset)
+            .filter(IndustryPreset.industry_type == p["id"])
+            .first()
+        )
+        if existing:
+            existing.display_name = p["name"]
+            existing.description = p["desc"]
+            existing.modules = p["mods"]
+            existing.is_system = True
+            logger.info(f"  ~ preset: {p['name']}")
+        else:
+            db.add(
+                IndustryPreset(
                     industry_type=p["id"],
                     display_name=p["name"],
                     description=p["desc"],
                     modules=p["mods"],
-                    is_system=True
+                    is_system=True,
                 )
-                db.add(new_preset)
-                logger.info(f"Created: {p['name']}")
-        
-        db.commit()
-        logger.info("✅ Presets and Modules Initialized Successfully!")
+            )
+            logger.info(f"  + preset: {p['name']}")
+    db.commit()
 
+
+def main():
+    db = SessionLocal()
+    try:
+        logger.info("🚀 Initializing Atlas One Modules & Presets...")
+        seed_modules_and_presets(db)
+        logger.info("✅ Done")
     except Exception as e:
-        logger.error(f"❌ Error initializing presets: {e}")
+        logger.error(f"❌ Error: {e}")
         db.rollback()
+        raise
     finally:
         db.close()
 
+
 if __name__ == "__main__":
-    init_presets()
+    main()
