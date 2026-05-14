@@ -52,6 +52,7 @@ DEMOS = [
         "name": "Demo Atlas POS",
         "branch_name": "Matriz POS",
         "admin_username": "demo_pos",
+        "cashier_username": "demo_cajero_pos",
         "products": [
             ("Refresco 600ml",   "Bebida lista para venta",       Decimal("18.00"),  Decimal("10.00")),
             ("Café americano",   "Bebida caliente del día",       Decimal("35.00"),  Decimal("12.00")),
@@ -64,6 +65,7 @@ DEMOS = [
         "name": "Demo Atlas One Retail",
         "branch_name": "Matriz Retail",
         "admin_username": "demo_retail",
+        "cashier_username": "demo_cajero_retail",
         "products": [
             ("Cable USB-C 1m",         "Cargador rápido tipo C",         Decimal("199.00"), Decimal("80.00")),
             ("Resma papel carta",      "500 hojas Bond 75g",             Decimal("285.00"), Decimal("180.00")),
@@ -77,6 +79,7 @@ DEMOS = [
         "name": "Demo Atlas One Beauty",
         "branch_name": "Matriz Beauty",
         "admin_username": "demo_beauty",
+        "cashier_username": "demo_cajero_beauty",
         "products": [
             ("Corte de cabello",   "Servicio · 30 min",            Decimal("250.00"), Decimal("0.00")),
             ("Manicure básico",    "Servicio · 25 min",            Decimal("180.00"), Decimal("20.00")),
@@ -90,6 +93,7 @@ DEMOS = [
         "name": "Demo Atlas One Gastro",
         "branch_name": "Sucursal Gastro Centro",
         "admin_username": "demo_gastro",
+        "cashier_username": "demo_cajero_gastro",
         "products": [
             ("Hamburguesa clásica",  "Carne + lechuga + tomate",     Decimal("120.00"), Decimal("45.00")),
             ("Pizza Margherita",     "Mediana, masa delgada",        Decimal("220.00"), Decimal("80.00")),
@@ -103,6 +107,7 @@ DEMOS = [
         "name": "Demo Atlas One Services",
         "branch_name": "Taller Matriz",
         "admin_username": "demo_services",
+        "cashier_username": "demo_cajero_services",
         "products": [
             ("Mantenimiento preventivo", "Servicio cada 5000 km",     Decimal("1450.00"), Decimal("400.00")),
             ("Diagnóstico computarizado","Escaneo completo de fallas",Decimal("450.00"),  Decimal("100.00")),
@@ -115,6 +120,7 @@ DEMOS = [
         "name": "Demo Atlas One Enterprise",
         "branch_name": "Corporativo",
         "admin_username": "demo_enterprise",
+        "cashier_username": "demo_cajero_enterprise",
         "products": [
             ("Plan anual ejecutivo",      "Licencia anual full-stack",      Decimal("85000.00"),  Decimal("0.00")),
             ("Consultoría 1h",            "Sesión estratégica con experto", Decimal("3500.00"),   Decimal("0.00")),
@@ -127,6 +133,7 @@ DEMOS = [
         "name": "Demo Custom",
         "branch_name": "Sucursal Principal",
         "admin_username": "demo_custom",
+        "cashier_username": "demo_cajero_custom",
         "products": [],  # Custom intentionally empty — operator builds catalog manually
     },
 ]
@@ -181,11 +188,19 @@ def ensure_branch(db, org: Organization, branch_name: str) -> Branch:
     return branch
 
 
-def ensure_admin(db, org: Organization, branch: Branch, username: str) -> User:
+def ensure_user(
+    db,
+    org: Organization,
+    branch: Branch,
+    username: str,
+    role: Role,
+    org_role: str,
+    full_name: str,
+) -> User:
+    """Idempotent: create the User if missing, link to org if not linked yet."""
     existing = db.query(User).filter(User.username == username).first()
     if existing:
-        logger.info(f"    · user '{username}' already exists (id={existing.id})")
-        # Ensure the link to the org exists even if user is reused
+        logger.info(f"    · user '{username}' already exists (id={existing.id}, role={existing.role.value})")
         link = (
             db.query(UserOrganization)
             .filter(
@@ -195,17 +210,17 @@ def ensure_admin(db, org: Organization, branch: Branch, username: str) -> User:
             .first()
         )
         if not link:
-            db.add(UserOrganization(user_id=existing.id, organization_id=org.id, is_active=True, org_role="ADMIN"))
+            db.add(UserOrganization(user_id=existing.id, organization_id=org.id, is_active=True, org_role=org_role))
             db.commit()
-            logger.info(f"      + linked existing user to org")
+            logger.info(f"      + linked existing user to org as {org_role}")
         return existing
 
     user = User(
         username=username,
-        full_name=f"Demo Admin {username}",
+        full_name=full_name,
         email=f"{username}@atlasone.demo",
         password_hash=get_password_hash(DEFAULT_PASSWORD),
-        role=Role.ADMINISTRADOR,
+        role=role,
         platform_role=PlatformRole.NONE,
         branch_id=branch.id,
         is_active=True,
@@ -214,10 +229,28 @@ def ensure_admin(db, org: Organization, branch: Branch, username: str) -> User:
     db.commit()
     db.refresh(user)
 
-    db.add(UserOrganization(user_id=user.id, organization_id=org.id, is_active=True, org_role="ADMIN"))
+    db.add(UserOrganization(user_id=user.id, organization_id=org.id, is_active=True, org_role=org_role))
     db.commit()
-    logger.info(f"    + user '{user.username}' / password=demo1234 (id={user.id}, role=ADMINISTRADOR)")
+    logger.info(f"    + user '{user.username}' / password=demo1234 (id={user.id}, role={role.value})")
     return user
+
+
+def ensure_admin(db, org: Organization, branch: Branch, username: str) -> User:
+    return ensure_user(
+        db, org, branch, username,
+        role=Role.ADMINISTRADOR,
+        org_role="ADMIN",
+        full_name=f"Demo Admin {username}",
+    )
+
+
+def ensure_cashier(db, org: Organization, branch: Branch, username: str) -> User:
+    return ensure_user(
+        db, org, branch, username,
+        role=Role.CAJERO,
+        org_role="MEMBER",
+        full_name=f"Demo Cajero {username}",
+    )
 
 
 def ensure_products(db, org: Organization, items: list) -> int:
@@ -287,6 +320,8 @@ def seed_all(db) -> None:
 
             branch = ensure_branch(db, org, spec["branch_name"])
             ensure_admin(db, org, branch, spec["admin_username"])
+            if spec.get("cashier_username"):
+                ensure_cashier(db, org, branch, spec["cashier_username"])
 
             try:
                 apply_industry_preset(db, org.id, spec["industry_type"])

@@ -1,6 +1,20 @@
 import { create } from 'zustand'
 import client from '../api/client'
 
+/**
+ * Apply or clear the `data-preset` attribute on <html>.
+ * Drives CSS variable theming defined in src/index.css (per-preset accent
+ * colors). No-op when running outside the browser (SSR-safe).
+ */
+function applyPresetAttribute(preset: string | null) {
+  if (typeof document === 'undefined') return
+  if (preset) {
+    document.documentElement.setAttribute('data-preset', preset)
+  } else {
+    document.documentElement.removeAttribute('data-preset')
+  }
+}
+
 interface ContextResponse {
   enabled_modules?: string[]
   preset?: string | null
@@ -35,18 +49,24 @@ export const useEnabledModulesStore = create<EnabledModulesStore>((set, get) => 
     try {
       const r = await client.get<ContextResponse>('/users/me/context')
       const mods = Array.isArray(r.data?.enabled_modules) ? r.data!.enabled_modules! : []
+      const preset = r.data?.preset ?? null
       set({
         enabledModules: mods,
-        preset: r.data?.preset ?? null,
+        preset,
         loaded: true,
         loading: false,
       })
+      applyPresetAttribute(preset)
     } catch {
       // Fail open: if context fetch fails, leave the sidebar showing all
       // items. Better than locking the user out of navigation.
       set({ enabledModules: [], preset: null, loaded: true, loading: false })
+      applyPresetAttribute(null)
     }
   },
 
-  reset: () => set({ enabledModules: [], preset: null, loaded: false, loading: false }),
+  reset: () => {
+    set({ enabledModules: [], preset: null, loaded: false, loading: false })
+    applyPresetAttribute(null)
+  },
 }))

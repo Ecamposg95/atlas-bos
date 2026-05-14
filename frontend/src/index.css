@@ -92,6 +92,52 @@
     --sb-active-icon: #a78bfa;
   }
 
+  /* ── PRESET THEMING (2026-05-14) ──
+     `data-preset="ATLAS_ONE_*"` en <html> dispara el color del vertical
+     globalmente. Sobrescribe --p-accent y sus aliases para que botones,
+     activos del sidebar, badges y links cambien de color con el preset. */
+  [data-preset="ATLAS_ONE_BEAUTY"] {
+    --p-accent:        #ec4899;
+    --p-accent-hover:  #db2777;
+    --p-accent-soft:   rgba(236, 72, 153, 0.12);
+    --p-accent-line:   rgba(236, 72, 153, 0.35);
+    --p-teal:          #ec4899;
+    --p-cyan:          #ec4899;
+  }
+  [data-preset="ATLAS_ONE_GASTRO"] {
+    --p-accent:        #f97316;
+    --p-accent-hover:  #ea580c;
+    --p-accent-soft:   rgba(249, 115, 22, 0.12);
+    --p-accent-line:   rgba(249, 115, 22, 0.35);
+    --p-teal:          #f97316;
+    --p-cyan:          #f97316;
+  }
+  [data-preset="ATLAS_ONE_RETAIL"] {
+    --p-accent:        #2563eb;
+    --p-accent-hover:  #1d4ed8;
+    --p-accent-soft:   rgba(37, 99, 235, 0.12);
+    --p-accent-line:   rgba(37, 99, 235, 0.35);
+    --p-teal:          #2563eb;
+    --p-cyan:          #2563eb;
+  }
+  [data-preset="ATLAS_ONE_SERVICES"] {
+    --p-accent:        #10b981;
+    --p-accent-hover:  #059669;
+    --p-accent-soft:   rgba(16, 185, 129, 0.12);
+    --p-accent-line:   rgba(16, 185, 129, 0.35);
+    --p-teal:          #10b981;
+    --p-cyan:          #10b981;
+  }
+  [data-preset="ATLAS_ONE_ENTERPRISE"] {
+    --p-accent:        #a855f7;
+    --p-accent-hover:  #9333ea;
+    --p-accent-soft:   rgba(168, 85, 247, 0.12);
+    --p-accent-line:   rgba(168, 85, 247, 0.35);
+    --p-teal:          #a855f7;
+    --p-cyan:          #a855f7;
+  }
+  /* ATLAS_POS y CUSTOM mantienen el azul default. */
+
   /* ── MODO OSCURO (override) ── */
   .dark {
     --dax-bg:          #050508;
