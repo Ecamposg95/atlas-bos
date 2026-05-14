@@ -9,6 +9,7 @@ import {
   PlatformBranch,
   PlatformOrg,
   PlatformUser,
+  UpsellResponse,
 } from '../../api/platform'
 import { toast } from '../../store/toastStore'
 import { useImpersonationStore } from '../../store/impersonationStore'
@@ -249,6 +250,11 @@ export function PlatformOrgDetail() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
 
+  // Upsell recommendations
+  const [upsell, setUpsell] = useState<UpsellResponse | null>(null)
+  const [upsellLoading, setUpsellLoading] = useState(false)
+  const [activatingModule, setActivatingModule] = useState<string | null>(null)
+
   const [tab, setTab] = useState<Tab>('branches')
 
   // Module toggle busy
@@ -283,6 +289,18 @@ export function PlatformOrgDetail() {
   const [impersonating, setImpersonating] = useState(false)
   const startImpersonation = useImpersonationStore((s) => s.start)
 
+  const loadUpsell = async () => {
+    setUpsellLoading(true)
+    try {
+      const data = await platformApi.getUpsellRecommendations(id)
+      setUpsell(data)
+    } catch {
+      setUpsell(null)
+    } finally {
+      setUpsellLoading(false)
+    }
+  }
+
   const load = async () => {
     setLoading(true)
     setLoadError(false)
@@ -295,6 +313,7 @@ export function PlatformOrgDetail() {
         platformApi.getPresets(),
         platformApi.getModulesCatalog().catch(() => [] as Module[]),
       ])
+      loadUpsell()
       setOrg(o)
       setModules(m)
       setUsers(u)
@@ -685,6 +704,127 @@ export function PlatformOrgDetail() {
                       background: '#fff',
                       transition: 'left 0.2s',
                     }} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ── Sección Módulos disponibles (upsell) ─────────────────────── */}
+      <section style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+          <p style={sectionTitle}>
+            <i className="fa-solid fa-arrow-up-right-dots" style={{ marginRight: 6, color: 'var(--p-teal)' }} />
+            Módulos disponibles
+          </p>
+          <span style={{ fontSize: 11, color: 'var(--p-muted)' }}>
+            {upsell ? `${upsell.recommendations.length} disponibles` : '—'}
+          </span>
+        </div>
+
+        {upsellLoading && (
+          <p style={{ fontSize: 12, color: 'var(--p-muted)' }}>Cargando recomendaciones...</p>
+        )}
+
+        {!upsellLoading && upsell && upsell.recommendations.length === 0 && (
+          <p style={{ fontSize: 12, color: 'var(--p-muted)', fontStyle: 'italic' }}>
+            Tu organización tiene todos los módulos recomendados activos.
+          </p>
+        )}
+
+        {!upsellLoading && upsell && upsell.recommendations.length > 0 && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: 12,
+          }}>
+            {upsell.recommendations.map(rec => {
+              const busy = activatingModule === rec.module_key
+              return (
+                <div
+                  key={rec.module_key}
+                  style={{
+                    background: 'var(--p-bg)',
+                    border: `1px solid ${rec.in_recommended_preset ? 'var(--p-teal)' : 'var(--p-border)'}`,
+                    borderRadius: 6,
+                    padding: 14,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {rec.icon && <i className={`fa-solid ${rec.icon}`} style={{ color: 'var(--p-cyan)' }} />}
+                    <span style={{ fontWeight: 700, fontSize: 13 }}>{rec.module_name}</span>
+                    <span style={{
+                      fontSize: 9,
+                      padding: '1px 6px',
+                      borderRadius: 3,
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                      background: rec.status === 'BETA' ? 'rgba(245,158,11,0.18)' : 'rgba(34,197,94,0.15)',
+                      color: rec.status === 'BETA' ? 'var(--p-warning)' : 'var(--p-success)',
+                    }}>
+                      {rec.status}
+                    </span>
+                  </div>
+
+                  {rec.in_recommended_preset && (
+                    <span style={{
+                      fontSize: 10,
+                      color: 'var(--p-teal)',
+                      fontWeight: 600,
+                      letterSpacing: '0.04em',
+                      textTransform: 'uppercase',
+                    }}>
+                      <i className="fa-solid fa-star" style={{ marginRight: 4 }} />
+                      Recomendado para tu plan
+                    </span>
+                  )}
+
+                  {rec.upgrade_prompt && (
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--p-muted)', lineHeight: 1.4 }}>
+                      {rec.upgrade_prompt}
+                    </p>
+                  )}
+
+                  {rec.value_props.length > 0 && (
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 11, color: 'var(--p-text)' }}>
+                      {rec.value_props.map((vp, i) => <li key={i}>{vp}</li>)}
+                    </ul>
+                  )}
+
+                  <button
+                    onClick={async () => {
+                      setActivatingModule(rec.module_key)
+                      try {
+                        await platformApi.toggleModule(id, rec.module_key, true)
+                        toast.success(`${rec.module_name} activado`)
+                        await Promise.all([loadUpsell(), load()])
+                      } catch (err: any) {
+                        toast.error(err?.response?.data?.detail || 'No se pudo activar')
+                      } finally {
+                        setActivatingModule(null)
+                      }
+                    }}
+                    disabled={busy}
+                    style={{
+                      background: 'var(--p-teal)',
+                      color: '#000',
+                      fontWeight: 700,
+                      border: 'none',
+                      padding: '6px 12px',
+                      borderRadius: 4,
+                      fontSize: 11,
+                      cursor: busy ? 'wait' : 'pointer',
+                      opacity: busy ? 0.6 : 1,
+                      marginTop: 'auto',
+                    }}
+                  >
+                    <i className="fa-solid fa-plus" style={{ marginRight: 6 }} />
+                    {busy ? 'Activando...' : 'Activar'}
                   </button>
                 </div>
               )
