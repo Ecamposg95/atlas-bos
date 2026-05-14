@@ -411,6 +411,21 @@ def main():
                 import traceback
                 traceback.print_exc()
 
+            # Step 4: Demo organizations + users + sample products (2026-05-14)
+            # Idempotent: skip if a demo org already exists by name.
+            # Creates 7 orgs (1 per Atlas One preset) with branch HQ, admin
+            # user demo_<preset>/demo1234, applied preset, and sample products.
+            # Wrapped in try/except so a partial failure does not crash boot.
+            print("\n🎭 Atlas One — seeding demo organizations...")
+            try:
+                from scripts.seed_demo_orgs import seed_all as seed_demo_orgs_all
+                seed_demo_orgs_all(db)
+                print("✅ Demo organizations seed complete")
+            except Exception as e:
+                print(f"⚠️ Demo orgs seed failed (non-fatal): {e}")
+                import traceback
+                traceback.print_exc()
+
             print("\n" + "=" * 60)
             print("✅ INITIALIZATION COMPLETE!")
             print("=" * 60)
