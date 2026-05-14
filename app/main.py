@@ -152,6 +152,23 @@ app.include_router(branch.router,           prefix="/api/branch",           tags
 
 from app.routers import setup
 app.include_router(setup.router, prefix="/api/setup", tags=["Setup"])
+
+# ─── Atlas One stub modules (2026-05-14) ────────────────────────────
+# Beta scaffolds exposing only /health. Real endpoints will be added
+# when each module is built out per docs/modules/MODULE_GUIDE.md.
+from app.modules.appointments.router import router as appointments_router
+from app.modules.commissions.router  import router as commissions_router
+from app.modules.memberships.router  import router as memberships_router
+from app.modules.recipes.router      import router as recipes_router
+from app.modules.ai.router           import router as ai_router
+from app.modules.purchasing.router   import router as purchasing_router
+
+app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda (Beta)"])
+app.include_router(commissions_router,  prefix="/api/commissions",  tags=["Comisiones (Beta)"])
+app.include_router(memberships_router,  prefix="/api/memberships",  tags=["Membresías (Beta)"])
+app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recetas (Beta)"])
+app.include_router(ai_router,           prefix="/api/ai",           tags=["IA (Beta)"])
+app.include_router(purchasing_router,   prefix="/api/purchasing",   tags=["Compras (Beta)"])
 # daxpos.router eliminado en Sprint 3 (tech-debt roadmap).
 # Sus 15 rutas SSR fueron desactivadas: las que coinciden con rutas React
 # caen al catch-all de la SPA; las que necesitan cambio de destino están
