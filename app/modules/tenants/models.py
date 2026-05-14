@@ -70,6 +70,13 @@ class IndustryType(str, enum.Enum):
     # Genérico
     CUSTOM = "CUSTOM"
 
+    # Atlas One commercial suite (2026-05-13)
+    ATLAS_ONE_RETAIL = "ATLAS_ONE_RETAIL"
+    ATLAS_ONE_BEAUTY = "ATLAS_ONE_BEAUTY"
+    ATLAS_ONE_GASTRO = "ATLAS_ONE_GASTRO"
+    ATLAS_ONE_SERVICES = "ATLAS_ONE_SERVICES"
+    ATLAS_ONE_ENTERPRISE = "ATLAS_ONE_ENTERPRISE"
+
 
 class Branch(Base, TenantMixin):
     __tablename__ = "branches"
