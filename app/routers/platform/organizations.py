@@ -751,6 +751,76 @@ def toggle_org_module(
     return {"message": f"Module {module_key} set to {enable}"}
 
 
+@router.get("/organizations/{org_id}/upsell-recommendations")
+def get_upsell_recommendations(
+    org_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_platform_admin),
+):
+    """Return modules NOT enabled for this org, with upsell metadata, grouped by recommended preset."""
+    from app.models.modules import Module, OrganizationModule
+    from app.schemas.modules import UpsellRecommendation, UpsellResponse
+
+    org = db.query(Organization).filter(Organization.id == org_id).first()
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    active_modules = [
+        om.module_key
+        for om in db.query(OrganizationModule)
+        .filter(
+            OrganizationModule.organization_id == org_id,
+            OrganizationModule.is_enabled == True,  # noqa: E712
+        )
+        .all()
+    ]
+    active_preset = org.industry_type.value if org.industry_type else None
+
+    # Modules with metadata, not yet enabled
+    candidates = (
+        db.query(Module)
+        .filter(Module.upsell_metadata.isnot(None))
+        .all()
+    )
+
+    recommendations = []
+    grouped: dict[str, list[str]] = {}
+
+    for mod in candidates:
+        if mod.key in active_modules:
+            continue
+        meta = mod.upsell_metadata or {}
+        recommended = meta.get("recommended_presets", []) or []
+
+        rec = UpsellRecommendation(
+            module_key=mod.key,
+            module_name=mod.name,
+            description=mod.description,
+            category=meta.get("category"),
+            status=mod.status.value if mod.status else "STABLE",
+            in_recommended_preset=bool(active_preset and active_preset in recommended),
+            recommended_presets=recommended,
+            value_props=meta.get("value_props", []) or [],
+            upgrade_prompt=meta.get("upgrade_prompt"),
+            icon=meta.get("icon"),
+            sort_hint=meta.get("sort_hint", 100),
+        )
+        recommendations.append(rec)
+
+        for preset_key in recommended:
+            grouped.setdefault(preset_key, []).append(mod.key)
+
+    recommendations.sort(key=lambda r: (r.sort_hint, r.module_key))
+
+    return UpsellResponse(
+        org_id=org_id,
+        active_preset=active_preset,
+        active_modules=active_modules,
+        recommendations=recommendations,
+        grouped_by_preset=grouped,
+    )
+
+
 @router.post("/organizations/{org_id}/reset-preset")
 def reset_organization_preset(
     org_id: int,
