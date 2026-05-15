@@ -36,11 +36,19 @@ def run_migrations():
     # commercial suite. ALTER TYPE ADD VALUE cannot run inside a transaction
     # block on older Postgres versions; use AUTOCOMMIT.
     atlas_one_industry_values = [
+        # v1 (2026-05-13) — kept for backward compat with existing orgs
         "ATLAS_ONE_RETAIL",
         "ATLAS_ONE_BEAUTY",
         "ATLAS_ONE_GASTRO",
         "ATLAS_ONE_SERVICES",
         "ATLAS_ONE_ENTERPRISE",
+        # v2 (2026-05-15) — vertical-specific presets
+        "ATLAS_ONE_BARBER",
+        "ATLAS_ONE_BEAUTY_WELLNESS",
+        "ATLAS_ONE_HEALTH",
+        "ATLAS_ONE_RESTAURANT",
+        "ATLAS_ONE_CAFE",
+        "ATLAS_ONE_BAR",
     ]
     print("\n  Atlas One — ensuring industrytype enum values…")
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:

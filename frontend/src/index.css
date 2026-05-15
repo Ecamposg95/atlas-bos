@@ -136,6 +136,56 @@
     --p-teal:          #a855f7;
     --p-cyan:          #a855f7;
   }
+
+  /* ── Taxonomy v2 (2026-05-15) ── */
+  [data-preset="ATLAS_ONE_BARBER"] {
+    --p-accent:        #0891b2;
+    --p-accent-hover:  #0e7490;
+    --p-accent-soft:   rgba(8, 145, 178, 0.12);
+    --p-accent-line:   rgba(8, 145, 178, 0.35);
+    --p-teal:          #0891b2;
+    --p-cyan:          #0891b2;
+  }
+  [data-preset="ATLAS_ONE_BEAUTY_WELLNESS"] {
+    --p-accent:        #ec4899;
+    --p-accent-hover:  #db2777;
+    --p-accent-soft:   rgba(236, 72, 153, 0.12);
+    --p-accent-line:   rgba(236, 72, 153, 0.35);
+    --p-teal:          #ec4899;
+    --p-cyan:          #ec4899;
+  }
+  [data-preset="ATLAS_ONE_HEALTH"] {
+    --p-accent:        #06b6d4;
+    --p-accent-hover:  #0891b2;
+    --p-accent-soft:   rgba(6, 182, 212, 0.12);
+    --p-accent-line:   rgba(6, 182, 212, 0.35);
+    --p-teal:          #06b6d4;
+    --p-cyan:          #06b6d4;
+  }
+  [data-preset="ATLAS_ONE_RESTAURANT"] {
+    --p-accent:        #f97316;
+    --p-accent-hover:  #ea580c;
+    --p-accent-soft:   rgba(249, 115, 22, 0.12);
+    --p-accent-line:   rgba(249, 115, 22, 0.35);
+    --p-teal:          #f97316;
+    --p-cyan:          #f97316;
+  }
+  [data-preset="ATLAS_ONE_CAFE"] {
+    --p-accent:        #d97706;
+    --p-accent-hover:  #b45309;
+    --p-accent-soft:   rgba(217, 119, 6, 0.12);
+    --p-accent-line:   rgba(217, 119, 6, 0.35);
+    --p-teal:          #d97706;
+    --p-cyan:          #d97706;
+  }
+  [data-preset="ATLAS_ONE_BAR"] {
+    --p-accent:        #7c3aed;
+    --p-accent-hover:  #6d28d9;
+    --p-accent-soft:   rgba(124, 58, 237, 0.12);
+    --p-accent-line:   rgba(124, 58, 237, 0.35);
+    --p-teal:          #7c3aed;
+    --p-cyan:          #7c3aed;
+  }
   /* ATLAS_POS y CUSTOM mantienen el azul default. */
 
   /* ── MODO OSCURO (override) ── */

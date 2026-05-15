@@ -37,16 +37,32 @@ export function PresetHome() {
   const orgName = org?.name || ''
 
   switch (preset) {
-    case 'ATLAS_ONE_BEAUTY':
-      return <BeautyHome greeting={greeting} orgName={orgName} />
-    case 'ATLAS_ONE_GASTRO':
-      return <GastroHome greeting={greeting} orgName={orgName} />
+    // Taxonomy v2 (2026-05-15)
+    case 'ATLAS_ONE_BARBER':
+      return <BarberHome greeting={greeting} orgName={orgName} />
+    case 'ATLAS_ONE_BEAUTY_WELLNESS':
+      return <BeautyWellnessHome greeting={greeting} orgName={orgName} />
+    case 'ATLAS_ONE_HEALTH':
+      return <HealthHome greeting={greeting} orgName={orgName} />
+    case 'ATLAS_ONE_RESTAURANT':
+      return <RestaurantHome greeting={greeting} orgName={orgName} />
+    case 'ATLAS_ONE_CAFE':
+      return <CafeHome greeting={greeting} orgName={orgName} />
+    case 'ATLAS_ONE_BAR':
+      return <BarHome greeting={greeting} orgName={orgName} />
+    // Atlas One verticals (v1)
     case 'ATLAS_ONE_RETAIL':
       return <RetailHome greeting={greeting} orgName={orgName} />
     case 'ATLAS_ONE_SERVICES':
       return <ServicesHome greeting={greeting} orgName={orgName} />
     case 'ATLAS_ONE_ENTERPRISE':
       return <EnterpriseHome greeting={greeting} orgName={orgName} />
+    // Legacy aliases — orgs created before taxonomy v2 still land on
+    // a coherent home instead of redirecting to /hq/operations.
+    case 'ATLAS_ONE_BEAUTY':
+      return <BeautyWellnessHome greeting={greeting} orgName={orgName} />
+    case 'ATLAS_ONE_GASTRO':
+      return <RestaurantHome greeting={greeting} orgName={orgName} />
     default:
       return <Navigate to="/hq/operations" replace />
   }
@@ -182,40 +198,116 @@ function Widget({ icon, title, description, cta, ctaUrl, beta }: WidgetProps) {
 
 // ── Per-preset homes ────────────────────────────────────────────────────────
 
-function BeautyHome({ greeting, orgName }: HomeProps) {
+function BarberHome({ greeting, orgName }: HomeProps) {
   return (
     <HomeShell
       greeting={greeting}
       orgName={orgName}
-      title="Atlas One Beauty"
-      subtitle="Agenda, servicios, comisiones y clientes en un solo lugar."
-      accent="#ff66b3"
+      title="Atlas One Barber"
+      subtitle="Agenda de cortes, paquetes prepagados y comisiones del equipo."
+      accent="#0891b2"
     >
-      <Widget icon="fa-calendar" title="Citas de hoy" description="Ver la agenda del día por profesional y cabina." cta="Abrir agenda" ctaUrl="/appointments" beta />
-      <Widget icon="fa-id-card" title="Membresías activas" description="Saldo de paquetes y vencimientos próximos." cta="Ver membresías" ctaUrl="/memberships" beta />
-      <Widget icon="fa-percent" title="Comisiones del turno" description="Resumen de comisiones del equipo al cierre." cta="Ver comisiones" ctaUrl="/commissions" beta />
-      <Widget icon="fa-address-book" title="Clientes" description="Historial, preferencias y frecuencia de visita." cta="Ver clientes" ctaUrl="/customers" />
-      <Widget icon="fa-cash-register" title="Vender ahora" description="Cobrar servicio o producto en mostrador." cta="Ir al POS" ctaUrl="/pos" />
-      <Widget icon="fa-chart-pie" title="Reportes" description="Ventas, servicios más vendidos, ticket promedio." cta="Ver reportes" ctaUrl="/reports" />
+      <Widget icon="fa-calendar" title="Agenda de hoy" description="Cortes y barbas agendadas, sillas disponibles." cta="Abrir agenda" ctaUrl="/appointments" beta />
+      <Widget icon="fa-id-card" title="Paquetes prepagados" description="Bonos de N cortes y vencimientos próximos." cta="Ver paquetes" ctaUrl="/memberships" beta />
+      <Widget icon="fa-percent" title="Comisiones del turno" description="Resumen por barbero al cierre del día." cta="Ver comisiones" ctaUrl="/commissions" beta />
+      <Widget icon="fa-address-book" title="Clientes recurrentes" description="Historial de cortes y preferencias." cta="Ver clientes" ctaUrl="/customers" />
+      <Widget icon="fa-cash-register" title="Cobrar" description="Cobrar servicio o paquete en silla." cta="Ir al POS" ctaUrl="/pos" />
+      <Widget icon="fa-chart-pie" title="Reportes" description="Ingreso por barbero, servicios top." cta="Ver reportes" ctaUrl="/reports" />
     </HomeShell>
   )
 }
 
-function GastroHome({ greeting, orgName }: HomeProps) {
+function BeautyWellnessHome({ greeting, orgName }: HomeProps) {
   return (
     <HomeShell
       greeting={greeting}
       orgName={orgName}
-      title="Atlas One Gastro"
-      subtitle="Cocina, mesas, recetas y caja para tu restaurante."
-      accent="#ff9933"
+      title="Atlas One Beauty & Wellness"
+      subtitle="Agenda, servicios, comisiones y clientes en un solo lugar."
+      accent="#ec4899"
+    >
+      <Widget icon="fa-calendar" title="Citas de hoy" description="Agenda del día por profesional y cabina." cta="Abrir agenda" ctaUrl="/appointments" beta />
+      <Widget icon="fa-id-card" title="Membresías activas" description="Saldo de paquetes y vencimientos próximos." cta="Ver membresías" ctaUrl="/memberships" beta />
+      <Widget icon="fa-percent" title="Comisiones del turno" description="Resumen de comisiones al cierre." cta="Ver comisiones" ctaUrl="/commissions" beta />
+      <Widget icon="fa-address-book" title="Clientes" description="Historial, preferencias y frecuencia." cta="Ver clientes" ctaUrl="/customers" />
+      <Widget icon="fa-cash-register" title="Vender" description="Cobrar servicio o producto." cta="Ir al POS" ctaUrl="/pos" />
+      <Widget icon="fa-chart-pie" title="Reportes" description="Servicios top, ticket promedio." cta="Ver reportes" ctaUrl="/reports" />
+    </HomeShell>
+  )
+}
+
+function HealthHome({ greeting, orgName }: HomeProps) {
+  return (
+    <HomeShell
+      greeting={greeting}
+      orgName={orgName}
+      title="Atlas One Health"
+      subtitle="Pacientes, agenda, planes de tratamiento y cobros."
+      accent="#06b6d4"
+    >
+      <Widget icon="fa-calendar" title="Consultas de hoy" description="Agenda por consultorio y profesional." cta="Abrir agenda" ctaUrl="/appointments" beta />
+      <Widget icon="fa-user-injured" title="Pacientes" description="Historial clínico, notas y contactos." cta="Ver pacientes" ctaUrl="/customers" />
+      <Widget icon="fa-id-card" title="Planes de tratamiento" description="Paquetes prepagados y avance por paciente." cta="Ver planes" ctaUrl="/memberships" beta />
+      <Widget icon="fa-percent" title="Comisiones" description="Pago por consulta o sesión." cta="Ver comisiones" ctaUrl="/commissions" beta />
+      <Widget icon="fa-cash-register" title="Cobrar" description="Cobro de consulta o paquete." cta="Ir al POS" ctaUrl="/pos" />
+      <Widget icon="fa-chart-pie" title="Reportes" description="Consultas atendidas, ingresos por profesional." cta="Ver reportes" ctaUrl="/reports" />
+    </HomeShell>
+  )
+}
+
+function RestaurantHome({ greeting, orgName }: HomeProps) {
+  return (
+    <HomeShell
+      greeting={greeting}
+      orgName={orgName}
+      title="Atlas One Restaurant"
+      subtitle="Cocina en vivo, mesas, recetas y comisiones de meseros."
+      accent="#f97316"
     >
       <Widget icon="fa-utensils" title="Cocina en vivo" description="Comandas pendientes, tiempos por mesa." cta="Abrir KDS" ctaUrl="/kitchen" />
-      <Widget icon="fa-chair" title="Mesas" description="Estado del plano: ocupadas, en cuenta, libres." cta="Ver mesas" ctaUrl="/tables" />
+      <Widget icon="fa-chair" title="Mesas" description="Plano: ocupadas, en cuenta, libres." cta="Ver mesas" ctaUrl="/tables" />
       <Widget icon="fa-book" title="Recetas" description="Costo por platillo y consumo de insumos." cta="Ver recetas" ctaUrl="/recipes" beta />
+      <Widget icon="fa-percent" title="Comisiones meseros" description="Propinas y desempeño por turno." cta="Ver comisiones" ctaUrl="/commissions" beta />
+      <Widget icon="fa-cash-register" title="Cobrar mesa" description="Cerrar cuenta y partir." cta="Ir al POS" ctaUrl="/pos" />
+      <Widget icon="fa-chart-pie" title="Reportes" description="Platillos top, propinas, mermas." cta="Ver reportes" ctaUrl="/reports" />
+    </HomeShell>
+  )
+}
+
+function CafeHome({ greeting, orgName }: HomeProps) {
+  return (
+    <HomeShell
+      greeting={greeting}
+      orgName={orgName}
+      title="Atlas One Café"
+      subtitle="Mostrador rápido, cocina y caja para café/bakery."
+      accent="#d97706"
+    >
+      <Widget icon="fa-coffee" title="Mostrador" description="Cola de pedidos y prioridades." cta="Abrir KDS" ctaUrl="/kitchen" />
+      <Widget icon="fa-boxes" title="Inventario" description="Granos, leche, pan y consumibles." cta="Ver inventario" ctaUrl="/inventory" />
       <Widget icon="fa-vault" title="Caja del día" description="Apertura, ventas y arqueo del turno." cta="Ir a caja" ctaUrl="/cash-history" />
-      <Widget icon="fa-cash-register" title="Cobrar" description="Cobrar mesa o pedido al mostrador." cta="Ir al POS" ctaUrl="/pos" />
-      <Widget icon="fa-chart-pie" title="Reportes" description="Ventas por platillo, mermas, propinas." cta="Ver reportes" ctaUrl="/reports" />
+      <Widget icon="fa-cash-register" title="Cobrar" description="Cobro rápido en mostrador." cta="Ir al POS" ctaUrl="/pos" />
+      <Widget icon="fa-address-book" title="Clientes frecuentes" description="Quién compra qué y cada cuánto." cta="Ver clientes" ctaUrl="/customers" />
+      <Widget icon="fa-chart-pie" title="Reportes" description="Productos top, horarios pico." cta="Ver reportes" ctaUrl="/reports" />
+    </HomeShell>
+  )
+}
+
+function BarHome({ greeting, orgName }: HomeProps) {
+  return (
+    <HomeShell
+      greeting={greeting}
+      orgName={orgName}
+      title="Atlas One Bar"
+      subtitle="Cocteles, mesas, comisiones de bartender y control de inventario líquido."
+      accent="#7c3aed"
+    >
+      <Widget icon="fa-martini-glass" title="Cocteles" description="Recetas, costo y disponibilidad de insumos." cta="Ver recetas" ctaUrl="/recipes" beta />
+      <Widget icon="fa-chair" title="Mesas y tabs" description="Estado de mesas, cuentas abiertas." cta="Ver mesas" ctaUrl="/tables" />
+      <Widget icon="fa-boxes" title="Inventario líquido" description="Botellas abiertas, mermas, reposición." cta="Ver inventario" ctaUrl="/inventory" />
+      <Widget icon="fa-percent" title="Comisiones bartender" description="Por bebida o por venta total del turno." cta="Ver comisiones" ctaUrl="/commissions" beta />
+      <Widget icon="fa-cash-register" title="Cobrar" description="Cierre de tab o pedido al mostrador." cta="Ir al POS" ctaUrl="/pos" />
+      <Widget icon="fa-chart-pie" title="Reportes" description="Tragos top, ventas por hora." cta="Ver reportes" ctaUrl="/reports" />
     </HomeShell>
   )
 }

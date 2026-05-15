@@ -283,10 +283,11 @@ PRESETS = [
         "desc": "Retail multi-sucursal: ferreterías, abarrotes, farmacias, papelerías, refaccionarias.",
         "mods": ATLAS_POS_MODS + ["crm", "branch_catalog_enablement", "purchasing", "promotions", "quotes"],
     },
+    # ── Legacy (taxonomy v1) — display marked so the operator migrates ────────
     {
         "id": "ATLAS_ONE_BEAUTY",
-        "name": "Atlas One Beauty",
-        "desc": "Barberías, estéticas, spas, estudios de uñas y wellness con agenda, servicios y comisiones.",
+        "name": "Atlas One Beauty (legacy — usar Beauty & Wellness o Barber)",
+        "desc": "[LEGACY] Sustituido por ATLAS_ONE_BEAUTY_WELLNESS y ATLAS_ONE_BARBER en taxonomy v2.",
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
@@ -296,13 +297,74 @@ PRESETS = [
     },
     {
         "id": "ATLAS_ONE_GASTRO",
-        "name": "Atlas One Gastro",
-        "desc": "Cafés, restaurantes pequeños, taquerías, food trucks y dark kitchens con KDS, mesas y recetas.",
+        "name": "Atlas One Gastro (legacy — usar Restaurant, Café o Bar)",
+        "desc": "[LEGACY] Sustituido por ATLAS_ONE_RESTAURANT, ATLAS_ONE_CAFE y ATLAS_ONE_BAR en taxonomy v2.",
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
             "kitchen", "tables", "recipes",
             "reports",
+        ],
+    },
+
+    # ── Taxonomy v2 (2026-05-15) — vertical-specific presets ──────────────────
+    {
+        "id": "ATLAS_ONE_BARBER",
+        "name": "Atlas One Barber",
+        "desc": "Barberías masculinas: cortes, barba, diseño y paquetes para hombre.",
+        "mods": [
+            "core", "users", "catalog", "payments", "cash_management", "crm", "pos",
+            "appointments", "commissions", "memberships", "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_BEAUTY_WELLNESS",
+        "name": "Atlas One Beauty & Wellness",
+        "desc": "Estéticas, uñas, depilación, maquillaje, spas y wellness no clínico.",
+        "mods": [
+            "core", "users", "catalog", "inventory", "payments",
+            "cash_management", "crm", "pos",
+            "appointments", "commissions", "memberships",
+            "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_HEALTH",
+        "name": "Atlas One Health",
+        "desc": "Consultorios médicos, dentales, quiroprácticos, fisio y terapia. Agenda, pacientes, planes de tratamiento.",
+        "mods": [
+            "core", "users", "catalog", "payments", "cash_management", "crm", "pos",
+            "appointments", "commissions", "memberships", "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_RESTAURANT",
+        "name": "Atlas One Restaurant",
+        "desc": "Restaurantes con mesas, meseros, cocina y recetas costeadas.",
+        "mods": [
+            "core", "users", "catalog", "inventory", "payments",
+            "cash_management", "crm", "pos",
+            "kitchen", "tables", "recipes", "commissions", "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_CAFE",
+        "name": "Atlas One Café",
+        "desc": "Cafeterías, bakery y mostrador rápido. Operativa ligera, sin mesas asignadas.",
+        "mods": [
+            "core", "users", "catalog", "inventory", "payments",
+            "cash_management", "crm", "pos",
+            "kitchen", "reports",
+        ],
+    },
+    {
+        "id": "ATLAS_ONE_BAR",
+        "name": "Atlas One Bar",
+        "desc": "Bares y cantinas: cocteles, mesas, bartenders con comisión y control de inventario líquido.",
+        "mods": [
+            "core", "users", "catalog", "inventory", "payments",
+            "cash_management", "crm", "pos",
+            "tables", "recipes", "commissions", "reports",
         ],
     },
     {
