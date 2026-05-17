@@ -10,7 +10,7 @@ from app.core.tenant_context import get_current_active_organization
 from app.models import Product, User
 from app.core.security import get_current_user
 from app.crud.products import _is_admin
-from app.schemas.products import BatchActionRequest
+from app.modules.products.schemas import BatchActionRequest
 
 router = APIRouter()
 

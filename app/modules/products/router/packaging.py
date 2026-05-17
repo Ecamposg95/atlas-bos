@@ -13,7 +13,7 @@ from app.models import (
 )
 from app.core.security import get_current_user
 from app.crud.products import _is_admin
-from app.schemas.products import PackagingUpdate
+from app.modules.products.schemas import PackagingUpdate
 
 from ._shared import _MANAGER_ROLES, _PRODUCT_ADVANCED_ROLES
 

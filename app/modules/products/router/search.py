@@ -75,7 +75,7 @@ from app.models import (
 )
 from app.core.security import get_current_user
 from app.crud.products import query_visible_products
-from app.schemas.products import ProductRead, StockLevel
+from app.modules.products.schemas import ProductRead, StockLevel
 
 from ._shared import _compute_product_read
 

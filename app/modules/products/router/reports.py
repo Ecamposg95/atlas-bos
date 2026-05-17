@@ -34,7 +34,7 @@ def hq_inventory_list(
     current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization),
 ):
-    from app.schemas.products import HQInventoryPage, HQInventoryKPIs
+    from app.modules.products.schemas import HQInventoryPage, HQInventoryKPIs
 
     # [A1-10] Admin-only: ADMINISTRADOR / DUEÑO. GERENTE no accede a vista HQ.
     if not _is_admin(current_user):

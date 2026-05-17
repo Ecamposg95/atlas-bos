@@ -40,7 +40,7 @@ from app.crud.products import (
     get_product_if_visible,
     _is_admin,
 )
-from app.schemas.products import (
+from app.modules.products.schemas import (
     ProductCreate, ProductRead, ProductUpdate, ProductListResponse,
 )
 
@@ -67,7 +67,7 @@ def read_products(
     current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization),
 ):
-    from app.models.products import Brand
+    from app.modules.products.models import Brand
 
     # include_inactive solo aplica a admins (helper lo ignora para no-admins)
     is_admin = _is_admin(current_user)
@@ -350,7 +350,7 @@ def create_product(
 
         # [NEW] Create ProductBranchStatus for Commercial Enablement
         # This separates "where can we sell" from "how much stock do we have"
-        from app.models.products import ProductBranchStatus
+        from app.modules.products.models import ProductBranchStatus
         for bid in effective_branch_ids:
             branch_status = ProductBranchStatus(
                 variant_id=new_variant.id,

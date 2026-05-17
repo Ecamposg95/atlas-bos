@@ -35,7 +35,7 @@ from app.crud.products import (
     assert_branches_belong_to_org,
     log_pbs_change,
 )
-from app.schemas.products import (
+from app.modules.products.schemas import (
     BranchStatusUpdate, PBSResponse,
     BulkToggleBranchStatusRequest, BranchStatusFlagsUpdate,
     PbsCloneRequest, PbsCloneResponse,

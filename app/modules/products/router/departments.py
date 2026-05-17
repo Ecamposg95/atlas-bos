@@ -12,7 +12,7 @@ from typing import List
 from app.core.database import get_db
 from app.core.tenant_context import get_current_active_organization
 from app.models import Department
-from app.schemas.products import DepartmentRead
+from app.modules.products.schemas import DepartmentRead
 
 router = APIRouter()
 
