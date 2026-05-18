@@ -94,6 +94,8 @@ def run_migrations():
         # Atlas One presets expansion 2026-05-13 — upsell metadata per module.
         # Populated by scripts/init_presets_v2.py (run manually post-deploy).
         ("modules", "upsell_metadata", "ALTER TABLE modules ADD COLUMN upsell_metadata JSON;"),
+        # Appointments MVP 2026-05-18 — slug for public portal URLs
+        ("organization", "slug", "ALTER TABLE organization ADD COLUMN slug VARCHAR(64);"),
     ]
 
     # Track 1 — Audit + cleanup de Payment huérfanos antes de NOT NULL.
@@ -224,6 +226,37 @@ def run_migrations():
         )).scalar()
         if orphans:
             print(f"  ⚠ {orphans} employees sin organization_id (sin base_branch_id) — resolver manual antes de Sprint 9.")
+
+    # Appointments MVP — backfill slug from name for orgs that don't have one.
+    # Create UNIQUE INDEX first so concurrent backfills (e.g., two Railway
+    # replicas booting) fail-fast with IntegrityError instead of producing
+    # silent duplicates after the fact. Base slug is truncated to 60 chars
+    # so the "-N" suffix (n < 1000 → up to 4 chars) always fits within 64.
+    import re
+    print("\n  Backfill organization.slug…")
+    with engine.connect() as conn:
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ux_organization_slug ON organization (slug);"))
+        conn.commit()
+    with engine.begin() as conn:
+        # Postgres advisory lock to serialize concurrent backfills
+        if engine.dialect.name == "postgresql":
+            conn.execute(text("SELECT pg_advisory_xact_lock(:k)"), {"k": 91827364})
+        rows = conn.execute(text("SELECT id, name FROM organization WHERE slug IS NULL")).fetchall()
+        if not rows:
+            print("  ✓ nothing to backfill")
+        for org_id, name in rows:
+            base = re.sub(r"[^a-z0-9]+", "-", (name or "").lower()).strip("-")[:60] or f"org-{org_id}"
+            cand, n = base, 1
+            while conn.execute(text("SELECT 1 FROM organization WHERE slug = :s"), {"s": cand}).scalar():
+                n += 1
+                cand = f"{base}-{n}"
+                if len(cand) > 64:
+                    # Should never happen with base ≤ 60 and n < 9999, but safe-guard
+                    cand = f"org-{org_id}"
+            conn.execute(text("UPDATE organization SET slug = :s WHERE id = :id"), {"s": cand, "id": org_id})
+            print(f"    · org {org_id} ('{name}') → slug='{cand}'")
+        if rows:
+            print(f"  ✓ backfilled {len(rows)} orgs")
 
     print("✅ Migrations complete")
 

@@ -187,6 +187,7 @@ class Organization(Base):
 
     # Modular suite
     industry_type = Column(Enum(IndustryType), nullable=True)
+    slug = Column(String(64), nullable=True, unique=True)
     hq_branch_id = Column(
         Integer,
         ForeignKey("branches.id", use_alter=True, name="fk_organization_hq_branch"),
