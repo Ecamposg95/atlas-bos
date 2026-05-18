@@ -164,6 +164,14 @@ from app.modules.ai.router           import router as ai_router
 from app.modules.purchasing.router   import router as purchasing_router
 
 app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda"])
+
+from app.modules.appointments.portal_router import router as appointments_portal_router
+
+app.include_router(
+    appointments_portal_router,
+    prefix="/api/portal/booking",
+    tags=["Portal: Booking (público)"],
+)
 app.include_router(commissions_router,  prefix="/api/commissions",  tags=["Comisiones (Beta)"])
 app.include_router(memberships_router,  prefix="/api/memberships",  tags=["Membresías (Beta)"])
 app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recetas (Beta)"])
