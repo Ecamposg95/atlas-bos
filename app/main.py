@@ -163,7 +163,7 @@ from app.modules.recipes.router      import router as recipes_router
 from app.modules.ai.router           import router as ai_router
 from app.modules.purchasing.router   import router as purchasing_router
 
-app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda (Beta)"])
+app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda"])
 app.include_router(commissions_router,  prefix="/api/commissions",  tags=["Comisiones (Beta)"])
 app.include_router(memberships_router,  prefix="/api/memberships",  tags=["Membresías (Beta)"])
 app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recetas (Beta)"])

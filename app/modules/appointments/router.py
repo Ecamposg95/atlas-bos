@@ -3,6 +3,7 @@
 Endpoints for staff (require_module + tenant guard). Customer portal
 endpoints live in portal_router.py.
 """
+from datetime import timedelta
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -340,3 +341,334 @@ def delete_service(
     s = get_tenant_scoped(db, Service, service_id, current_user)
     db.delete(s)
     db.commit()
+
+
+# ── Availability ────────────────────────────────────────────────────────────
+
+from datetime import date as _date  # noqa: E402
+from typing import List as _List  # noqa: E402
+
+from app.modules.appointments.schemas import (  # noqa: E402
+    AvailabilitySlot,
+    AppointmentCreate,
+    AppointmentRead,
+    AppointmentUpdate,
+    CancelAppointment,
+    CompleteAppointment,
+)
+from app.modules.appointments.services import (  # noqa: E402
+    acquire_professional_lock,
+    get_availability,
+)
+from app.modules.appointments.models import (  # noqa: E402
+    Appointment,
+    AppointmentEvent,
+    AppointmentEventType,
+    AppointmentService as ApptServiceLink,
+    AppointmentStatus,
+    BookingChannel,
+)
+
+
+@router.get("/availability", response_model=_List[AvailabilitySlot])
+def availability_endpoint(
+    branch_id: int,
+    date: str,
+    service_ids: str = Query(..., description="comma-separated ids: '1,2,3'"),
+    professional_id: Optional[int] = None,
+    resource_id: Optional[int] = None,
+    slot_minutes: int = 15,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        target = _date.fromisoformat(date)
+    except ValueError:
+        raise HTTPException(status_code=422, detail="date must be YYYY-MM-DD")
+    ids = [int(s) for s in service_ids.split(",") if s.strip()]
+    if not ids:
+        raise HTTPException(status_code=422, detail="service_ids required")
+    return get_availability(
+        db,
+        organization_id=_org_id(current_user),
+        branch_id=branch_id,
+        target_date=target,
+        service_ids=ids,
+        professional_id=professional_id,
+        resource_id=resource_id,
+        slot_minutes=slot_minutes,
+    )
+
+
+# ── Appointment CRUD + lifecycle ────────────────────────────────────────────
+
+def _emit(db, appt: Appointment, ev_type: AppointmentEventType, actor_user_id: Optional[int] = None, payload=None):
+    db.add(AppointmentEvent(
+        organization_id=appt.organization_id,
+        appointment_id=appt.id,
+        event_type=ev_type,
+        actor_user_id=actor_user_id,
+        payload=payload,
+    ))
+
+
+def _services_or_422(db, org_id: int, service_ids: List[int]) -> List[Service]:
+    svcs = db.query(Service).filter(Service.organization_id == org_id, Service.id.in_(service_ids)).all()
+    if len(svcs) != len(service_ids):
+        raise HTTPException(status_code=422, detail="Service(s) not found")
+    return svcs
+
+
+def _validate_no_conflict(db, *, org_id, professional_id, resource_id, starts_at, ends_at, exclude_id=None):
+    q = db.query(Appointment).filter(
+        Appointment.organization_id == org_id,
+        Appointment.professional_id == professional_id,
+        Appointment.starts_at < ends_at,
+        Appointment.ends_at > starts_at,
+        Appointment.status.in_([
+            AppointmentStatus.PENDING,
+            AppointmentStatus.CONFIRMED,
+            AppointmentStatus.IN_PROGRESS,
+        ]),
+    )
+    if exclude_id is not None:
+        q = q.filter(Appointment.id != exclude_id)
+    if q.first():
+        raise HTTPException(status_code=409, detail="Professional has a conflicting appointment")
+    if resource_id is not None:
+        q2 = db.query(Appointment).filter(
+            Appointment.organization_id == org_id,
+            Appointment.resource_id == resource_id,
+            Appointment.starts_at < ends_at,
+            Appointment.ends_at > starts_at,
+            Appointment.status.in_([
+                AppointmentStatus.PENDING,
+                AppointmentStatus.CONFIRMED,
+                AppointmentStatus.IN_PROGRESS,
+            ]),
+        )
+        if exclude_id is not None:
+            q2 = q2.filter(Appointment.id != exclude_id)
+        if q2.first():
+            raise HTTPException(status_code=409, detail="Resource has a conflicting appointment")
+
+
+@router.get("/appointments", response_model=List[AppointmentRead])
+def list_appointments(
+    branch_id: Optional[int] = None,
+    from_: Optional[str] = Query(None, alias="from"),
+    to: Optional[str] = None,
+    professional_id: Optional[int] = None,
+    customer_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    q = scoped_query(db, Appointment, current_user)
+    if branch_id is not None:
+        q = q.filter(Appointment.branch_id == branch_id)
+    if professional_id is not None:
+        q = q.filter(Appointment.professional_id == professional_id)
+    if customer_id is not None:
+        q = q.filter(Appointment.customer_id == customer_id)
+    if from_:
+        q = q.filter(Appointment.starts_at >= from_)
+    if to:
+        q = q.filter(Appointment.starts_at <= to)
+    return q.order_by(Appointment.starts_at).all()
+
+
+@router.post("/appointments", response_model=AppointmentRead, status_code=status.HTTP_201_CREATED)
+def create_appointment(
+    payload: AppointmentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    org_id = _org_id(current_user)
+    # Verify professional + customer + branch belong to org
+    pro = get_tenant_scoped(db, Professional, payload.professional_id, current_user)
+    svcs = _services_or_422(db, org_id, payload.service_ids)
+
+    acquire_professional_lock(db, payload.professional_id)
+
+    total = sum(s.duration_minutes + s.buffer_minutes_after for s in svcs)
+    ends_at = payload.starts_at + timedelta(minutes=total)
+
+    _validate_no_conflict(
+        db,
+        org_id=org_id, professional_id=payload.professional_id,
+        resource_id=payload.resource_id,
+        starts_at=payload.starts_at, ends_at=ends_at,
+    )
+
+    appt = Appointment(
+        organization_id=org_id,
+        branch_id=payload.branch_id,
+        customer_id=payload.customer_id,
+        professional_id=payload.professional_id,
+        resource_id=payload.resource_id,
+        starts_at=payload.starts_at,
+        ends_at=ends_at,
+        notes=payload.notes,
+        booking_channel=BookingChannel.STAFF,
+        created_by=current_user.id,
+    )
+    db.add(appt)
+    db.flush()
+    for idx, svc in enumerate(svcs):
+        db.add(ApptServiceLink(
+            organization_id=org_id, appointment_id=appt.id, service_id=svc.id,
+            sort_order=idx, duration_minutes=svc.duration_minutes,
+        ))
+    _emit(db, appt, AppointmentEventType.CREATED, current_user.id)
+    db.commit()
+    db.refresh(appt)
+    return appt
+
+
+@router.get("/appointments/{aid}", response_model=AppointmentRead)
+def get_appointment(
+    aid: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return get_tenant_scoped(db, Appointment, aid, current_user)
+
+
+@router.put("/appointments/{aid}", response_model=AppointmentRead)
+def update_appointment(
+    aid: int,
+    payload: AppointmentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    appt = get_tenant_scoped(db, Appointment, aid, current_user)
+    if appt.status in [AppointmentStatus.COMPLETED, AppointmentStatus.CANCELED, AppointmentStatus.NO_SHOW]:
+        raise HTTPException(status_code=409, detail=f"Cannot edit appointment in {appt.status.value}")
+    org_id = appt.organization_id
+    changed_time = False
+
+    if payload.professional_id is not None:
+        appt.professional_id = payload.professional_id
+    if payload.resource_id is not None:
+        appt.resource_id = payload.resource_id
+    if payload.notes is not None:
+        appt.notes = payload.notes
+    if payload.service_ids is not None:
+        svcs = _services_or_422(db, org_id, payload.service_ids)
+        db.query(ApptServiceLink).filter(ApptServiceLink.appointment_id == appt.id).delete()
+        for idx, svc in enumerate(svcs):
+            db.add(ApptServiceLink(
+                organization_id=org_id, appointment_id=appt.id, service_id=svc.id,
+                sort_order=idx, duration_minutes=svc.duration_minutes,
+            ))
+        # recompute ends_at from current starts_at
+        total = sum(s.duration_minutes + s.buffer_minutes_after for s in svcs)
+        appt.ends_at = (payload.starts_at or appt.starts_at) + timedelta(minutes=total)
+        changed_time = True
+    if payload.starts_at is not None:
+        appt.starts_at = payload.starts_at
+        if not changed_time:
+            # recompute ends_at based on current services snapshot
+            durations = (
+                db.query(ApptServiceLink.duration_minutes)
+                .filter(ApptServiceLink.appointment_id == appt.id)
+                .all()
+            )
+            total = sum(d[0] for d in durations)
+            appt.ends_at = appt.starts_at + timedelta(minutes=total)
+            changed_time = True
+
+    if changed_time:
+        acquire_professional_lock(db, appt.professional_id)
+        _validate_no_conflict(
+            db, org_id=org_id, professional_id=appt.professional_id,
+            resource_id=appt.resource_id, starts_at=appt.starts_at, ends_at=appt.ends_at,
+            exclude_id=appt.id,
+        )
+        _emit(db, appt, AppointmentEventType.RESCHEDULED, current_user.id,
+              payload={"new_starts_at": appt.starts_at.isoformat()})
+
+    db.commit()
+    db.refresh(appt)
+    return appt
+
+
+def _transition(db, appt: Appointment, new_status: AppointmentStatus, allowed_from: List[AppointmentStatus],
+                ev_type: AppointmentEventType, actor_id: int, payload=None):
+    if appt.status not in allowed_from:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Invalid transition from {appt.status.value} to {new_status.value}",
+        )
+    appt.status = new_status
+    _emit(db, appt, ev_type, actor_id, payload=payload)
+    db.commit()
+    db.refresh(appt)
+
+
+@router.post("/appointments/{aid}/confirm", response_model=AppointmentRead)
+def confirm_appointment(aid: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    appt = get_tenant_scoped(db, Appointment, aid, current_user)
+    _transition(db, appt, AppointmentStatus.CONFIRMED, [AppointmentStatus.PENDING],
+                AppointmentEventType.CONFIRMED, current_user.id)
+    return appt
+
+
+@router.post("/appointments/{aid}/start", response_model=AppointmentRead)
+def start_appointment(aid: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    appt = get_tenant_scoped(db, Appointment, aid, current_user)
+    _transition(db, appt, AppointmentStatus.IN_PROGRESS, [AppointmentStatus.CONFIRMED],
+                AppointmentEventType.STARTED, current_user.id)
+    return appt
+
+
+@router.post("/appointments/{aid}/complete", response_model=AppointmentRead)
+def complete_appointment(
+    aid: int,
+    payload: CompleteAppointment,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    appt = get_tenant_scoped(db, Appointment, aid, current_user)
+    if appt.status != AppointmentStatus.IN_PROGRESS:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Invalid transition from {appt.status.value} to COMPLETED",
+        )
+    if payload.sales_document_id is not None:
+        appt.sales_document_id = payload.sales_document_id
+    if payload.actual_professional_id is not None:
+        appt.actual_professional_id = payload.actual_professional_id
+    appt.status = AppointmentStatus.COMPLETED
+    _emit(db, appt, AppointmentEventType.COMPLETED, current_user.id,
+          payload={"actual_professional_id": appt.actual_professional_id,
+                   "sales_document_id": appt.sales_document_id})
+    db.commit()
+    db.refresh(appt)
+    return appt
+
+
+@router.post("/appointments/{aid}/cancel", response_model=AppointmentRead)
+def cancel_appointment(
+    aid: int,
+    payload: CancelAppointment,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    appt = get_tenant_scoped(db, Appointment, aid, current_user)
+    _transition(
+        db, appt, AppointmentStatus.CANCELED,
+        [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS],
+        AppointmentEventType.CANCELED, current_user.id,
+        payload={"reason": payload.reason},
+    )
+    return appt
+
+
+@router.post("/appointments/{aid}/no-show", response_model=AppointmentRead)
+def no_show_appointment(aid: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    appt = get_tenant_scoped(db, Appointment, aid, current_user)
+    _transition(db, appt, AppointmentStatus.NO_SHOW,
+                [AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING],
+                AppointmentEventType.NO_SHOW, current_user.id)
+    return appt
