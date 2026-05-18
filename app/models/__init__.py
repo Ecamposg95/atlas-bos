@@ -88,3 +88,6 @@ from .platform import (
     OrgFeatureOverride,
     ApiKey,
 )
+
+# 13. Appointments (registered on Base.metadata for create_all)
+from app.modules.appointments import models as _appointments_models  # noqa: F401
