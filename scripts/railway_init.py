@@ -187,6 +187,27 @@ def run_migrations():
             "ix_parked_tickets_user_branch_created",
             "CREATE INDEX IF NOT EXISTS ix_parked_tickets_user_branch_created ON parked_tickets (user_id, branch_id, created_at);",
         ),
+        # Appointments MVP 2026-05-18 — critical indexes for availability + lifecycle
+        (
+            "ix_appt_org_branch_starts",
+            "CREATE INDEX IF NOT EXISTS ix_appt_org_branch_starts ON appointments (organization_id, branch_id, starts_at);",
+        ),
+        (
+            "ix_appt_professional_range",
+            "CREATE INDEX IF NOT EXISTS ix_appt_professional_range ON appointments (professional_id, starts_at, ends_at);",
+        ),
+        (
+            "ix_appt_customer",
+            "CREATE INDEX IF NOT EXISTS ix_appt_customer ON appointments (customer_id);",
+        ),
+        (
+            "ix_appt_events",
+            "CREATE INDEX IF NOT EXISTS ix_appt_events ON appointments_events (appointment_id, created_at);",
+        ),
+        (
+            "ix_blocks_prof_range",
+            "CREATE INDEX IF NOT EXISTS ix_blocks_prof_range ON appointments_blocks (professional_id, starts_at, ends_at);",
+        ),
     ]
 
     with engine.connect() as conn:
@@ -194,6 +215,17 @@ def run_migrations():
             conn.execute(text(ddl))
             conn.commit()
             print(f"  ✓ index {name} ensured")
+
+    # Partial index — only Postgres supports CREATE INDEX ... WHERE
+    if engine.dialect.name == "postgresql":
+        with engine.connect() as conn:
+            conn.execute(text(
+                "CREATE INDEX IF NOT EXISTS ix_appt_resource_range "
+                "ON appointments (resource_id, starts_at, ends_at) "
+                "WHERE resource_id IS NOT NULL;"
+            ))
+            conn.commit()
+            print("  ✓ index ix_appt_resource_range (partial) ensured")
 
     # --- Sprint 2 backfill: cash_sessions.organization_id y employees.organization_id ---
     # Derivado de branches.organization_id. Idempotente (solo filas con NULL).

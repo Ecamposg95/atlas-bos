@@ -36,7 +36,21 @@ from app.core.database import SessionLocal
 from app.core.security import get_password_hash
 from app.models.modules import OrganizationModule
 from app.models.organization import Branch, Organization
+from datetime import datetime, time, timedelta, timezone
+
 from app.models.products import Product, ProductVariant
+from app.modules.appointments.models import (
+    Appointment,
+    AppointmentService as ApptServiceLink,
+    AppointmentStatus,
+    BookingChannel,
+    Professional,
+    ProfessionalSchedule,
+    Resource,
+    ResourceType,
+    Service,
+)
+from app.modules.customers.models import Customer
 from app.modules.tenants.models import BranchType, IndustryType
 from app.modules.users.models import PlatformRole, Role, User, UserOrganization
 from app.services.capabilities_service import apply_industry_preset
@@ -396,6 +410,111 @@ def ensure_products(db, org: Organization, items: list) -> int:
     return created
 
 
+def seed_appointments_demo(db, spec, org, branch, cashier_user, products):
+    """For demos with appointments-enabled presets, populate professional + schedule + sample appointments."""
+    APPT_PRESETS = {
+        "ATLAS_ONE_BARBER":          ResourceType.CHAIR,
+        "ATLAS_ONE_BEAUTY_WELLNESS": ResourceType.CABIN,
+        "ATLAS_ONE_HEALTH":          ResourceType.CONSULTORY,
+        "ATLAS_ONE_SERVICES":        ResourceType.BAY,
+        "ATLAS_ONE_BEAUTY":          ResourceType.CABIN,  # legacy alias
+    }
+    industry = spec["industry_type"].value
+    res_type = APPT_PRESETS.get(industry)
+    if res_type is None:
+        return  # preset doesn't use appointments
+
+    # Idempotent: skip if professional already exists for this cashier+branch
+    existing_pro = (
+        db.query(Professional)
+        .filter(Professional.user_id == cashier_user.id, Professional.branch_id == branch.id)
+        .first()
+    )
+    if existing_pro:
+        logger.info("    · appointments seed already present, skipping")
+        return
+
+    pro = Professional(
+        organization_id=org.id, user_id=cashier_user.id, branch_id=branch.id,
+        is_bookable=True, color="#06b6d4",
+        bio=f"Profesional demo de {spec['name']}",
+    )
+    db.add(pro); db.flush()
+    for wd in range(0, 6):  # Mon-Sat
+        db.add(ProfessionalSchedule(
+            organization_id=org.id, professional_id=pro.id, weekday=wd,
+            start_time=time(9, 0), end_time=time(18, 0),
+        ))
+
+    res = Resource(
+        organization_id=org.id, branch_id=branch.id,
+        name=f"{res_type.value} 1", resource_type=res_type, capacity=1, is_active=True,
+    )
+    db.add(res); db.commit()
+
+    # Mark first 4 product variants as Services
+    durations = [30, 45, 60, 30]
+    variants = (
+        db.query(ProductVariant)
+        .filter(ProductVariant.organization_id == org.id)
+        .order_by(ProductVariant.created_at)
+        .limit(4)
+        .all()
+    )
+    services = []
+    for v, d in zip(variants, durations):
+        if db.query(Service).filter(Service.product_variant_id == v.id).first():
+            continue
+        s = Service(
+            organization_id=org.id, product_variant_id=v.id,
+            duration_minutes=d, buffer_minutes_after=5,
+            requires_resource_type=res_type, is_bookable_online=True,
+        )
+        db.add(s)
+        services.append(s)
+    db.commit()
+    for s in services:
+        db.refresh(s)
+    logger.info(f"    + {len(services)} service(s) marked")
+
+    if not services:
+        # Org has no variants to upgrade to services — skip the demo customer + appointments
+        return
+
+    # Demo customer (only when we have at least one service to attach)
+    cust = Customer(
+        organization_id=org.id, name="Cliente Demo Agenda",
+        email="cliente.demo@atlasone.test", phone="+5215555555555",
+    )
+    db.add(cust); db.commit()
+
+    svc = services[0]
+    today = datetime.now(timezone.utc)
+    today_local = today.replace(hour=10, minute=0, second=0, microsecond=0)
+    yesterday = today_local - timedelta(days=1)
+    later_today = today_local + timedelta(hours=2)
+
+    demos = [
+        (today_local, AppointmentStatus.CONFIRMED),
+        (later_today, AppointmentStatus.PENDING),
+        (yesterday, AppointmentStatus.COMPLETED),
+    ]
+    for starts_at, st in demos:
+        a = Appointment(
+            organization_id=org.id, branch_id=branch.id, customer_id=cust.id,
+            professional_id=pro.id, resource_id=res.id,
+            starts_at=starts_at, ends_at=starts_at + timedelta(minutes=svc.duration_minutes),
+            status=st, booking_channel=BookingChannel.STAFF,
+        )
+        db.add(a); db.flush()
+        db.add(ApptServiceLink(
+            organization_id=org.id, appointment_id=a.id, service_id=svc.id,
+            sort_order=0, duration_minutes=svc.duration_minutes,
+        ))
+    db.commit()
+    logger.info(f"    + 3 demo appointments seeded (1 confirmed today, 1 pending, 1 completed yesterday)")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def seed_all(db) -> None:
     logger.info(f"🚀 Seeding {len(DEMOS)} demo organizations...")
@@ -431,6 +550,16 @@ def seed_all(db) -> None:
                 logger.error(f"    ✗ preset apply failed: {e}")
 
             ensure_products(db, org, spec["products"])
+
+            # Appointments-enabled presets get a professional, schedule, and 3 demo appointments
+            try:
+                cashier = db.query(User).filter(User.username == spec.get("cashier_username", "")).first()
+                if cashier:
+                    seed_appointments_demo(db, spec, org, branch, cashier, spec["products"])
+            except Exception as e:
+                db.rollback()
+                logger.warning(f"    ⚠ appointments demo seed failed: {e}")
+
             succeeded += 1
         except Exception as e:
             # IMPORTANT: roll back so the next iteration starts from a clean
