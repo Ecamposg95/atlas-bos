@@ -27,6 +27,7 @@ export function Button({ label, kind = 'primary', preset, icon: IconCmp, size = 
     : { padding: '8px 14px', fontSize: 13 };
   return (
     <button
+      type="button"
       onClick={onClick}
       style={{
         display: 'inline-flex',
