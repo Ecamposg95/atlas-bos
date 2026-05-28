@@ -7,6 +7,15 @@ interface SearchInputProps {
   width?: number;
 }
 
+/**
+ * Visual placeholder for a search input.
+ *
+ * **Note**: This is a non-functional mockup component, not a real input field.
+ * It renders a `<div>` styled to look like an input. For real search functionality,
+ * use a native `<input>` or a controlled component with onChange + value props.
+ * This is intentional — Atlas One uses it in dashboards where ⌘K invokes a global
+ * command palette modal rather than typing inline.
+ */
 export function SearchInput({
   placeholder = 'Buscar productos, clientes, tickets…',
   width = 320,
