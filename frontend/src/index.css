@@ -117,8 +117,8 @@
     --p-accent-hover:  #082A6B;
     --p-accent-soft:   rgba(11, 58, 143, 0.12);
     --p-accent-line:   rgba(11, 58, 143, 0.28);
-    --p-teal:          #06B6D4;
-    --p-cyan:          #06B6D4;
+    --p-teal:          #0B3A8F;   /* accent — reconciled T4 */
+    --p-cyan:          #06B6D4;   /* accent2 — unchanged */
   }
   [data-preset="ATLAS_ONE_SERVICES"] {
     --p-accent:        #0E7C5C;
@@ -159,8 +159,8 @@
     --p-accent-hover:  #0B7E7B;
     --p-accent-soft:   rgba(14, 159, 156, 0.12);
     --p-accent-line:   rgba(14, 159, 156, 0.28);
-    --p-teal:          #06b6d4;
-    --p-cyan:          #06b6d4;
+    --p-teal:          #0E9F9C;   /* accent — reconciled T4 */
+    --p-cyan:          #7DD3FC;   /* accent2 — reconciled T4 */
   }
   [data-preset="ATLAS_ONE_RESTAURANT"] {
     --p-accent:        #E2531B;
