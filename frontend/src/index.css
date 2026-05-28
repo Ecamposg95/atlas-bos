@@ -223,7 +223,7 @@
   }
 
   body {
-    font-family: 'Montserrat', system-ui, sans-serif;
+    font-family: var(--ao-font-sans);
     font-weight: 500;
     background: var(--dax-bg);
     color: var(--dax-text);
