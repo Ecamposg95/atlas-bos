@@ -35,7 +35,7 @@ export function Sidebar({ preset, active, items, footer, width = 232 }: SidebarP
         {items.map((it, i) => {
           if ('header' in it) {
             return (
-              <div key={i} style={{
+              <div key={`h-${it.header}`} style={{
                 fontFamily: ATLAS_MONO,
                 fontSize: 10,
                 color: sb.mute,
@@ -48,7 +48,7 @@ export function Sidebar({ preset, active, items, footer, width = 232 }: SidebarP
           const isActive = it.label === active;
           const IconCmp = it.icon;
           return (
-            <div key={i} style={{
+            <div key={`i-${it.label}`} style={{
               display: 'flex',
               alignItems: 'center',
               gap: 10,
