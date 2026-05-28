@@ -18,6 +18,13 @@ interface BarChartProps {
 export function BarChart({ data, width = 480, height = 180, color = '#0B0B0B', soft = '#E8E5DD' }: BarChartProps) {
   if (!data.length) return null;
   const max = Math.max(...data.map(d => d.value));
+  if (max === 0) {
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y={height / 2} fontSize={11} fontFamily={ATLAS_MONO} fill={N.muted} textAnchor="middle">Sin datos</text>
+      </svg>
+    );
+  }
   const barW = (width - 20) / data.length - 8;
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>

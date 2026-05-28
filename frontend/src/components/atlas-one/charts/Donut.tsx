@@ -10,9 +10,10 @@ interface DonutProps {
 }
 
 export function Donut({ value = 0.72, label, size = 110, color = '#0B0B0B', track = '#EEEAE0' }: DonutProps) {
+  const v = Math.max(0, Math.min(1, value));
   const r = (size - 14) / 2;
   const c = 2 * Math.PI * r;
-  const dash = value * c;
+  const dash = v * c;
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-90deg)' }}>
@@ -43,7 +44,7 @@ export function Donut({ value = 0.72, label, size = 110, color = '#0B0B0B', trac
           color: N.ink,
           fontFeatureSettings: '"tnum"',
         }}>
-          {Math.round(value * 100)}
+          {Math.round(v * 100)}
           <span style={{ fontSize: 11, color: N.muted, fontFamily: ATLAS_MONO }}>%</span>
         </div>
         {label && <div style={{

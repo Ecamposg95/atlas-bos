@@ -22,7 +22,13 @@ export function LineChart({
   color2 = '#9C9B95',
   labels = [],
 }: LineChartProps) {
-  if (!series.length || !series[0].values.length) return null;
+  if (!series.length || series[0].values.length < 2) {
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y={height / 2} fontSize={11} fontFamily={ATLAS_MONO} fill={N.muted} textAnchor="middle">Sin datos suficientes</text>
+      </svg>
+    );
+  }
   const all = series.flatMap(s => s.values);
   const min = Math.min(...all);
   const max = Math.max(...all);
