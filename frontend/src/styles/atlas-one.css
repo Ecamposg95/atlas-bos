@@ -1,0 +1,24 @@
+/* Atlas One design tokens
+ * Source of truth: C:\Users\ecamp\Devs\Atlas Brain\AtlasONE\ATLAS ONE\system.jsx
+ */
+
+:root {
+  /* Warm canvas neutrals */
+  --ao-canvas:   #F6F4EF;
+  --ao-page:     #FBFAF6;
+  --ao-card:     #FFFFFF;
+  --ao-ink:      #0B0B0B;
+  --ao-body:     #2A2A28;
+  --ao-muted:    #6B6B66;
+  --ao-faint:    #9C9B95;
+  --ao-line:     #E8E5DD;
+  --ao-line2:    #D9D5CB;
+  --ao-chip:     #F2EFE7;
+  --ao-ink-dark: #0E0E10;
+  --ao-ink-soft: #19191C;
+
+  /* Typography */
+  --ao-font-sans:  'IBM Plex Sans', 'Montserrat', system-ui, -apple-system, sans-serif;
+  --ao-font-mono:  'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --ao-font-serif: 'IBM Plex Serif', Georgia, serif;
+}
