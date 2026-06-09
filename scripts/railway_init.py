@@ -32,29 +32,19 @@ def run_migrations():
     print("\n🔄 Running column migrations...")
     from sqlalchemy import text
 
-    # Atlas One presets expansion 2026-05-13 — enum values for the new
-    # commercial suite. ALTER TYPE ADD VALUE cannot run inside a transaction
-    # block on older Postgres versions; use AUTOCOMMIT.
-    atlas_one_industry_values = [
-        # v1 (2026-05-13) — kept for backward compat with existing orgs
-        "ATLAS_ONE_RETAIL",
-        "ATLAS_ONE_BEAUTY",
-        "ATLAS_ONE_GASTRO",
-        "ATLAS_ONE_SERVICES",
-        "ATLAS_ONE_ENTERPRISE",
-        # v2 (2026-05-15) — vertical-specific presets
-        "ATLAS_ONE_BARBER",
-        "ATLAS_ONE_BEAUTY_WELLNESS",
-        "ATLAS_ONE_HEALTH",
-        "ATLAS_ONE_RESTAURANT",
-        "ATLAS_ONE_CAFE",
-        "ATLAS_ONE_BAR",
-    ]
+    # Sync EVERY value of the Python IndustryType enum into the Postgres
+    # `industrytype` type. The DB enum was originally created with the legacy
+    # taxonomy (incl. DATAXPOS); create_all() never ALTERs an existing type, so
+    # renamed/added values — ATLAS_POS itself and the whole ATLAS_ONE_* family —
+    # must be backfilled here, otherwise INSERT org with industry_type='ATLAS_POS'
+    # raises InvalidTextRepresentation. ADD VALUE cannot run in a txn block → AUTOCOMMIT.
     print("\n  Atlas One — ensuring industrytype enum values…")
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
-        for v in atlas_one_industry_values:
-            conn.execute(text(f"ALTER TYPE industrytype ADD VALUE IF NOT EXISTS '{v}'"))
-            print(f"  ✓ industrytype value ensured: {v}")
+        for member in IndustryType:
+            conn.execute(text(
+                f"ALTER TYPE industrytype ADD VALUE IF NOT EXISTS '{member.value}'"
+            ))
+    print(f"  ✓ industrytype enum synced ({len(list(IndustryType))} values)")
 
     migrations = [
         # (table, column, ddl)
@@ -467,13 +457,13 @@ def main():
             # Step 1: Create Superadmin
             create_superadmin(db)
 
-            # Step 2: Initialize Presets (legacy — keeps DATAXPOS untouched)
+            # Step 2: Initialize Presets (legacy)
             initialize_presets(db)
 
             # Step 3: Atlas One presets seed (2026-05-13)
-            # Idempotent upsert — adds 6 new modules + 7 Atlas One presets
-            # (ATLAS_POS aligerado + 5 ATLAS_ONE_*) + CUSTOM. Does NOT delete
-            # legacy presets like DATAXPOS / RESTAURANT_QSR — those stay.
+            # Idempotent upsert — adds 6 new modules + Atlas One presets
+            # (ATLAS_POS aligerado + ATLAS_ONE_*) + CUSTOM, and retires the
+            # legacy DATAXPOS naming (orgs migrated → ATLAS_POS, preset row dropped).
             print("\n🌐 Atlas One — seeding modules & presets...")
             try:
                 from scripts.init_presets_v2 import seed_modules_and_presets

@@ -435,6 +435,31 @@ def seed_modules_and_presets(db: Session) -> None:
             logger.info(f"  + preset: {p['name']}")
     db.commit()
 
+    _cleanup_legacy_dataxpos(db)
+
+
+def _cleanup_legacy_dataxpos(db: Session) -> None:
+    """Retire the legacy DATAXPOS naming (old commercial name for Atlas POS).
+
+    Idempotent: migrates any organization still flagged DATAXPOS onto ATLAS_POS
+    and removes the orphan DATAXPOS row from `industry_presets`. Runs after the
+    enum sync in railway_init guarantees ATLAS_POS exists in the PG enum.
+    """
+    from sqlalchemy import text
+
+    migrated = db.execute(text(
+        "UPDATE organization SET industry_type = 'ATLAS_POS' "
+        "WHERE industry_type::text = 'DATAXPOS'"
+    )).rowcount
+    deleted = db.execute(text(
+        "DELETE FROM industry_presets WHERE industry_type = 'DATAXPOS'"
+    )).rowcount
+    db.commit()
+    if migrated or deleted:
+        logger.info(f"  ✓ DATAXPOS retired (orgs migrated={migrated}, preset rows removed={deleted})")
+    else:
+        logger.info("  · DATAXPOS already absent")
+
 
 def main():
     db = SessionLocal()

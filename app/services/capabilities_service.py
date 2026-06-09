@@ -36,9 +36,11 @@ MOD_MENU = "menu"
 # fallback dict solo se consulta si la query a `industry_presets` no
 # devuelve nada para una industria dada.
 INDUSTRY_PRESETS = {
+    # Must mirror ATLAS_POS_MODS in scripts/init_presets_v2.py (DB row is the
+    # source of truth; this fallback only fires if industry_presets is empty).
     IndustryType.ATLAS_POS: [
-        MOD_CORE, MOD_POS, MOD_CASH, MOD_INVENTORY, MOD_CATALOG, MOD_BRANCH_CATALOG,
-        MOD_RETURNS, MOD_PRICING, MOD_PROMOTIONS, MOD_PAYMENTS, MOD_CRM, MOD_REPORTS
+        MOD_CORE, MOD_POS, MOD_CASH, MOD_CATALOG, MOD_INVENTORY,
+        MOD_RETURNS, MOD_PRICING, MOD_PAYMENTS, MOD_REPORTS
     ],
     IndustryType.DISTRIBUTOR_POS: [
         MOD_CORE, MOD_REPORTS, MOD_POS, MOD_WAREHOUSE, MOD_QUOTES, MOD_INVENTORY, MOD_CASH, MOD_CATALOG

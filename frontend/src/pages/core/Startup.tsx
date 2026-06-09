@@ -8,10 +8,11 @@ type PresetType = 'Atlas POS' | 'Retail' | 'Gastronomía' | 'Logística' | 'Serv
 
 const PRESET_KEY: Record<PresetType, string> = {
   'Atlas POS': 'ATLAS_POS',
-  Retail: 'CUSTOM',
-  'Gastronomía': 'CUSTOM',
+  Retail: 'ATLAS_ONE_RETAIL',
+  'Gastronomía': 'ATLAS_ONE_RESTAURANT',
+  // No hay preset de logística dedicado en el seed v2 todavía → arranca en base.
   'Logística': 'CUSTOM',
-  Servicios: 'CUSTOM',
+  Servicios: 'ATLAS_ONE_SERVICES',
   Manual: 'CUSTOM',
 }
 
