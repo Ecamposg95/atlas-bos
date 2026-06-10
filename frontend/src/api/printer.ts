@@ -90,6 +90,18 @@ export interface AgentInstallResult {
   steps: AgentInstallStep[]
 }
 
+export interface AgentSystemSetupResult {
+  status: 'ok' | 'error'
+  package_manager: string
+  elevation: string
+  user: string | null
+  packages: string[]
+  returncode: number
+  stdout: string
+  stderr: string
+  needs_relogin: boolean
+}
+
 export interface AgentDiagnostics {
   version: string
   os: string
@@ -258,6 +270,25 @@ export const printerApi = {
       const err = await res.json().catch(() => ({})) as { detail?: string }
       throw new Error(err?.detail ?? `Test-print error ${res.status}`)
     }
+  },
+
+  /**
+   * POST /system/setup — actualiza el sistema e instala CUPS + drivers de
+   * impresora vía el gestor de paquetes (pide autorización gráfica con pkexec).
+   * Solo Linux. Puede tardar varios minutos.
+   */
+  systemSetup: async (includeDrivers = true): Promise<AgentSystemSetupResult> => {
+    const res = await agentFetch('/system/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ include_drivers: includeDrivers }),
+      timeoutMs: 600_000,
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { detail?: string }
+      throw new Error(err?.detail ?? `Setup error ${res.status}`)
+    }
+    return res.json()
   },
 
   /** URL de descarga del agente por plataforma */

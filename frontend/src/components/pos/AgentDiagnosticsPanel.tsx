@@ -18,6 +18,7 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
   const [diag, setDiag] = useState<AgentDiagnostics | null | 'offline'>(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(false)
+  const [setupRunning, setSetupRunning] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -25,6 +26,28 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
     setDiag(data ?? 'offline')
     setLoading(false)
   }, [])
+
+  const runSystemSetup = useCallback(async () => {
+    setSetupRunning(true)
+    toast.info('Instalando CUPS y drivers… acepta el diálogo de administrador. Puede tardar varios minutos.')
+    try {
+      const res = await printerApi.systemSetup()
+      if (res.status === 'ok') {
+        toast.success(
+          res.needs_relogin
+            ? 'Sistema actualizado. Cierra sesión y vuelve a entrar para aplicar permisos de impresión.'
+            : 'Sistema y drivers actualizados correctamente.',
+        )
+      } else {
+        toast.error(`Terminó con errores: ${res.stderr.slice(-200) || 'revisa el log del agente'}`)
+      }
+      await load()
+    } catch (e) {
+      toast.error((e as Error).message || 'No se pudo actualizar el sistema')
+    } finally {
+      setSetupRunning(false)
+    }
+  }, [load])
 
   useEffect(() => {
     load()
@@ -171,7 +194,7 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
             </div>
           )}
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex flex-wrap gap-2 pt-1">
             <button
               onClick={load}
               disabled={loading}
@@ -179,6 +202,17 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
             >
               {loading ? 'Verificando…' : 'Actualizar'}
             </button>
+            {diag.os === 'Linux' && (
+              <button
+                onClick={runSystemSetup}
+                disabled={setupRunning}
+                title="Actualiza el sistema e instala CUPS + drivers de impresora (pide autorización de administrador)"
+                className="text-xs px-3 py-1.5 rounded-md bg-indigo-600/20 text-indigo-200 border border-indigo-500/30 hover:bg-indigo-600/30 disabled:opacity-50"
+              >
+                <i className="fa-solid fa-download mr-1.5" />
+                {setupRunning ? 'Instalando…' : 'Actualizar sistema y drivers'}
+              </button>
+            )}
             <a
               href="https://localhost:9100/diagnostics"
               target="_blank"

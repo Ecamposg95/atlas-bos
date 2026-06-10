@@ -519,6 +519,11 @@ class TestPrintRequest(BaseModel):
     paper_width_mm: int = 80
 
 
+class SystemSetupRequest(BaseModel):
+    # Si False, solo instala CUPS sin los paquetes de drivers de impresora.
+    include_drivers: bool = True
+
+
 class OpenDrawerRequest(BaseModel):
     printer_name: str
 
@@ -808,6 +813,131 @@ def install_printer(req: InstallPrinterRequest):
         "queue_name": qname,
         "uri": req.uri,
         "steps": steps,
+    }
+
+
+def _detect_pkg_manager() -> Optional[dict]:
+    """Detecta el gestor de paquetes del sistema y devuelve el plan de instalación.
+
+    Returns {name, packages_core, packages_drivers, build(script_body)} o None
+    si no se reconoce. Solo Linux."""
+    if _which("apt-get"):
+        return {
+            "name": "apt",
+            "core": ["cups", "cups-client", "cups-bsd"],
+            "drivers": ["printer-driver-escpr", "printer-driver-gutenprint", "system-config-printer"],
+            "update": "apt-get update",
+            "install": "DEBIAN_FRONTEND=noninteractive apt-get install -y",
+        }
+    if _which("dnf"):
+        return {
+            "name": "dnf",
+            "core": ["cups", "cups-client"],
+            "drivers": ["gutenprint", "epson-inkjet-printer-escpr"],
+            "update": "dnf -y makecache",
+            "install": "dnf install -y",
+        }
+    if _which("pacman"):
+        return {
+            "name": "pacman",
+            "core": ["cups", "cups-pdf"],
+            "drivers": ["gutenprint"],
+            "update": "pacman -Sy --noconfirm",
+            "install": "pacman -S --noconfirm",
+        }
+    if _which("zypper"):
+        return {
+            "name": "zypper",
+            "core": ["cups", "cups-client"],
+            "drivers": ["gutenprint"],
+            "update": "zypper --non-interactive refresh",
+            "install": "zypper --non-interactive install",
+        }
+    return None
+
+
+@app.post("/system/setup")
+def system_setup(req: SystemSetupRequest):
+    """Actualiza el sistema e instala lo necesario para imprimir: CUPS, drivers
+    comunes, arranca el demonio y agrega al usuario al grupo de administración
+    de impresión. Requiere privilegios → usa `pkexec` (diálogo gráfico) o
+    `sudo -n`. Solo Linux."""
+    if _IS_WINDOWS:
+        raise HTTPException(status_code=400, detail="Solo Linux. En Windows usa Windows Update y 'Agregar impresora'.")
+    if _IS_MAC:
+        raise HTTPException(status_code=400, detail="En macOS CUPS ya viene incluido; no requiere instalación de drivers.")
+
+    plan = _detect_pkg_manager()
+    if not plan:
+        raise HTTPException(
+            status_code=500,
+            detail="Gestor de paquetes no reconocido (no apt/dnf/pacman/zypper). Instala CUPS manualmente.",
+        )
+
+    # Usuario real (antes de elevar; dentro de pkexec $USER sería root).
+    target_user = os.environ.get("SUDO_USER") or os.environ.get("USER") or os.environ.get("LOGNAME") or ""
+    target_user = re.sub(r"[^a-zA-Z0-9_.-]", "", target_user)
+
+    pkgs = list(plan["core"]) + (list(plan["drivers"]) if req.include_drivers else [])
+    lines = [
+        "set -e",
+        plan["update"],
+        f"{plan['install']} {' '.join(pkgs)}",
+        "systemctl enable --now cups 2>/dev/null || systemctl enable --now cups.service 2>/dev/null || true",
+    ]
+    if target_user:
+        # apt usa 'lpadmin'; otras distros suelen usar 'lp'/'sys'. Best-effort.
+        lines.append(
+            f'usermod -aG lpadmin "{target_user}" 2>/dev/null '
+            f'|| usermod -aG lp "{target_user}" 2>/dev/null || true'
+        )
+    script = "\n".join(lines)
+
+    # Elegir mecanismo de elevación.
+    if _which("pkexec"):
+        cmd = ["pkexec", "bash", "-c", script]
+        elevation = "pkexec"
+    elif _which("sudo"):
+        cmd = ["sudo", "-n", "bash", "-c", script]
+        elevation = "sudo -n"
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "No hay forma de elevar privilegios (falta pkexec y sudo). "
+                f"Ejecuta manualmente en terminal: sudo bash -c '{script}'"
+            ),
+        )
+
+    logger.info(f"system_setup via {elevation} ({plan['name']}): {pkgs}")
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="La instalación excedió el tiempo límite (10 min).")
+
+    ok = p.returncode == 0
+    stderr = (p.stderr or "").strip()
+    if not ok:
+        low = stderr.lower()
+        if "dismiss" in low or "authentication" in low or "not authorized" in low or p.returncode == 126:
+            raise HTTPException(status_code=403, detail="Autorización cancelada o denegada. Acepta el diálogo de administrador y reintenta.")
+        if elevation == "sudo -n" and ("password" in low or "a terminal is required" in low):
+            raise HTTPException(
+                status_code=403,
+                detail="sudo requiere contraseña y no hay diálogo gráfico (pkexec/policykit). Instala 'policykit-1' o corre el agente desde una terminal con sudo disponible.",
+            )
+
+    return {
+        "status": "ok" if ok else "error",
+        "package_manager": plan["name"],
+        "elevation": elevation,
+        "user": target_user or None,
+        "packages": pkgs,
+        "returncode": p.returncode,
+        "stdout": (p.stdout or "").strip()[-4000:],
+        "stderr": stderr[-4000:],
+        # Cambio de grupo requiere re-login para que `lpadmin` aplique sin sudo.
+        "needs_relogin": ok and bool(target_user),
     }
 
 
