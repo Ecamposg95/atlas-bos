@@ -288,6 +288,7 @@ PRESETS = [
         "id": "ATLAS_ONE_BEAUTY",
         "name": "Atlas One Beauty (legacy — usar Beauty & Wellness o Barber)",
         "desc": "[LEGACY] Sustituido por ATLAS_ONE_BEAUTY_WELLNESS y ATLAS_ONE_BARBER en taxonomy v2.",
+        "deprecated": True,
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
@@ -299,6 +300,7 @@ PRESETS = [
         "id": "ATLAS_ONE_GASTRO",
         "name": "Atlas One Gastro (legacy — usar Restaurant, Café o Bar)",
         "desc": "[LEGACY] Sustituido por ATLAS_ONE_RESTAURANT, ATLAS_ONE_CAFE y ATLAS_ONE_BAR en taxonomy v2.",
+        "deprecated": True,
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
@@ -421,6 +423,7 @@ def seed_modules_and_presets(db: Session) -> None:
             existing.description = p["desc"]
             existing.modules = p["mods"]
             existing.is_system = True
+            existing.is_deprecated = p.get("deprecated", False)
             logger.info(f"  ~ preset: {p['name']}")
         else:
             db.add(
@@ -430,6 +433,7 @@ def seed_modules_and_presets(db: Session) -> None:
                     description=p["desc"],
                     modules=p["mods"],
                     is_system=True,
+                    is_deprecated=p.get("deprecated", False),
                 )
             )
             logger.info(f"  + preset: {p['name']}")

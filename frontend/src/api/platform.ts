@@ -233,6 +233,7 @@ export interface IndustryPreset {
   description: string | null
   modules: string[]
   is_system: boolean
+  is_deprecated?: boolean
 }
 
 // ── Module Upsell System (2026-05-13) ───────────────────────────────────────

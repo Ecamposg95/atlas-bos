@@ -8,6 +8,7 @@ class IndustryPresetBase(BaseModel):
     description: Optional[str] = None
     modules: List[str]
     is_system: bool = False
+    is_deprecated: bool = False
 
 class IndustryPresetCreate(IndustryPresetBase):
     pass
@@ -16,6 +17,7 @@ class IndustryPresetUpdate(BaseModel):
     display_name: Optional[str] = None
     description: Optional[str] = None
     modules: Optional[List[str]] = None
+    is_deprecated: Optional[bool] = None
 
 class IndustryPresetRead(IndustryPresetBase):
     id: int

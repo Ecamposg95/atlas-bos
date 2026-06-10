@@ -18,11 +18,18 @@ router = APIRouter()
 # --- 9. INDUSTRY PRESETS (Dynamic Management) ---
 
 @router.get("/presets", response_model=List[IndustryPresetRead])
-def list_industry_presets(db: Session = Depends(get_db)):
-    """List all industry presets from the database."""
+def list_industry_presets(
+    include_deprecated: bool = False,
+    db: Session = Depends(get_db),
+):
+    """List industry presets. Deprecated presets are hidden unless explicitly requested."""
     from app.models.modules import IndustryPreset
 
-    presets = db.query(IndustryPreset).order_by(IndustryPreset.display_name).all()
+    q = db.query(IndustryPreset)
+    if not include_deprecated:
+        # is_deprecated may be NULL on rows created before the column existed → treat as not deprecated.
+        q = q.filter(IndustryPreset.is_deprecated.isnot(True))
+    presets = q.order_by(IndustryPreset.display_name).all()
     return presets
 
 @router.get("/presets/{preset_id}", response_model=IndustryPresetRead)

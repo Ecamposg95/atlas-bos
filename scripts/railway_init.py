@@ -86,6 +86,8 @@ def run_migrations():
         ("modules", "upsell_metadata", "ALTER TABLE modules ADD COLUMN upsell_metadata JSON;"),
         # Appointments MVP 2026-05-18 — slug for public portal URLs
         ("organization", "slug", "ALTER TABLE organization ADD COLUMN slug VARCHAR(64);"),
+        # Preset deprecation 2026-06-09 — hide legacy presets from selectors
+        ("industry_presets", "is_deprecated", "ALTER TABLE industry_presets ADD COLUMN is_deprecated BOOLEAN NOT NULL DEFAULT FALSE;"),
     ]
 
     # Track 1 — Audit + cleanup de Payment huérfanos antes de NOT NULL.

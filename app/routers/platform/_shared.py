@@ -52,6 +52,7 @@ class IndustryPresetUpdate(BaseModel):
     description: Optional[str] = None
     modules: Optional[List[str]] = None
     is_system: Optional[bool] = None
+    is_deprecated: Optional[bool] = None
 
 
 def _existing_tables(db: Session) -> set:

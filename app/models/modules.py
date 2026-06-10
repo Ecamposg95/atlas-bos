@@ -55,3 +55,4 @@ class IndustryPreset(Base):
     description = Column(String, nullable=True)
     modules = Column(JSON, nullable=False)  # List of module keys
     is_system = Column(Boolean, default=True)  # System presets have warnings when editing
+    is_deprecated = Column(Boolean, nullable=False, default=False)  # Hidden from selectors; kept for existing orgs
