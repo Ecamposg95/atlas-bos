@@ -19,6 +19,7 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState(false)
   const [setupRunning, setSetupRunning] = useState(false)
+  const [spoolerRunning, setSpoolerRunning] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -46,6 +47,21 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
       toast.error((e as Error).message || 'No se pudo actualizar el sistema')
     } finally {
       setSetupRunning(false)
+    }
+  }, [load])
+
+  const runSpoolerRepair = useCallback(async () => {
+    setSpoolerRunning(true)
+    toast.info('Reparando Print Spooler… acepta el diálogo de Administrador (UAC) si aparece.')
+    try {
+      const res = await printerApi.repairSpooler()
+      if (res.running) toast.success(res.message)
+      else toast.error(res.message)
+      await load()
+    } catch (e) {
+      toast.error((e as Error).message || 'No se pudo reparar el spooler')
+    } finally {
+      setSpoolerRunning(false)
     }
   }, [load])
 
@@ -211,6 +227,17 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
               >
                 <i className="fa-solid fa-download mr-1.5" />
                 {setupRunning ? 'Instalando…' : 'Actualizar sistema y drivers'}
+              </button>
+            )}
+            {diag.os === 'Windows' && (
+              <button
+                onClick={runSpoolerRepair}
+                disabled={spoolerRunning}
+                title="Deja el Print Spooler en inicio automático y lo arranca (pide autorización UAC)"
+                className="text-xs px-3 py-1.5 rounded-md bg-indigo-600/20 text-indigo-200 border border-indigo-500/30 hover:bg-indigo-600/30 disabled:opacity-50"
+              >
+                <i className="fa-solid fa-wrench mr-1.5" />
+                {spoolerRunning ? 'Reparando…' : 'Reparar Print Spooler'}
               </button>
             )}
             <a

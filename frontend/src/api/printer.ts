@@ -102,6 +102,14 @@ export interface AgentSystemSetupResult {
   needs_relogin: boolean
 }
 
+export interface AgentSpoolerRepairResult {
+  status: 'ok' | 'error'
+  running: boolean
+  was_running: boolean
+  message: string
+  steps: unknown[]
+}
+
 export interface AgentDiagnostics {
   version: string
   os: string
@@ -287,6 +295,19 @@ export const printerApi = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { detail?: string }
       throw new Error(err?.detail ?? `Setup error ${res.status}`)
+    }
+    return res.json()
+  },
+
+  /**
+   * POST /system/spooler-repair — Windows: deja el Print Spooler en automático
+   * y lo arranca (pide elevación UAC si hace falta).
+   */
+  repairSpooler: async (): Promise<AgentSpoolerRepairResult> => {
+    const res = await agentFetch('/system/spooler-repair', { method: 'POST', timeoutMs: 90_000 })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as { detail?: string }
+      throw new Error(err?.detail ?? `Spooler error ${res.status}`)
     }
     return res.json()
   },

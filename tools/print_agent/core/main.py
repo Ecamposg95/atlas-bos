@@ -112,6 +112,9 @@ MAX_PAYLOAD_BYTES = 3 * 1024 * 1024  # base64 chars
 
 app = FastAPI(title="Atlas POS Local Print Agent", version=VERSION)
 
+# Dominios extra vía env (separados por coma) para despliegues con dominio
+# propio. Ej: ATLAS_AGENT_ORIGINS="https://pos.miempresa.com,https://app.atlasone.mx"
+_ENV_ORIGINS = [o.strip() for o in os.environ.get("ATLAS_AGENT_ORIGINS", "").split(",") if o.strip()]
 _CORS_ORIGINS = [
     "https://datax.up.railway.app",
     "https://qa-datax.up.railway.app",
@@ -119,12 +122,15 @@ _CORS_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://localhost:8080",
+    *_ENV_ORIGINS,
 ]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
-    # Cubre localhost + subdominios *-datax.up.railway.app (qa, beta, staging…)
-    allow_origin_regex=r"https?://(localhost(:\d+)?|[a-z0-9-]+-datax\.up\.railway\.app)",
+    # Cubre localhost (cualquier puerto) + CUALQUIER subdominio *.up.railway.app.
+    # El rebrand a Atlas One puede cambiar el host de Railway; este regex evita
+    # romper CORS cada vez. Dominios propios se agregan por ATLAS_AGENT_ORIGINS.
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://[a-z0-9-]+\.up\.railway\.app",
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     # Access-Control-Request-Private-Network must be in allow_headers so Chrome
@@ -938,6 +944,75 @@ def system_setup(req: SystemSetupRequest):
         "stderr": stderr[-4000:],
         # Cambio de grupo requiere re-login para que `lpadmin` aplique sin sudo.
         "needs_relogin": ok and bool(target_user),
+    }
+
+
+@app.post("/system/spooler-repair")
+def spooler_repair():
+    """Windows: deja el Print Spooler en inicio automático y lo arranca.
+
+    Requiere privilegios. Intenta directo (si el agente ya es Administrador) y,
+    si falla, eleva con UAC vía `Start-Process -Verb RunAs`. Tras elevar no se
+    puede capturar la salida del proceso elevado, así que se sondea el estado
+    del servicio para confirmar."""
+    if not _IS_WINDOWS:
+        raise HTTPException(status_code=400, detail="Solo Windows. En Linux usa 'Actualizar sistema y drivers'.")
+
+    was_running = _spooler_running()
+    steps: list[dict] = []
+
+    def _run(label: str, cmd: list[str]) -> bool:
+        try:
+            p = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+            steps.append({"label": label, "ok": p.returncode == 0,
+                          "stdout": (p.stdout or "").strip(), "stderr": (p.stderr or "").strip()})
+            return p.returncode == 0
+        except Exception as e:
+            steps.append({"label": label, "ok": False, "error": str(e)})
+            return False
+
+    # 1) Intento directo (funciona si el agente corre como Administrador).
+    _run("sc config", ["sc", "config", "Spooler", "start=", "auto"])
+    _run("net start", ["net", "start", "Spooler"])  # exit 2 = ya estaba arrancado
+
+    # 2) Si sigue sin correr, elevar con UAC.
+    if not _spooler_running():
+        ps_cmd = (
+            "Start-Process -FilePath cmd.exe -Verb RunAs -WindowStyle Hidden "
+            "-ArgumentList '/c sc config Spooler start= auto & net start Spooler'"
+        )
+        try:
+            p = subprocess.run(
+                ["powershell", "-NoProfile", "-Command", ps_cmd],
+                capture_output=True, text=True, timeout=60,
+            )
+            steps.append({"label": "UAC elevate", "ok": p.returncode == 0,
+                          "stderr": (p.stderr or "").strip()})
+            if p.returncode != 0:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Elevación cancelada o denegada (UAC). Acepta el diálogo de Administrador y reintenta.",
+                )
+        except subprocess.TimeoutExpired:
+            raise HTTPException(status_code=500, detail="Tiempo agotado esperando el diálogo de Administrador.")
+        # El proceso elevado es asíncrono: sondear hasta ~8s.
+        for _ in range(16):
+            if _spooler_running():
+                break
+            time.sleep(0.5)
+
+    running = _spooler_running()
+    logger.info(f"spooler_repair: was_running={was_running} running={running}")
+    return {
+        "status": "ok" if running else "error",
+        "running": running,
+        "was_running": was_running,
+        "steps": steps,
+        "message": (
+            "Print Spooler activo y en inicio automático."
+            if running else
+            "No se pudo iniciar el Print Spooler. Inícialo manualmente: services.msc → Print Spooler → Iniciar."
+        ),
     }
 
 

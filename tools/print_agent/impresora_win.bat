@@ -80,7 +80,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [INFO]    Preparando certificado local SSL...
+echo [INFO]    Registrando componentes de Windows (pywin32)...
 "%PYTHON%" -m pywin32_postinstall -install >nul 2>&1
 if %errorlevel% neq 0 (
     "%PYTHON%" "%VENV_DIR%\Scripts\pywin32_postinstall.py" -install >nul 2>&1
