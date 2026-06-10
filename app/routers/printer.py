@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Body
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -19,7 +19,13 @@ from pathlib import Path
 router = APIRouter()
 
 
-def _resolve_printer(current_user: User, organization) -> Tuple[PosPrinter, Optional[str]]:
+def _resolve_printer(
+    current_user: User,
+    organization,
+    *,
+    override_printer_name: Optional[str] = None,
+    override_width: Optional[int] = None,
+) -> Tuple[PosPrinter, Optional[str]]:
     """Resolve printer config para construir bytes ESC/POS.
 
     Track 4 (POS bug-fix): el printer.printer_name solo se usa como **hint**
@@ -27,16 +33,24 @@ def _resolve_printer(current_user: User, organization) -> Tuple[PosPrinter, Opti
     de cada PC (cada cajero puede tener N PCs con N impresoras distintas);
     el server-side print mode quedó deprecado.
 
+    Los overrides permiten que "Probar impresora" refleje la selección que el
+    cajero tiene en pantalla aunque todavía no la haya guardado en la sucursal.
+
     Returns (PosPrinter instance, raw target name preserved for response only).
     """
     target = None
-    if current_user.branch and current_user.branch.printer_name:
+    if override_printer_name:
+        target = override_printer_name
+    elif current_user.branch and current_user.branch.printer_name:
         target = current_user.branch.printer_name
     elif organization and organization.printer_name:
         target = organization.printer_name
     p_name = target or "POS-80"
-    branch_width = getattr(current_user.branch, 'paper_width_mm', None) if current_user.branch else None
-    width = branch_width if branch_width in (58, 80) else (58 if "58" in p_name else 80)
+    if override_width in (58, 80):
+        width = override_width
+    else:
+        branch_width = getattr(current_user.branch, 'paper_width_mm', None) if current_user.branch else None
+        width = branch_width if branch_width in (58, 80) else (58 if "58" in p_name else 80)
     return PosPrinter(printer_name=p_name, paper_width_mm=width), target
 
 
@@ -70,9 +84,17 @@ def _record_print_job(db: Session, *, raw_bytes: bytes, printer_name: Optional[s
     return job
 
 
+class TestPrintRequest(BaseModel):
+    """Override opcional desde la UI: el cajero prueba con la impresora/ancho
+    que tiene seleccionado en pantalla, sin necesidad de guardar primero."""
+    printer_name: Optional[str] = None
+    paper_width_mm: Optional[int] = None
+
+
 @router.post("/test-print")
 def test_print_endpoint(
     request: Request,
+    payload: Optional[TestPrintRequest] = Body(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization)
@@ -80,7 +102,12 @@ def test_print_endpoint(
     """Track 4: siempre retorna base64. El agente local de cada PC imprime."""
     from app.models.organization import Organization
     organization = db.query(Organization).filter(Organization.id == org_id).first()
-    printer, target_printer_name = _resolve_printer(current_user, organization)
+    printer, target_printer_name = _resolve_printer(
+        current_user,
+        organization,
+        override_printer_name=payload.printer_name if payload else None,
+        override_width=payload.paper_width_mm if payload else None,
+    )
     try:
         raw_bytes = printer.build_test_ticket_bytes(organization, branch=current_user.branch)
     except Exception as e:

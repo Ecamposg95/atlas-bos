@@ -9,6 +9,40 @@ export interface PrinterSettings {
 
 export const AGENT_BASE = 'https://localhost:9100'
 
+/**
+ * Error de conectividad con el agente local: está apagado, o su certificado
+ * autofirmado no ha sido aceptado por el navegador. Un `fetch` a
+ * https://localhost:9100 falla igual en ambos casos (TypeError "Failed to
+ * fetch"), así que damos un mensaje accionable que cubre las dos causas.
+ */
+export class AgentUnreachableError extends Error {
+  constructor() {
+    super(
+      'No se pudo conectar al Agente de Impresión (https://localhost:9100). ' +
+      'Verifica que el agente esté abierto y que hayas aceptado su certificado: ' +
+      'abre https://localhost:9100 una vez en el navegador y acepta la advertencia de seguridad.'
+    )
+    this.name = 'AgentUnreachableError'
+  }
+}
+
+/** fetch contra el agente local que traduce errores de red a AgentUnreachableError. */
+async function agentFetch(
+  path: string,
+  init: RequestInit & { timeoutMs?: number } = {},
+): Promise<Response> {
+  const { timeoutMs, signal, ...rest } = init
+  try {
+    return await fetch(`${AGENT_BASE}${path}`, {
+      ...rest,
+      signal: signal ?? (timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined),
+    })
+  } catch {
+    // Network error / abort por timeout / cert rechazado → todos opacos para JS.
+    throw new AgentUnreachableError()
+  }
+}
+
 export interface AgentCupsQueue {
   name: string
   device_uri: string | null
@@ -136,9 +170,7 @@ export const printerApi = {
    * y sugiere nombre de cola para cada uno (Linux/macOS solo).
    */
   detectPrinters: async (): Promise<AgentDetectResult> => {
-    const res = await fetch(`${AGENT_BASE}/printers/detect`, {
-      signal: AbortSignal.timeout(15000),
-    })
+    const res = await agentFetch('/printers/detect', { timeoutMs: 15000 })
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { detail?: string }
       throw new Error(err?.detail ?? `Detect error ${res.status}`)
@@ -154,7 +186,7 @@ export const printerApi = {
     queueName: string,
     setDefault = false,
   ): Promise<AgentInstallResult> => {
-    const res = await fetch(`${AGENT_BASE}/printers/install`, {
+    const res = await agentFetch('/printers/install', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uri, queue_name: queueName, set_default: setDefault }),
@@ -217,7 +249,7 @@ export const printerApi = {
    * generado por el agente (no requiere backend).
    */
   testPrintOnQueue: async (queueName: string, paperWidthMm = 80): Promise<void> => {
-    const res = await fetch(`${AGENT_BASE}/printers/test-print`, {
+    const res = await agentFetch('/printers/test-print', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ printer_name: queueName, paper_width_mm: paperWidthMm }),
@@ -232,20 +264,28 @@ export const printerApi = {
   downloadAgentUrl: (platform: 'windows' | 'linux' | 'mac'): string =>
     `/api/printer/download-agent?platform=${platform}`,
 
-  /** Ticket de prueba en base64 desde backend */
-  testPrintBase64: async (): Promise<string> => {
+  /**
+   * Ticket de prueba en base64 desde backend. Acepta override opcional para
+   * que la prueba refleje la impresora/ancho seleccionados en la UI aunque
+   * todavía no se hayan guardado en la sucursal.
+   */
+  testPrintBase64: async (opts?: { printerName?: string | null; paperWidthMm?: number }): Promise<string> => {
+    const body: Record<string, unknown> = {}
+    if (opts?.printerName) body.printer_name = opts.printerName
+    if (opts?.paperWidthMm) body.paper_width_mm = opts.paperWidthMm
     const { data } = await client.post<{ content_base64?: string; base64?: string }>(
-      '/printer/test-print?mode=return_base64'
+      '/printer/test-print', body
     )
     return data.content_base64 ?? data.base64 ?? ''
   },
 
   /** Enviar base64 al agente local para imprimir */
   printViaAgent: async (printerName: string, base64: string): Promise<void> => {
-    const res = await fetch(`${AGENT_BASE}/print`, {
+    const res = await agentFetch('/print', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ printer_name: printerName, content_base64: base64 }),
+      timeoutMs: 8000,
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { detail?: string }
@@ -255,10 +295,11 @@ export const printerApi = {
 
   /** Abrir el cajón de dinero sin imprimir. Usa el mismo canal que /print. */
   openDrawerViaAgent: async (printerName: string): Promise<void> => {
-    const res = await fetch(`${AGENT_BASE}/drawer/open`, {
+    const res = await agentFetch('/drawer/open', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ printer_name: printerName }),
+      timeoutMs: 8000,
     })
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { detail?: string }

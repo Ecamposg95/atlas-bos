@@ -219,7 +219,11 @@ export function PrinterSettings() {
     setTesting(true)
     try {
       // Track 4: solo agente local. Server-side CUPS deprecado.
-      const b64 = await printerApi.testPrintBase64()
+      // Refleja la selección actual aunque no se haya guardado todavía.
+      const b64 = await printerApi.testPrintBase64({
+        printerName: config.printer_name,
+        paperWidthMm: config.paper_width_mm,
+      })
       if (!b64) throw new Error('Sin datos del servidor')
       await printerApi.printViaAgent(config.printer_name, b64)
       showToast('Ticket de prueba enviado')
@@ -306,7 +310,7 @@ export function PrinterSettings() {
     if (!btDevice) return
     setTesting(true)
     try {
-      const b64 = await printerApi.testPrintBase64()
+      const b64 = await printerApi.testPrintBase64({ paperWidthMm: config.paper_width_mm })
       if (!b64) throw new Error('Sin datos del servidor')
       const raw = Uint8Array.from(atob(b64), c => c.charCodeAt(0))
       // Enviar en chunks de 512 bytes (límite BLE MTU)
