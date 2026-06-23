@@ -20,7 +20,6 @@ class MovementType(str, enum.Enum):
     TRANSFER_IN = "TRANSFER_IN"
     TRANSFER_OUT = "TRANSFER_OUT"
     SALE_RETURN = "SALE_RETURN" # Devolución de Venta
-    RECIPE_CONSUMPTION = "RECIPE_CONSUMPTION" # Consumo de insumos por receta (gastro)
 
 
 class InventoryMovement(Base, TenantMixin):

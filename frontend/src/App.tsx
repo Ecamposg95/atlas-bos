@@ -81,14 +81,9 @@ const PresetHome = lazy(() => import('./pages/home/PresetHome').then(m => ({ def
 const AppointmentsComingSoon = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AppointmentsComingSoon })))
 const CommissionsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.CommissionsComingSoon })))
 const MembershipsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.MembershipsComingSoon })))
+const RecipesComingSoon      = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.RecipesComingSoon })))
 const AIComingSoon           = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AIComingSoon })))
 const PurchasingComingSoon   = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.PurchasingComingSoon })))
-
-// Gastro modules (2026-06-22) — Mesas, Cocina/KDS, Recetas
-const FloorPlan       = lazy(() => import('./pages/tables/FloorPlan').then(m => ({ default: m.FloorPlan })))
-const KDS             = lazy(() => import('./pages/kitchen/KDS').then(m => ({ default: m.KDS })))
-const Recipes         = lazy(() => import('./pages/recipes/Recipes').then(m => ({ default: m.Recipes })))
-const RecipeForm      = lazy(() => import('./pages/recipes/RecipeForm').then(m => ({ default: m.RecipeForm })))
 
 // Portal (CLIENTE)
 const Portal          = lazy(() => import('./pages/portal/Portal').then(m => ({ default: m.Portal })))
@@ -322,12 +317,7 @@ export default function App() {
           <Route path="appointments" element={<Suspense fallback={<PageLoader />}><AppointmentsComingSoon /></Suspense>} />
           <Route path="commissions"  element={<Suspense fallback={<PageLoader />}><CommissionsComingSoon /></Suspense>} />
           <Route path="memberships"  element={<Suspense fallback={<PageLoader />}><MembershipsComingSoon /></Suspense>} />
-          {/* Gastro — Recetas (real), Mesas, Cocina/KDS */}
-          <Route path="recipes"      element={<Suspense fallback={<PageLoader />}><Recipes /></Suspense>} />
-          <Route path="recipes/new"  element={<Suspense fallback={<PageLoader />}><RecipeForm /></Suspense>} />
-          <Route path="recipes/:id/edit" element={<Suspense fallback={<PageLoader />}><RecipeForm /></Suspense>} />
-          <Route path="tables"       element={<Suspense fallback={<PageLoader />}><FloorPlan /></Suspense>} />
-          <Route path="kitchen"      element={<Suspense fallback={<PageLoader />}><KDS /></Suspense>} />
+          <Route path="recipes"      element={<Suspense fallback={<PageLoader />}><RecipesComingSoon /></Suspense>} />
           <Route path="ai"           element={<Suspense fallback={<PageLoader />}><AIComingSoon /></Suspense>} />
           <Route path="purchasing"   element={<Suspense fallback={<PageLoader />}><PurchasingComingSoon /></Suspense>} />
 
