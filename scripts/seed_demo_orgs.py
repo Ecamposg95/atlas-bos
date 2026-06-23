@@ -666,8 +666,14 @@ def seed_all(db) -> None:
         try:
             org = ensure_organization(db, spec)
             if org is None:
-                succeeded += 1  # already existed counts as success
-                continue
+                # Org already exists — re-resolve it and run the idempotent
+                # seeds anyway, so demo orgs created on an earlier deploy get
+                # backfilled with modules/products/gastro data added later.
+                org = db.query(Organization).filter(Organization.name == spec["name"]).first()
+                if org is None:
+                    succeeded += 1
+                    continue
+                logger.info(f"  ↻ backfilling existing org '{spec['name']}' (id={org.id})")
 
             branch = ensure_branch(db, org, spec["branch_name"])
             ensure_admin(db, org, branch, spec["admin_username"])
