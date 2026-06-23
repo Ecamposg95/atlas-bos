@@ -46,6 +46,16 @@ def run_migrations():
             ))
     print(f"  ✓ industrytype enum synced ({len(list(IndustryType))} values)")
 
+    # Gastro 2026-06-22 — recipes deduct ingredient stock with a new movement
+    # type. ADD VALUE cannot run in a txn block → AUTOCOMMIT (same as enums above).
+    if engine.dialect.name == "postgresql":
+        print("\n  Gastro — ensuring movementtype enum value RECIPE_CONSUMPTION…")
+        with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+            conn.execute(text(
+                "ALTER TYPE movementtype ADD VALUE IF NOT EXISTS 'RECIPE_CONSUMPTION'"
+            ))
+        print("  ✓ movementtype enum synced")
+
     migrations = [
         # (table, column, ddl)
         ("products", "image_url",      "ALTER TABLE products ADD COLUMN image_url VARCHAR;"),
@@ -199,6 +209,23 @@ def run_migrations():
         (
             "ix_blocks_prof_range",
             "CREATE INDEX IF NOT EXISTS ix_blocks_prof_range ON appointments_blocks (professional_id, starts_at, ends_at);",
+        ),
+        # Gastro 2026-06-22 — Mesas, Cocina/KDS, Recetas
+        (
+            "ix_dining_tables_org_branch_status",
+            "CREATE INDEX IF NOT EXISTS ix_dining_tables_org_branch_status ON dining_tables (organization_id, branch_id, status);",
+        ),
+        (
+            "ix_kitchen_tickets_org_branch_status",
+            "CREATE INDEX IF NOT EXISTS ix_kitchen_tickets_org_branch_status ON kitchen_tickets (organization_id, branch_id, status);",
+        ),
+        (
+            "ix_kitchen_items_ticket_station",
+            "CREATE INDEX IF NOT EXISTS ix_kitchen_items_ticket_station ON kitchen_ticket_items (ticket_id, station_id);",
+        ),
+        (
+            "ix_recipe_ingredients_recipe",
+            "CREATE INDEX IF NOT EXISTS ix_recipe_ingredients_recipe ON recipe_ingredients (recipe_id);",
         ),
     ]
 

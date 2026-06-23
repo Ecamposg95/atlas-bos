@@ -48,6 +48,10 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
     setup_abasto_subscribers()
+    from app.subscribers.recipes import setup_recipe_subscribers
+    from app.subscribers.tables import setup_tables_subscribers
+    setup_recipe_subscribers()
+    setup_tables_subscribers()
     from app.core.database import SessionLocal
     from app.services.capabilities_service import seed_global_modules
     db = SessionLocal()
@@ -162,6 +166,9 @@ from app.modules.memberships.router  import router as memberships_router
 from app.modules.recipes.router      import router as recipes_router
 from app.modules.ai.router           import router as ai_router
 from app.modules.purchasing.router   import router as purchasing_router
+# Gastro modules (2026-06-22) — Mesas, Cocina/KDS, Recetas
+from app.modules.tables.router       import router as tables_router
+from app.modules.kitchen.router      import router as kitchen_router
 
 app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda"])
 
@@ -174,9 +181,11 @@ app.include_router(
 )
 app.include_router(commissions_router,  prefix="/api/commissions",  tags=["Comisiones (Beta)"])
 app.include_router(memberships_router,  prefix="/api/memberships",  tags=["Membresías (Beta)"])
-app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recetas (Beta)"])
+app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recetas"])
 app.include_router(ai_router,           prefix="/api/ai",           tags=["IA (Beta)"])
 app.include_router(purchasing_router,   prefix="/api/purchasing",   tags=["Compras (Beta)"])
+app.include_router(tables_router,       prefix="/api/tables",       tags=["Mesas"])
+app.include_router(kitchen_router,      prefix="/api/kitchen",      tags=["Cocina / KDS"])
 # daxpos.router eliminado en Sprint 3 (tech-debt roadmap).
 # Sus 15 rutas SSR fueron desactivadas: las que coinciden con rutas React
 # caen al catch-all de la SPA; las que necesitan cambio de destino están

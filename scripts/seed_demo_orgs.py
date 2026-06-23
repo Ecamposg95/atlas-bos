@@ -54,6 +54,11 @@ from app.modules.customers.models import Customer
 from app.modules.tenants.models import BranchType, IndustryType
 from app.modules.users.models import PlatformRole, Role, User, UserOrganization
 from app.services.capabilities_service import apply_industry_preset
+# Gastro modules (2026-06-22)
+from app.models.inventory import StockOnHand
+from app.modules.tables.models import DiningArea, DiningTable
+from app.modules.kitchen.models import KitchenStation
+from app.modules.recipes.models import Recipe, RecipeIngredient
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -515,6 +520,142 @@ def seed_appointments_demo(db, spec, org, branch, cashier_user, products):
     logger.info(f"    + 3 demo appointments seeded (1 confirmed today, 1 pending, 1 completed yesterday)")
 
 
+# ── Gastro demo (Mesas + Cocina/KDS + Recetas) ───────────────────────────────
+# Per-preset: which gastro modules to populate. Mirrors the preset module
+# composition in scripts/init_presets_v2.py.
+GASTRO_CONFIG = {
+    "ATLAS_ONE_RESTAURANT": {"tables": True,  "kitchen": True,  "recipes": True},
+    "ATLAS_ONE_CAFE":       {"tables": False, "kitchen": True,  "recipes": False},
+    "ATLAS_ONE_BAR":        {"tables": True,  "kitchen": False, "recipes": True},
+}
+
+# dish product name → [(ingredient name, cost, qty, unit, waste_pct)]
+GASTRO_RECIPES = {
+    "ATLAS_ONE_RESTAURANT": {
+        "Hamburguesa clásica": [
+            ("Carne de res 150g (insumo)", 35, 1, "pza", 5),
+            ("Pan brioche (insumo)",        8, 1, "pza", 0),
+            ("Queso amarillo (insumo)",     6, 2, "reb", 0),
+        ],
+        "Pizza Margherita": [
+            ("Masa para pizza (insumo)",   20, 1, "pza", 0),
+            ("Queso mozzarella (insumo)",  35, 1, "porc", 5),
+            ("Salsa de tomate (insumo)",   10, 1, "porc", 0),
+        ],
+    },
+    "ATLAS_ONE_BAR": {
+        "Cuba libre": [
+            ("Ron (insumo)",               18, 2, "oz", 0),
+            ("Refresco de cola (insumo)",   6, 1, "vaso", 0),
+        ],
+        "Margarita clásica": [
+            ("Tequila (insumo)",           22, 2, "oz", 0),
+            ("Jugo de limón (insumo)",      5, 1, "oz", 0),
+        ],
+    },
+}
+
+
+def _dish_variant(db, org, product_name):
+    p = (
+        db.query(Product)
+        .filter(Product.organization_id == org.id, Product.name == product_name)
+        .first()
+    )
+    if not p:
+        return None
+    return db.query(ProductVariant).filter(ProductVariant.product_id == p.id).first()
+
+
+def _ensure_ingredient(db, org, branch, name, cost):
+    """Ensure a raw-material product+variant exists with branch stock. Returns the variant."""
+    p = (
+        db.query(Product)
+        .filter(Product.organization_id == org.id, Product.name == name)
+        .first()
+    )
+    if not p:
+        p = Product(
+            name=name, description="Insumo", unit="pza",
+            organization_id=org.id, is_active=True, has_variants=False,
+            approval_status="APPROVED",
+        )
+        db.add(p)
+        db.flush()
+    v = db.query(ProductVariant).filter(ProductVariant.product_id == p.id).first()
+    if not v:
+        v = ProductVariant(
+            product_id=p.id, sku=f"ING-{uuid.uuid4().hex[:6].upper()}",
+            variant_name="Insumo", price=Decimal("0"), cost=Decimal(str(cost)),
+            has_iva=False, tax_rate=Decimal("0"), organization_id=org.id,
+        )
+        db.add(v)
+        db.flush()
+    soh = (
+        db.query(StockOnHand)
+        .filter(StockOnHand.branch_id == branch.id, StockOnHand.variant_id == v.id)
+        .first()
+    )
+    if not soh:
+        db.add(StockOnHand(
+            organization_id=org.id, branch_id=branch.id, variant_id=v.id,
+            qty_on_hand=Decimal("1000"), is_active=True,
+        ))
+    return v
+
+
+def seed_gastro_demo(db, spec, org, branch):
+    """Populate Mesas / Cocina / Recetas for gastro presets (idempotent)."""
+    cfg = GASTRO_CONFIG.get(spec["industry_type"].value)
+    if cfg is None:
+        return
+
+    if cfg["tables"] and not db.query(DiningArea).filter(DiningArea.organization_id == org.id).first():
+        area = DiningArea(organization_id=org.id, branch_id=branch.id, name="Salón", sort_order=0, is_active=True)
+        db.add(area)
+        db.flush()
+        for i in range(1, 5):
+            db.add(DiningTable(
+                organization_id=org.id, branch_id=branch.id, area_id=area.id,
+                code=f"M{i}", seats=4,
+            ))
+        db.commit()
+        logger.info("    + 1 área + 4 mesas")
+
+    if cfg["kitchen"] and not db.query(KitchenStation).filter(KitchenStation.organization_id == org.id).first():
+        db.add(KitchenStation(organization_id=org.id, branch_id=branch.id, name="Cocina", sort_order=0, is_active=True))
+        db.commit()
+        logger.info("    + 1 estación de cocina")
+
+    if cfg["recipes"]:
+        n = 0
+        for dish_name, ings in GASTRO_RECIPES.get(spec["industry_type"].value, {}).items():
+            dish_v = _dish_variant(db, org, dish_name)
+            if not dish_v:
+                continue
+            if db.query(Recipe).filter(
+                Recipe.organization_id == org.id, Recipe.product_variant_id == dish_v.id
+            ).first():
+                continue
+            recipe = Recipe(
+                organization_id=org.id, product_variant_id=dish_v.id,
+                name=dish_name, yield_qty=Decimal("1"), is_active=True,
+            )
+            db.add(recipe)
+            db.flush()
+            for (iname, icost, qty, unit, waste) in ings:
+                iv = _ensure_ingredient(db, org, branch, iname, icost)
+                db.add(RecipeIngredient(
+                    organization_id=org.id, recipe_id=recipe.id,
+                    ingredient_variant_id=iv.id, qty=Decimal(str(qty)),
+                    unit=unit, waste_pct=Decimal(str(waste)),
+                ))
+            n += 1
+        if n:
+            db.commit()
+            logger.info(f"    + {n} receta(s) con insumos + stock")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 def seed_all(db) -> None:
     logger.info(f"🚀 Seeding {len(DEMOS)} demo organizations...")
@@ -559,6 +700,13 @@ def seed_all(db) -> None:
             except Exception as e:
                 db.rollback()
                 logger.warning(f"    ⚠ appointments demo seed failed: {e}")
+
+            # Gastro presets get areas+tables, kitchen station, and recipes
+            try:
+                seed_gastro_demo(db, spec, org, branch)
+            except Exception as e:
+                db.rollback()
+                logger.warning(f"    ⚠ gastro demo seed failed: {e}")
 
             succeeded += 1
         except Exception as e:

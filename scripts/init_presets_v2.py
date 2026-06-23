@@ -51,7 +51,7 @@ MODULES_CATALOG = [
     ("appointments", "Agenda", "Citas, disponibilidad, recordatorios", ModuleScope.BRANCH, ModuleStatus.BETA),
     ("commissions", "Comisiones", "Comisiones por servicio o venta", ModuleScope.GLOBAL, ModuleStatus.BETA),
     ("memberships", "Membresías", "Paquetes, créditos y suscripciones", ModuleScope.GLOBAL, ModuleStatus.BETA),
-    ("recipes", "Recetas / BOM", "Recetas, ingredientes y costeo por platillo", ModuleScope.GLOBAL, ModuleStatus.BETA),
+    ("recipes", "Recetas / BOM", "Recetas, ingredientes y costeo por platillo", ModuleScope.GLOBAL, ModuleStatus.STABLE),
     ("ai", "Inteligencia Artificial", "Copilotos, predicciones, automatización", ModuleScope.GLOBAL, ModuleStatus.BETA),
 ]
 
