@@ -98,10 +98,10 @@
      globalmente. Sobrescribe --p-accent y sus aliases para que botones,
      activos del sidebar, badges y links cambien de color con el preset. */
   [data-preset="ATLAS_ONE_BEAUTY"] {
-    --p-accent:        #ec4899;
-    --p-accent-hover:  #db2777;
-    --p-accent-soft:   rgba(236, 72, 153, 0.12);
-    --p-accent-line:   rgba(236, 72, 153, 0.35);
+    --p-accent:        #B16E78;
+    --p-accent-hover:  #8E5862;
+    --p-accent-soft:   rgba(177, 110, 120, 0.14);
+    --p-accent-line:   rgba(177, 110, 120, 0.30);
     --p-teal:          #ec4899;
     --p-cyan:          #ec4899;
   }
@@ -114,54 +114,54 @@
     --p-cyan:          #e2531b;
   }
   [data-preset="ATLAS_ONE_RETAIL"] {
-    --p-accent:        #2563eb;
-    --p-accent-hover:  #1d4ed8;
-    --p-accent-soft:   rgba(37, 99, 235, 0.12);
-    --p-accent-line:   rgba(37, 99, 235, 0.35);
-    --p-teal:          #2563eb;
-    --p-cyan:          #2563eb;
+    --p-accent:        #0B3A8F;
+    --p-accent-hover:  #082A6B;
+    --p-accent-soft:   rgba(11, 58, 143, 0.12);
+    --p-accent-line:   rgba(11, 58, 143, 0.28);
+    --p-teal:          #0B3A8F;   /* accent — reconciled T4 */
+    --p-cyan:          #06B6D4;   /* accent2 — unchanged */
   }
   [data-preset="ATLAS_ONE_SERVICES"] {
-    --p-accent:        #10b981;
-    --p-accent-hover:  #059669;
-    --p-accent-soft:   rgba(16, 185, 129, 0.12);
-    --p-accent-line:   rgba(16, 185, 129, 0.35);
+    --p-accent:        #0E7C5C;
+    --p-accent-hover:  #0B6049;
+    --p-accent-soft:   rgba(14, 124, 92, 0.12);
+    --p-accent-line:   rgba(14, 124, 92, 0.28);
     --p-teal:          #10b981;
     --p-cyan:          #10b981;
   }
   [data-preset="ATLAS_ONE_ENTERPRISE"] {
-    --p-accent:        #a855f7;
-    --p-accent-hover:  #9333ea;
-    --p-accent-soft:   rgba(168, 85, 247, 0.12);
-    --p-accent-line:   rgba(168, 85, 247, 0.35);
+    --p-accent:        #6D28D9;
+    --p-accent-hover:  #571FAA;
+    --p-accent-soft:   rgba(109, 40, 217, 0.14);
+    --p-accent-line:   rgba(109, 40, 217, 0.30);
     --p-teal:          #a855f7;
     --p-cyan:          #a855f7;
   }
 
   /* ── Taxonomy v2 (2026-05-15) ── */
   [data-preset="ATLAS_ONE_BARBER"] {
-    --p-accent:        #0891b2;
-    --p-accent-hover:  #0e7490;
-    --p-accent-soft:   rgba(8, 145, 178, 0.12);
-    --p-accent-line:   rgba(8, 145, 178, 0.35);
-    --p-teal:          #0891b2;
-    --p-cyan:          #0891b2;
+    --p-accent:        #0F766E;
+    --p-accent-hover:  #0B5F58;
+    --p-accent-soft:   rgba(15, 118, 110, 0.12);
+    --p-accent-line:   rgba(15, 118, 110, 0.28);
+    --p-teal:          #22D3B8;
+    --p-cyan:          #22D3B8;
   }
   [data-preset="ATLAS_ONE_BEAUTY_WELLNESS"] {
-    --p-accent:        #ec4899;
-    --p-accent-hover:  #db2777;
-    --p-accent-soft:   rgba(236, 72, 153, 0.12);
-    --p-accent-line:   rgba(236, 72, 153, 0.35);
+    --p-accent:        #B16E78;
+    --p-accent-hover:  #8E5862;
+    --p-accent-soft:   rgba(177, 110, 120, 0.14);
+    --p-accent-line:   rgba(177, 110, 120, 0.30);
     --p-teal:          #ec4899;
     --p-cyan:          #ec4899;
   }
   [data-preset="ATLAS_ONE_HEALTH"] {
-    --p-accent:        #06b6d4;
-    --p-accent-hover:  #0891b2;
-    --p-accent-soft:   rgba(6, 182, 212, 0.12);
-    --p-accent-line:   rgba(6, 182, 212, 0.35);
-    --p-teal:          #06b6d4;
-    --p-cyan:          #06b6d4;
+    --p-accent:        #0E9F9C;
+    --p-accent-hover:  #0B7E7B;
+    --p-accent-soft:   rgba(14, 159, 156, 0.12);
+    --p-accent-line:   rgba(14, 159, 156, 0.28);
+    --p-teal:          #0E9F9C;   /* accent — reconciled T4 */
+    --p-cyan:          #7DD3FC;   /* accent2 — reconciled T4 */
   }
   [data-preset="ATLAS_ONE_RESTAURANT"] {
     --p-accent:        #e2531b;   /* terracota cálido (prototipo) */
@@ -180,10 +180,10 @@
     --p-cyan:          #8b4a2b;
   }
   [data-preset="ATLAS_ONE_BAR"] {
-    --p-accent:        #7c3aed;
-    --p-accent-hover:  #6d28d9;
-    --p-accent-soft:   rgba(124, 58, 237, 0.12);
-    --p-accent-line:   rgba(124, 58, 237, 0.35);
+    --p-accent:        #7C3AED;
+    --p-accent-hover:  #6325C4;
+    --p-accent-soft:   rgba(124, 58, 237, 0.14);
+    --p-accent-line:   rgba(124, 58, 237, 0.30);
     --p-teal:          #7c3aed;
     --p-cyan:          #7c3aed;
   }

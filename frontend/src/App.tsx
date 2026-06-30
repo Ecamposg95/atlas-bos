@@ -93,6 +93,9 @@ const RecipeForm      = lazy(() => import('./pages/recipes/RecipeForm').then(m =
 // Portal (CLIENTE)
 const Portal          = lazy(() => import('./pages/portal/Portal').then(m => ({ default: m.Portal })))
 
+// Dev-only preview (never included in production bundle)
+const AtlasOnePreview = lazy(() => import('./pages/__dev__/AtlasOnePreview'))
+
 // Platform (SUPERADMIN)
 const PlatformLayout       = lazy(() => import('./pages/platform/PlatformLayout').then(m => ({ default: m.PlatformLayout })))
 const PlatformMetrics      = lazy(() => import('./pages/platform/PlatformMetrics').then(m => ({ default: m.PlatformMetrics })))
@@ -231,6 +234,18 @@ export default function App() {
       <Routes>
         {/* Público */}
         <Route path="/login" element={<LoginPage />} />
+
+        {/* Dev-only — gated by Vite's import.meta.env.DEV (stripped in prod builds) */}
+        {import.meta.env.DEV && (
+          <Route
+            path="/__dev__/atlas-one-preview"
+            element={
+              <Suspense fallback={<div style={{ padding: 40 }}>Loading…</div>}>
+                <AtlasOnePreview />
+              </Suspense>
+            }
+          />
+        )}
 
         {/* Rutas protegidas — bajo Layout */}
         <Route
