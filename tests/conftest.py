@@ -28,7 +28,6 @@ from app.models.products import Product, ProductVariant, ProductBranchStatus
 from app.models.inventory import StockOnHand
 from app.models.cash import CashSession, CashSessionStatus, CashMovement
 from app.models.sales import SalesDocument, DocumentStatus, Payment, PaymentMethod
-from app.models.modules import Module, OrganizationModule
 from app.core.security import get_password_hash, create_access_token
 
 # ── Engine & Session ──────────────────────────────────────────────────────────
@@ -105,22 +104,6 @@ def org(db):
     o = Organization(name="Test Org", status="ACTIVE")
     db.add(o)
     db.flush()
-
-    # Enable 'pos' module for this organization
-    pos_module = db.query(Module).filter(Module.key == "pos").first()
-    if not pos_module:
-        pos_module = Module(key="pos", name="POS", description="Point of Sale")
-        db.add(pos_module)
-        db.flush()
-
-    org_module = OrganizationModule(
-        organization_id=o.id,
-        module_key="pos",
-        is_enabled=True
-    )
-    db.add(org_module)
-    db.flush()
-
     return o
 
 
