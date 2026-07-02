@@ -121,6 +121,13 @@ class ParkedTicketCreate(BaseModel):
     expires_in_hours: Optional[int] = 24
 
 
+class ParkedTicketUpdate(BaseModel):
+    """Reemplaza el cart_json de una cuenta abierta (mesa). El merge de
+    'ítems existentes + comanda nueva' lo hace el cliente antes de mandar."""
+    cart_json: dict
+    notes: Optional[str] = None
+
+
 class ParkedTicketRead(BaseModel):
     id: str
     branch_id: int

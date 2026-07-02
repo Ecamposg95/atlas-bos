@@ -835,7 +835,7 @@ def get_my_last_sale(
 # Hand-off entre PCs de la misma sucursal: cualquier cajero puede reanudar.
 # Routes deben ir ANTES de "/{sale_id}" para que /parked no sea capturado.
 # ─────────────────────────────────────────────────────────────────────────────
-from app.schemas.sales import ParkedTicketCreate, ParkedTicketRead
+from app.schemas.sales import ParkedTicketCreate, ParkedTicketRead, ParkedTicketUpdate
 
 
 def _parked_to_read(p: ParkedTicket) -> ParkedTicketRead:
@@ -943,6 +943,40 @@ def resume_parked_ticket(
             status_code=410,
             detail=f"Ticket pausado en estado {pt_status}; no se puede reanudar."
         )
+    return _parked_to_read(pt)
+
+
+@router.patch("/parked/{parked_id}", response_model=ParkedTicketRead)
+def update_parked_ticket(
+    parked_id: str,
+    payload: ParkedTicketUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    org_id: int = Depends(get_current_active_organization),
+):
+    """Actualiza el carrito de una cuenta abierta (usado por la comanda para
+    acumular platillos enviados a cocina). No consume folio ni descuenta stock."""
+    if not payload.cart_json:
+        raise HTTPException(status_code=422, detail="cart_json no puede estar vacío.")
+    pt = db.query(ParkedTicket).filter(
+        ParkedTicket.id == parked_id,
+        ParkedTicket.organization_id == org_id,
+        ParkedTicket.branch_id == current_user.branch_id,
+        ParkedTicket.deleted_at == None,
+    ).first()
+    if not pt:
+        raise HTTPException(status_code=404, detail="Ticket pausado no encontrado.")
+    pt_status = getattr(pt, 'status', None) or 'ACTIVE'
+    if pt_status != 'ACTIVE':
+        raise HTTPException(
+            status_code=410,
+            detail=f"Ticket pausado en estado {pt_status}; no se puede modificar."
+        )
+    pt.cart_json = payload.cart_json
+    if payload.notes is not None:
+        pt.notes = payload.notes
+    db.commit()
+    db.refresh(pt)
     return _parked_to_read(pt)
 
 
