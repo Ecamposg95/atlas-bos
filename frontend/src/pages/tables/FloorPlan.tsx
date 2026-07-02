@@ -191,7 +191,7 @@ export function FloorPlan() {
                     <span><i className="fa-solid fa-user" /> {t.seats}</span>
                     {t.opened_at && <span><i className="fa-solid fa-clock" /> {mins}m</span>}
                   </div>
-                  {t.status !== 'AVAILABLE' && (
+                  {m && (
                     <div className="mt-2 space-y-1">
                       <p className="text-sm font-black text-white">{formatCurrency(m?.total ?? 0)}</p>
                       {m?.kitchenCount ? (

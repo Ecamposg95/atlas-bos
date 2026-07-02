@@ -31,7 +31,7 @@ export function TableFormModal({ open, mode, onClose, onSubmitArea, onSubmitTabl
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
          onClick={onClose}>
       <div className="dax-card w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-lg font-black text-white mb-4">
@@ -42,7 +42,7 @@ export function TableFormModal({ open, mode, onClose, onSubmitArea, onSubmitTabl
             Nombre del área
             <input autoFocus value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Salón, Terraza, Barra…"
-              className="mt-1 w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-white" />
+              className="dax-input mt-1" />
           </label>
         ) : (
           <>
@@ -50,13 +50,13 @@ export function TableFormModal({ open, mode, onClose, onSubmitArea, onSubmitTabl
               Código de la mesa
               <input autoFocus value={code} onChange={(e) => setCode(e.target.value)}
                 placeholder="M1, T4, Barra-2…"
-                className="mt-1 w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-white" />
+                className="dax-input mt-1" />
             </label>
             <label className="block text-sm text-slate-300 mb-4">
               Asientos
               <input type="number" min={1} value={seats}
                 onChange={(e) => setSeats(Math.max(1, Number(e.target.value) || 1))}
-                className="mt-1 w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-white" />
+                className="dax-input mt-1" />
             </label>
           </>
         )}
