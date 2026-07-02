@@ -52,3 +52,28 @@ def test_update_parked_not_found(client, pos_module_enabled, auth_cajero_a):
         headers=auth_cajero_a,
     )
     assert r.status_code == 404
+
+
+def test_update_parked_preserves_sibling_keys(client, pos_module_enabled, auth_cajero_a):
+    """Un PATCH de comanda (solo `items`) NO debe borrar llaves hermanas que el
+    POS guarda junto a items (requires_invoice, global_discount)."""
+    r = client.post(
+        "/api/sales/parked",
+        json={"cart_json": {"items": [{"name": "Taco", "quantity": 1}],
+                            "requires_invoice": True, "global_discount": 15}},
+        headers=auth_cajero_a,
+    )
+    assert r.status_code == 200, r.text
+    pid = r.json()["id"]
+
+    # La comanda manda solo items (mergeados) — no toca las otras llaves.
+    r2 = client.patch(
+        f"/api/sales/parked/{pid}",
+        json={"cart_json": {"items": [{"name": "Taco", "quantity": 1}, {"name": "Agua", "quantity": 2}]}},
+        headers=auth_cajero_a,
+    )
+    assert r2.status_code == 200, r2.text
+    cart = r2.json()["cart_json"]
+    assert len(cart["items"]) == 2               # items actualizados
+    assert cart["requires_invoice"] is True      # llave hermana preservada
+    assert cart["global_discount"] == 15         # llave hermana preservada

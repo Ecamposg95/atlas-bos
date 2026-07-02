@@ -955,7 +955,14 @@ def update_parked_ticket(
     org_id: int = Depends(get_current_active_organization),
 ):
     """Actualiza el carrito de una cuenta abierta (usado por la comanda para
-    acumular platillos enviados a cocina). No consume folio ni descuenta stock."""
+    acumular platillos enviados a cocina). No consume folio ni descuenta stock.
+
+    Contrato: last-write-wins sobre las llaves que trae `payload.cart_json`
+    (típicamente `items`, que el cliente manda ya mergeado = existentes + nuevos).
+    Se hace un shallow-merge de nivel superior para NO perder llaves hermanas que
+    el POS guarda junto a `items` (p.ej. `requires_invoice`, `global_discount`).
+    Asume un solo escritor por cuenta; si dos clientes editan la misma cuenta en
+    paralelo, gana el último PATCH (los `items` no fusionados del otro se pierden)."""
     if not payload.cart_json:
         raise HTTPException(status_code=422, detail="cart_json no puede estar vacío.")
     pt = db.query(ParkedTicket).filter(
@@ -972,7 +979,11 @@ def update_parked_ticket(
             status_code=410,
             detail=f"Ticket pausado en estado {pt_status}; no se puede modificar."
         )
-    pt.cart_json = payload.cart_json
+    # Shallow-merge: conserva llaves top-level existentes (requires_invoice,
+    # global_discount…) y sobrescribe solo las que el payload trae.
+    base = dict(pt.cart_json) if isinstance(pt.cart_json, dict) else {}
+    base.update(payload.cart_json)
+    pt.cart_json = base
     if payload.notes is not None:
         pt.notes = payload.notes
     db.commit()
