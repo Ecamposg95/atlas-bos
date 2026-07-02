@@ -89,6 +89,8 @@ const FloorPlan       = lazy(() => import('./pages/tables/FloorPlan').then(m => 
 const KDS             = lazy(() => import('./pages/kitchen/KDS').then(m => ({ default: m.KDS })))
 const Recipes         = lazy(() => import('./pages/recipes/Recipes').then(m => ({ default: m.Recipes })))
 const RecipeForm      = lazy(() => import('./pages/recipes/RecipeForm').then(m => ({ default: m.RecipeForm })))
+const ComandaTables   = lazy(() => import('./pages/mobile/ComandaTables').then(m => ({ default: m.ComandaTables })))
+const ComandaOrder    = lazy(() => import('./pages/mobile/ComandaOrder').then(m => ({ default: m.ComandaOrder })))
 
 // Portal (CLIENTE)
 const Portal          = lazy(() => import('./pages/portal/Portal').then(m => ({ default: m.Portal })))
@@ -359,6 +361,8 @@ export default function App() {
             <Route path="query"     element={<Suspense fallback={<PageLoader />}><MobileQuery /></Suspense>} />
             <Route path="sales"     element={<Suspense fallback={<PageLoader />}><MobileSales /></Suspense>} />
             <Route path="profile"   element={<Suspense fallback={<PageLoader />}><MobileProfile /></Suspense>} />
+            <Route path="comanda"          element={<Suspense fallback={<PageLoader />}><ComandaTables /></Suspense>} />
+            <Route path="comanda/:tableId" element={<Suspense fallback={<PageLoader />}><ComandaOrder /></Suspense>} />
             <Route path="owner"     element={
               <RequireRole roles={['DUEÑO', 'ADMINISTRADOR']}>
                 <Suspense fallback={<PageLoader />}><MobileOwnerDashboard /></Suspense>

@@ -88,6 +88,7 @@ export function MobileDashboard() {
         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Accesos rápidos</p>
         <div className="grid grid-cols-2 gap-3">
           {[
+            { label: 'Comanda', icon: 'fa-utensils', to: '/mobile/comanda', color: 'text-amber-400' },
             { label: 'Consulta', icon: 'fa-magnifying-glass', to: '/mobile/query', color: 'text-indigo-400' },
             { label: 'Cotización', icon: 'fa-file-invoice', to: '/mobile/sales', color: 'text-emerald-400' },
             { label: 'Mi perfil', icon: 'fa-user-circle', to: '/mobile/profile', color: 'text-slate-400' },
