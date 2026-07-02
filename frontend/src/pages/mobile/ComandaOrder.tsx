@@ -73,23 +73,36 @@ export function ComandaOrder() {
   const accountTotal = ticketTotal({ items: sent }) + draftTotal
 
   const fire = async () => {
-    if (!table?.current_ticket_id || draftList.length === 0 || !branchId) return
+    if (!table?.current_ticket_id || draftList.length === 0) return
+    if (!branchId) { toast.error('Tu usuario no tiene sucursal asignada.'); return }
+    const toSend = draftList
     setFiring(true)
+    // 1) Enviar a cocina. Si falla aquí, nada se disparó: conservamos el draft para reintentar.
     try {
       await kitchenApi.fire({
         branch_id: branchId,
         table_id: table.id,
         parked_ticket_id: table.current_ticket_id,
-        items: draftList.map(({ p, qty }) => toFireItem(p, qty)),
+        items: toSend.map(({ p, qty }) => toFireItem(p, qty)),
       })
-      const merged = [...sent, ...draftList.map(({ p, qty }) => toCartItem(p, qty))]
+    } catch (e: any) {
+      setFiring(false)
+      toast.error(e?.response?.data?.detail ?? 'No se pudo enviar la comanda a cocina')
+      return
+    }
+    // 2) Cocina ya recibió. Limpiamos el draft de inmediato para NO volver a disparar los mismos platillos.
+    const merged = [...sent, ...toSend.map(({ p, qty }) => toCartItem(p, qty))]
+    setSent(merged)
+    setDraft({})
+    // 3) Persistir en la cuenta. Si esto falla, la comida YA está en cocina: avisamos de forma accionable.
+    try {
       await parkedTicketsApi.update(table.current_ticket_id, { items: merged })
-      setSent(merged)
-      setDraft({})
       toast.success('Comanda enviada a cocina')
     } catch (e: any) {
-      toast.error(e?.response?.data?.detail ?? 'No se pudo enviar la comanda')
-    } finally { setFiring(false) }
+      toast.error('Se envió a cocina, pero no se pudo actualizar la cuenta. Avisa a caja para revisar el ticket.')
+    } finally {
+      setFiring(false)
+    }
   }
 
   const requestBill = async () => {
