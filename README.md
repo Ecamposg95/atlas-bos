@@ -47,10 +47,24 @@ It is the technical core behind Atlas One: an API-first, multi-tenant and modula
 | **Atlas POS** | Preset Ligero | Punto de venta ligero, rápido y el modelo de entrada base. |
 | **Atlas One Retail** | Preset Avanzado | Inventario robusto, proveedores, stock min/max, compras. |
 | **Atlas One Beauty** | Preset Servicios | Sistema de citas, servicios, comisiones y control de cabinas. |
-| **Atlas One Gastro** | Preset Alimentos | KDS, recetas, comandas, control de mermas y delivery. |
+| **Atlas One Gastro** | Preset Alimentos | Mesas, comandas, KDS, recetas, control de mermas y delivery. |
 | **Atlas One Enterprise**| Preset Custom | Implementaciones a la medida, IA avanzada y dashboards ejecutivos. |
 
 <br/>
+
+---
+
+## 🍽️ Gastro — Mesas & Comandas
+
+El preset **Atlas One Gastro** (`ATLAS_ONE_RESTAURANT`) opera un restaurante de punta a punta:
+
+- **Mesas premium** (`/tables`) — plano del salón con KPIs vivos (ocupadas/libres, cuentas abiertas, tiempo promedio) y cards por mesa con estado, mesero, tiempo abierta, total de cuenta y comandas en cocina.
+- **Comanda móvil** (`/mobile/comanda`) — el mesero (rol `VENDEDOR`) abre la mesa, arma la comanda desde el menú y la **envía a cocina (KDS)**; los platillos se acumulan en la cuenta para que el cajero cobre sin recapturar.
+- **KDS** (`/kitchen`) — display de cocina que recibe y despacha las comandas.
+
+Flujo: abrir mesa → levantar comanda → a cocina + a la cuenta → cobrar en POS → la mesa se libera sola.
+
+📄 Detalle técnico (rutas, endpoints, contrato, limitaciones): [`docs/modules/GASTRO_MESAS_COMANDAS.md`](docs/modules/GASTRO_MESAS_COMANDAS.md)
 
 <div align="center">
 
