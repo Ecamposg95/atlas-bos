@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useEnabledModulesStore } from '../../store/enabledModulesStore'
 import { useAuthStore } from '../../store/authStore'
+import { GastroHomeDay } from './GastroHomeDay'
 
 /**
  * Home distinta por preset (Atlas One verticals).
@@ -257,58 +258,64 @@ function HealthHome({ greeting, orgName }: HomeProps) {
 
 function RestaurantHome({ greeting, orgName }: HomeProps) {
   return (
-    <HomeShell
+    <GastroHomeDay
       greeting={greeting}
       orgName={orgName}
       title="Atlas One Restaurant"
-      subtitle="Cocina en vivo, mesas, recetas y comisiones de meseros."
-      accent="#f97316"
-    >
-      <Widget icon="fa-utensils" title="Cocina en vivo" description="Comandas pendientes, tiempos por mesa." cta="Abrir KDS" ctaUrl="/kitchen" />
-      <Widget icon="fa-chair" title="Mesas" description="Plano: ocupadas, en cuenta, libres." cta="Ver mesas" ctaUrl="/tables" />
-      <Widget icon="fa-book" title="Recetas" description="Costo por platillo y consumo de insumos." cta="Ver recetas" ctaUrl="/recipes" beta />
-      <Widget icon="fa-percent" title="Comisiones meseros" description="Propinas y desempeño por turno." cta="Ver comisiones" ctaUrl="/commissions" beta />
-      <Widget icon="fa-cash-register" title="Cobrar mesa" description="Cerrar cuenta y partir." cta="Ir al POS" ctaUrl="/pos" />
-      <Widget icon="fa-chart-pie" title="Reportes" description="Platillos top, propinas, mermas." cta="Ver reportes" ctaUrl="/reports" />
-    </HomeShell>
+      subtitle="Cocina en vivo, mesas, recetas y meseros — el pulso del día."
+      accent="#e2531b"
+      topLabel="Platillos top"
+      actions={[
+        { icon: 'fa-utensils', label: 'Cocina · KDS', to: '/kitchen' },
+        { icon: 'fa-chair', label: 'Plano de mesas', to: '/tables' },
+        { icon: 'fa-cash-register', label: 'Cobrar mesa', to: '/pos' },
+        { icon: 'fa-book', label: 'Recetas', to: '/recipes', beta: true },
+        { icon: 'fa-percent', label: 'Comisiones', to: '/commissions', beta: true },
+        { icon: 'fa-chart-pie', label: 'Reportes', to: '/reports' },
+      ]}
+    />
   )
 }
 
 function CafeHome({ greeting, orgName }: HomeProps) {
   return (
-    <HomeShell
+    <GastroHomeDay
       greeting={greeting}
       orgName={orgName}
       title="Atlas One Café"
       subtitle="Mostrador rápido, cocina y caja para café/bakery."
-      accent="#d97706"
-    >
-      <Widget icon="fa-coffee" title="Mostrador" description="Cola de pedidos y prioridades." cta="Abrir KDS" ctaUrl="/kitchen" />
-      <Widget icon="fa-boxes" title="Inventario" description="Granos, leche, pan y consumibles." cta="Ver inventario" ctaUrl="/inventory" />
-      <Widget icon="fa-vault" title="Caja del día" description="Apertura, ventas y arqueo del turno." cta="Ir a caja" ctaUrl="/cash-history" />
-      <Widget icon="fa-cash-register" title="Cobrar" description="Cobro rápido en mostrador." cta="Ir al POS" ctaUrl="/pos" />
-      <Widget icon="fa-address-book" title="Clientes frecuentes" description="Quién compra qué y cada cuánto." cta="Ver clientes" ctaUrl="/customers" />
-      <Widget icon="fa-chart-pie" title="Reportes" description="Productos top, horarios pico." cta="Ver reportes" ctaUrl="/reports" />
-    </HomeShell>
+      accent="#8b4a2b"
+      topLabel="Productos top"
+      actions={[
+        { icon: 'fa-coffee', label: 'Mostrador · KDS', to: '/kitchen' },
+        { icon: 'fa-cash-register', label: 'Cobrar', to: '/pos' },
+        { icon: 'fa-vault', label: 'Caja del día', to: '/cash-history' },
+        { icon: 'fa-boxes', label: 'Inventario', to: '/inventory' },
+        { icon: 'fa-address-book', label: 'Frecuentes', to: '/customers' },
+        { icon: 'fa-chart-pie', label: 'Reportes', to: '/reports' },
+      ]}
+    />
   )
 }
 
 function BarHome({ greeting, orgName }: HomeProps) {
   return (
-    <HomeShell
+    <GastroHomeDay
       greeting={greeting}
       orgName={orgName}
       title="Atlas One Bar"
-      subtitle="Cocteles, mesas, comisiones de bartender y control de inventario líquido."
+      subtitle="Barra, mesas, turnos e inventario líquido — control de la noche."
       accent="#7c3aed"
-    >
-      <Widget icon="fa-martini-glass" title="Cocteles" description="Recetas, costo y disponibilidad de insumos." cta="Ver recetas" ctaUrl="/recipes" beta />
-      <Widget icon="fa-chair" title="Mesas y tabs" description="Estado de mesas, cuentas abiertas." cta="Ver mesas" ctaUrl="/tables" />
-      <Widget icon="fa-boxes" title="Inventario líquido" description="Botellas abiertas, mermas, reposición." cta="Ver inventario" ctaUrl="/inventory" />
-      <Widget icon="fa-percent" title="Comisiones bartender" description="Por bebida o por venta total del turno." cta="Ver comisiones" ctaUrl="/commissions" beta />
-      <Widget icon="fa-cash-register" title="Cobrar" description="Cierre de tab o pedido al mostrador." cta="Ir al POS" ctaUrl="/pos" />
-      <Widget icon="fa-chart-pie" title="Reportes" description="Tragos top, ventas por hora." cta="Ver reportes" ctaUrl="/reports" />
-    </HomeShell>
+      topLabel="Bebidas top"
+      actions={[
+        { icon: 'fa-martini-glass', label: 'Barra · comandas', to: '/tables' },
+        { icon: 'fa-cash-register', label: 'Cobrar tab', to: '/pos' },
+        { icon: 'fa-boxes', label: 'Inventario líquido', to: '/inventory' },
+        { icon: 'fa-book', label: 'Cocteles · recetas', to: '/recipes', beta: true },
+        { icon: 'fa-percent', label: 'Comisiones', to: '/commissions', beta: true },
+        { icon: 'fa-chart-pie', label: 'Reportes', to: '/reports' },
+      ]}
+    />
   )
 }
 
