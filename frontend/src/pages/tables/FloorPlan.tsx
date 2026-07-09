@@ -10,15 +10,8 @@ import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
 import { formatCurrency } from '../../utils/currency'
 import { ticketTotal, minutesOpen, cartItemCount } from './tableUtils'
-import type { DiningArea, DiningTable, TableStatus } from '../../types/tables'
-
-const STATUS_STYLE: Record<TableStatus, { label: string; ring: string; dot: string; text: string }> = {
-  AVAILABLE:      { label: 'Libre',        ring: 'border-emerald-500/40 bg-emerald-500/5',  dot: 'bg-emerald-400', text: 'text-emerald-300' },
-  OCCUPIED:       { label: 'Ocupada',      ring: 'border-amber-500/50 bg-amber-500/10',     dot: 'bg-amber-400',   text: 'text-amber-300' },
-  BILL_REQUESTED: { label: 'Pidió cuenta', ring: 'border-sky-500/50 bg-sky-500/10',         dot: 'bg-sky-400',     text: 'text-sky-300' },
-  CLEANING:       { label: 'Limpieza',     ring: 'border-slate-500/40 bg-slate-500/10',     dot: 'bg-slate-400',   text: 'text-slate-300' },
-  RESERVED:       { label: 'Reservada',    ring: 'border-violet-500/40 bg-violet-500/10',   dot: 'bg-violet-400',  text: 'text-violet-300' },
-}
+import type { DiningArea, DiningTable } from '../../types/tables'
+import { StatusChip, TABLE_STATUS, toneBorder, toneBg } from '../../components/ui/StatusChip'
 
 interface Enriched {
   total: number
@@ -176,16 +169,15 @@ export function FloorPlan() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {tablesByArea(area.id).map((t) => {
-              const st = STATUS_STYLE[t.status]
+              const meta_t = TABLE_STATUS[t.status]
               const m = meta[t.id]
               const mins = minutesOpen(t.opened_at, now)
               return (
-                <div key={t.id} className={`rounded-xl border p-3 transition-colors ${st.ring}`}>
+                <div key={t.id} className="rounded-xl border p-3 transition-colors"
+                  style={{ borderColor: toneBorder(meta_t.tone), background: toneBg(meta_t.tone) }}>
                   <div className="flex items-center justify-between">
                     <span className="font-black text-white text-lg">{t.code}</span>
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold ${st.text}`}>
-                      <span className={`h-2 w-2 rounded-full ${st.dot}`} /> {st.label}
-                    </span>
+                    <StatusChip tone={meta_t.tone} label={meta_t.label} size="sm" onDark />
                   </div>
                   <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-400">
                     <span><i className="fa-solid fa-user" /> {t.seats}</span>

@@ -6,12 +6,8 @@ import { Spinner } from '../../components/ui/Spinner'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
 import { minutesOpen } from '../tables/tableUtils'
-import type { DiningTable, TableStatus } from '../../types/tables'
-
-const DOT: Record<TableStatus, string> = {
-  AVAILABLE: 'bg-emerald-400', OCCUPIED: 'bg-amber-400',
-  BILL_REQUESTED: 'bg-sky-400', CLEANING: 'bg-slate-400', RESERVED: 'bg-violet-400',
-}
+import type { DiningTable } from '../../types/tables'
+import { StatusChip, TABLE_STATUS } from '../../components/ui/StatusChip'
 
 export function ComandaTables() {
   const nav = useNavigate()
@@ -63,7 +59,7 @@ export function ComandaTables() {
             className="dax-card text-left active:scale-95 transition-transform disabled:opacity-50">
             <div className="flex items-center justify-between">
               <span className="text-2xl font-black text-white">{t.code}</span>
-              <span className={`h-3 w-3 rounded-full ${DOT[t.status]}`} />
+              <StatusChip tone={TABLE_STATUS[t.status].tone} dotOnly style={{ transform: 'scale(1.15)' }} />
             </div>
             <p className="mt-1 text-xs text-slate-400">
               <i className="fa-solid fa-user" /> {t.seats}

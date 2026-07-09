@@ -5,15 +5,8 @@ import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
-import type { KdsStatus, KitchenStation, KitchenTicket } from '../../types/kitchen'
-
-const STATUS_RING: Record<KdsStatus, string> = {
-  NEW: 'border-sky-500/50',
-  IN_PROGRESS: 'border-amber-500/50',
-  READY: 'border-emerald-500/50',
-  SERVED: 'border-slate-600/50',
-  CANCELED: 'border-slate-700/50',
-}
+import type { KitchenStation, KitchenTicket } from '../../types/kitchen'
+import { StatusChip, KDS_STATUS, ITEM_STATUS, toneBorder } from '../../components/ui/StatusChip'
 
 function ageLabel(seconds: number | null): string {
   if (seconds == null) return ''
@@ -116,12 +109,16 @@ export function KDS() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {tickets.map((t) => (
-            <div key={t.id} className={`dax-card p-4 border-2 ${STATUS_RING[t.status]}`}>
-              <div className="flex items-center justify-between mb-2">
+            <div key={t.id} className="dax-card p-4 border-2"
+              style={{ borderColor: toneBorder(KDS_STATUS[t.status].tone) }}>
+              <div className="flex items-center justify-between mb-2 gap-2">
                 <span className="font-black text-white">
                   {t.table_id ? `Mesa ${t.table_id}` : `Comanda #${t.id}`}
                 </span>
-                <span className="text-[11px] text-slate-400">{ageLabel(t.age_seconds)}</span>
+                <div className="flex items-center gap-2">
+                  <StatusChip tone={KDS_STATUS[t.status].tone} label={KDS_STATUS[t.status].label} size="sm" onDark />
+                  <span className="text-[11px] text-slate-400">{ageLabel(t.age_seconds)}</span>
+                </div>
               </div>
               <ul className="space-y-1.5">
                 {t.items.map((it) => (
@@ -140,7 +137,7 @@ export function KDS() {
                       className="text-[10px] font-bold px-2 py-1 rounded bg-slate-700/60 text-slate-200 hover:bg-slate-600 disabled:opacity-40"
                       title="Avanzar item"
                     >
-                      {it.status}
+                      {ITEM_STATUS[it.status].label}
                     </button>
                   </li>
                 ))}
