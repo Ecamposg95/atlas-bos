@@ -270,14 +270,14 @@ export function HQOperations() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-black text-white tracking-widest uppercase" style={{ textShadow: '0 0 24px rgba(16,185,129,0.45)' }}>
+            <h1 className="text-xl font-black text-dax-text tracking-widest uppercase" style={{ textShadow: '0 0 24px rgba(16,185,129,0.45)' }}>
               Operaciones
             </h1>
-            <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 tabular-nums">
+            <span className="text-[11px] font-mono text-sem-success bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 tabular-nums">
               {now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
             {branchesAll.length > 0 && (
-              <span className="text-[10px] font-bold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 tabular-nums">
+              <span className="text-[10px] font-bold text-sem-success bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 tabular-nums">
                 {activeCount}/{branchesAll.length} activas
               </span>
             )}
@@ -287,15 +287,15 @@ export function HQOperations() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-widest">Live · Auto-refresh</span>
+            <span className="text-[9px] font-bold text-sem-success uppercase tracking-widest">Live · Auto-refresh</span>
             <span className="text-slate-700">·</span>
-            <span className="text-[9px] text-slate-600 font-mono">
+            <span className="text-[9px] text-dax-faint font-mono">
               Últ. sync: {lastSync ? lastSync.toLocaleTimeString('es-MX') : '—'}
             </span>
           </div>
         </div>
-        <div className="text-[10px] text-slate-500 font-mono">
-          Próxima actualización en <span className="text-emerald-400 font-bold ml-1">{countdown}s</span>
+        <div className="text-[10px] text-dax-muted font-mono">
+          Próxima actualización en <span className="text-sem-success font-bold ml-1">{countdown}s</span>
         </div>
       </div>
 
@@ -313,8 +313,8 @@ export function HQOperations() {
               <button key={p} onClick={() => setPeriod(p)}
                 className={`px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border transition ${
                   active
-                    ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                    : 'bg-transparent text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/50'
+                    ? 'bg-emerald-500/15 text-sem-success border-emerald-500/30'
+                    : 'bg-transparent text-dax-muted hover:text-dax-muted border-transparent hover:bg-dax-card'
                 }`}>
                 <i className={`fas ${icon} mr-1.5`} /> {PERIOD_LABELS[p]}
               </button>
@@ -323,8 +323,8 @@ export function HQOperations() {
           <button onClick={() => setPeriod('custom')}
             className={`px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border transition ${
               period === 'custom'
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                : 'bg-transparent text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/50'
+                ? 'bg-emerald-500/15 text-sem-success border-emerald-500/30'
+                : 'bg-transparent text-dax-muted hover:text-dax-muted border-transparent hover:bg-dax-card'
             }`}>
             <i className="fas fa-sliders mr-1.5" /> Rango
           </button>
@@ -332,21 +332,21 @@ export function HQOperations() {
             <div className="flex items-center gap-2 ml-2">
               <input type="date" value={customStart} max={customEnd}
                 onChange={(e) => setCustomStart(e.target.value)}
-                className="bg-slate-800/80 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300" />
-              <span className="text-slate-600 text-xs">→</span>
+                className="bg-dax-card border border-dax-border rounded px-2 py-1 text-xs text-dax-muted" />
+              <span className="text-dax-faint text-xs">→</span>
               <input type="date" value={customEnd} min={customStart} max={todayStr()}
                 onChange={(e) => setCustomEnd(e.target.value)}
-                className="bg-slate-800/80 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300" />
+                className="bg-dax-card border border-dax-border rounded px-2 py-1 text-xs text-dax-muted" />
             </div>
           )}
         </div>
         <div className="flex items-center gap-2">
           <button onClick={exportCsv} title="Exportar CSV"
-            className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-slate-800/80 border border-slate-700 hover:border-emerald-500/50 hover:text-emerald-400 text-slate-400 transition">
+            className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg bg-dax-card border border-dax-border hover:border-emerald-500/50 hover:text-sem-success text-dax-muted transition">
             <i className="fas fa-download mr-1" /> CSV
           </button>
           <button onClick={load} title="Actualizar ahora (R)"
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-800/80 border border-slate-700 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-400 transition text-slate-400">
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-dax-card border border-dax-border hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-sem-success transition text-dax-muted">
             <i className={`fas fa-sync-alt text-xs ${loading ? 'fa-spin' : ''}`} />
           </button>
         </div>
@@ -365,7 +365,7 @@ export function HQOperations() {
             <div className={`w-10 h-10 rounded-full bg-${n.color}-500/15 text-${n.color}-400 flex items-center justify-center text-lg group-hover:scale-110 transition`}>
               <i className={`fas ${n.icon}`} />
             </div>
-            <span className="text-[11px] font-bold text-slate-300 group-hover:text-white">{n.label}</span>
+            <span className="text-[11px] font-bold text-dax-muted group-hover:text-dax-text">{n.label}</span>
           </Link>
         ))}
       </div>
@@ -387,25 +387,25 @@ export function HQOperations() {
 
             <div className="dax-card p-5 rounded-2xl border-t-2 border-t-sky-500/50 relative overflow-hidden group hover:border-t-sky-400 transition-all">
               <div className="flex justify-between items-end mb-1">
-                <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Tickets</p>
-                <span className="text-[10px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 tabular-nums">
+                <p className="text-[10px] font-black uppercase text-dax-muted tracking-widest">Tickets</p>
+                <span className="text-[10px] font-bold text-sem-info bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20 tabular-nums">
                   {(k?.items_per_ticket || 0).toFixed(1)} IPT
                 </span>
               </div>
-              <h2 className="text-3xl font-bold text-white tabular-nums">{k?.total_tickets ?? 0}</h2>
+              <h2 className="text-3xl font-bold text-dax-text tabular-nums">{k?.total_tickets ?? 0}</h2>
               <div className="mt-1 flex justify-between items-center text-xs font-mono">
-                <span className="text-slate-400">Avg: <span className="text-white font-bold tabular-nums">{formatCurrency(k?.ticket_average || 0)}</span></span>
+                <span className="text-dax-muted">Avg: <span className="text-dax-text font-bold tabular-nums">{formatCurrency(k?.ticket_average || 0)}</span></span>
                 {(k?.returns_total ?? 0) > 0 && (
-                  <span className="text-rose-400">Dev: <span className="tabular-nums">{formatCurrency(k?.returns_total || 0)}</span></span>
+                  <span className="text-sem-critical">Dev: <span className="tabular-nums">{formatCurrency(k?.returns_total || 0)}</span></span>
                 )}
               </div>
             </div>
 
             {/* Payment methods doughnut */}
             <div className="dax-card p-5 rounded-2xl border-t-2 border-t-violet-500/50 relative group hover:border-t-violet-400 transition-all">
-              <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-1">Métodos de Pago</p>
+              <p className="text-[10px] font-black uppercase text-dax-muted tracking-widest mb-1">Métodos de Pago</p>
               {paymentEntries.length === 0 ? (
-                <div className="h-20 flex items-center justify-center text-[10px] text-slate-600 italic">Sin pagos registrados</div>
+                <div className="h-20 flex items-center justify-center text-[10px] text-dax-faint italic">Sin pagos registrados</div>
               ) : (
                 <div className="flex items-center gap-3">
                   <div className="relative w-20 h-20 shrink-0">
@@ -429,7 +429,7 @@ export function HQOperations() {
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-[9px] font-bold text-slate-400 tabular-nums">{paymentEntries.length}</span>
+                      <span className="text-[9px] font-bold text-dax-muted tabular-nums">{paymentEntries.length}</span>
                     </div>
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
@@ -441,7 +441,7 @@ export function HQOperations() {
                             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PAYMENT_COLORS[m] ?? OTHER_COLOR }} />
                             <span className="truncate">{m}</span>
                           </span>
-                          <span className="text-slate-400 tabular-nums shrink-0">{pct.toFixed(0)}%</span>
+                          <span className="text-dax-muted tabular-nums shrink-0">{pct.toFixed(0)}%</span>
                         </div>
                       )
                     })}
@@ -453,15 +453,15 @@ export function HQOperations() {
             {/* Alerts */}
             <Link to="/hq/control"
               className="dax-card p-5 rounded-2xl border-t-2 border-t-rose-500/50 relative overflow-hidden flex flex-col justify-center items-center text-center group hover:border-t-rose-400 transition-all cursor-pointer hover:bg-rose-500/5">
-              <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 mb-2 ring-1 ring-rose-500/30 animate-pulse">
+              <div className="h-10 w-10 rounded-full bg-rose-500/10 flex items-center justify-center text-sem-critical mb-2 ring-1 ring-rose-500/30 animate-pulse">
                 <i className="fas fa-triangle-exclamation text-lg" />
               </div>
-              <h2 className="text-3xl font-bold text-white tabular-nums" style={{ textShadow: '0 0 12px rgba(244,63,94,0.5)' }}>
+              <h2 className="text-3xl font-bold text-dax-text tabular-nums" style={{ textShadow: '0 0 12px rgba(244,63,94,0.5)' }}>
                 {alerts.length}
               </h2>
-              <p className="text-[10px] font-black uppercase text-rose-400 tracking-widest">Alertas Críticas</p>
+              <p className="text-[10px] font-black uppercase text-sem-critical tracking-widest">Alertas Críticas</p>
               {dominantAlertType && (
-                <p className="text-[9px] text-slate-500 mt-0.5">
+                <p className="text-[9px] text-dax-muted mt-0.5">
                   dominante: <span className="text-rose-300 font-bold">{dominantAlertType}</span>
                 </p>
               )}
@@ -470,7 +470,7 @@ export function HQOperations() {
                   {unreadAlertsCount} nuevas
                 </span>
               )}
-              <p className="text-[9px] text-slate-600 mt-1">Ver Control HQ →</p>
+              <p className="text-[9px] text-dax-faint mt-1">Ver Control HQ →</p>
             </Link>
           </div>
 
@@ -478,12 +478,12 @@ export function HQOperations() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" style={{ minHeight: 380 }}>
             <div className="dax-card rounded-2xl p-5 border border-white/5 lg:col-span-2 flex flex-col relative overflow-hidden">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-2">
-                  <i className="fas fa-wave-square text-emerald-500" /> Sales Velocity (Hourly)
+                <h3 className="text-xs font-black uppercase text-dax-text tracking-widest flex items-center gap-2">
+                  <i className="fas fa-wave-square text-sem-success" /> Sales Velocity (Hourly)
                 </h3>
                 <span className="flex items-center gap-2">
                   {isTodayRange && (
-                    <span className="text-[9px] font-mono text-emerald-400/70">
+                    <span className="text-[9px] font-mono text-sem-success">
                       Hora actual: {String(currentHour).padStart(2, '0')}:00
                     </span>
                   )}
@@ -494,19 +494,19 @@ export function HQOperations() {
                 {hourly.length > 0 ? (
                   <Bar data={chartData} options={chartOptions} />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-xs text-slate-600 italic">Sin datos</div>
+                  <div className="flex items-center justify-center h-full text-xs text-dax-faint italic">Sin datos</div>
                 )}
               </div>
             </div>
 
             <div className="dax-card rounded-2xl p-0 border border-white/5 flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-white/5 bg-slate-900/40 space-y-2">
+              <div className="p-4 border-b border-white/5 bg-dax-bg space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-2">
+                  <h3 className="text-xs font-black uppercase text-dax-text tracking-widest flex items-center gap-2">
                     <i className="fas fa-network-wired text-sky-500" /> Branch Status
                   </h3>
                   <select value={branchSort} onChange={(e) => setBranchSort(e.target.value as BranchSort)}
-                    className="text-[10px] bg-slate-800/80 border border-slate-700 rounded px-1.5 py-0.5 text-slate-300">
+                    className="text-[10px] bg-dax-card border border-dax-border rounded px-1.5 py-0.5 text-dax-muted">
                     <option value="sales">Ventas</option>
                     <option value="name">Nombre</option>
                     <option value="alerts">Alertas</option>
@@ -514,11 +514,11 @@ export function HQOperations() {
                 </div>
                 <input type="search" value={branchSearch} onChange={(e) => setBranchSearch(e.target.value)}
                   placeholder="Buscar sucursal..."
-                  className="w-full bg-slate-800/80 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 placeholder-slate-600" />
+                  className="w-full bg-dax-card border border-dax-border rounded px-2 py-1 text-xs text-dax-muted placeholder-slate-600" />
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-900/20">
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-dax-bg">
                 {branches.length === 0 ? (
-                  <div className="text-xs text-slate-600 italic p-4 text-center">
+                  <div className="text-xs text-dax-faint italic p-4 text-center">
                     {branchesAll.length === 0 ? 'No hay sucursales configuradas.' : 'Sin resultados.'}
                   </div>
                 ) : (
@@ -528,35 +528,35 @@ export function HQOperations() {
                     const users = (b.pending_users || []).map((u) => u.user).join(', ')
                     return (
                       <Link key={b.id} to={`/hq/branches/${b.id}`}
-                        className="block p-3 rounded-xl bg-slate-800/50 hover:bg-slate-700/60 border border-white/5 hover:border-sky-500/30 transition group">
+                        className="block p-3 rounded-xl bg-dax-card hover:bg-dax-surface border border-white/5 hover:border-sky-500/30 transition group">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <div className={`w-2 h-2 rounded-full shrink-0 ${online ? 'bg-emerald-500' : 'bg-slate-600'}`}
                               style={online ? { boxShadow: '0 0 8px rgba(16,185,129,0.5)' } : undefined} />
-                            <p className="text-xs font-bold text-white group-hover:text-sky-400 transition truncate">
+                            <p className="text-xs font-bold text-dax-text group-hover:text-sem-info transition truncate">
                               {b.name}
                               {b.is_hq && <span className="text-[9px] bg-indigo-500 px-1 rounded ml-1">HQ</span>}
                             </p>
-                            <span className={`text-[9px] font-bold uppercase shrink-0 ${online ? 'text-emerald-400' : 'text-slate-500'}`}>
+                            <span className={`text-[9px] font-bold uppercase shrink-0 ${online ? 'text-sem-success' : 'text-dax-muted'}`}>
                               · {online ? 'Online' : 'Offline'}
                             </span>
                           </div>
                           <div className="text-right shrink-0">
                             {b.pending_cuts > 0 && (
-                              <span className="text-[9px] text-amber-400 font-bold block animate-pulse">CORTE: {users}</span>
+                              <span className="text-[9px] text-sem-warning font-bold block animate-pulse">CORTE: {users}</span>
                             )}
                             {b.critical_stock > 0 && (
-                              <span className="text-[9px] text-rose-400 font-bold block">
+                              <span className="text-[9px] text-sem-critical font-bold block">
                                 {b.critical_stock} Alerta{b.critical_stock !== 1 ? 's' : ''}
                               </span>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+                          <div className="flex-1 h-1 bg-dax-surface rounded-full overflow-hidden">
                             <div className="h-full bg-emerald-500/60 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                           </div>
-                          <span className="text-[10px] font-mono text-emerald-400 shrink-0">{formatCurrency(b.total_sales || 0)}</span>
+                          <span className="text-[10px] font-mono text-sem-success shrink-0">{formatCurrency(b.total_sales || 0)}</span>
                         </div>
                       </Link>
                     )
@@ -569,32 +569,32 @@ export function HQOperations() {
           {/* Bottom: Top Performers + Live Alerts Feed */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pb-6">
             <div className="dax-card rounded-2xl p-5 border border-white/5">
-              <h3 className="text-xs font-black uppercase text-white tracking-widest mb-4 flex items-center gap-2">
-                <i className="fas fa-rocket text-amber-500" /> Top Performers
+              <h3 className="text-xs font-black uppercase text-dax-text tracking-widest mb-4 flex items-center gap-2">
+                <i className="fas fa-rocket text-sem-warning" /> Top Performers
               </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-800">
-                  <thead className="bg-slate-900/80">
+                  <thead className="bg-dax-bg">
                     <tr>
-                      <th className="px-3 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider">Producto</th>
-                      <th className="px-3 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">Revenue</th>
-                      <th className="px-3 py-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wider">% del top</th>
+                      <th className="px-3 py-3 text-left text-[10px] font-bold text-dax-muted uppercase tracking-wider">Producto</th>
+                      <th className="px-3 py-3 text-right text-[10px] font-bold text-dax-muted uppercase tracking-wider">Revenue</th>
+                      <th className="px-3 py-3 text-right text-[10px] font-bold text-dax-muted uppercase tracking-wider">% del top</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50 text-sm">
                     {topProducts.length === 0 ? (
-                      <tr><td colSpan={3} className="py-4 text-center text-xs text-slate-600 italic">Sin datos</td></tr>
+                      <tr><td colSpan={3} className="py-4 text-center text-xs text-dax-faint italic">Sin datos</td></tr>
                     ) : (
                       topProducts.map((p, i) => {
                         const pct = (p.value / topProductsRevenue) * 100
                         return (
-                          <tr key={i} className="hover:bg-slate-800/60 transition group">
-                            <td className="px-3 py-3 font-bold text-white group-hover:text-emerald-400 transition text-xs truncate max-w-[140px]">{p.name}</td>
-                            <td className="px-3 py-3 text-right font-mono text-emerald-400 font-bold text-xs">{formatCurrency(p.value)}</td>
+                          <tr key={i} className="hover:bg-dax-card transition group">
+                            <td className="px-3 py-3 font-bold text-dax-text group-hover:text-sem-success transition text-xs truncate max-w-[140px]">{p.name}</td>
+                            <td className="px-3 py-3 text-right font-mono text-sem-success font-bold text-xs">{formatCurrency(p.value)}</td>
                             <td className="px-3 py-3 text-right">
                               <div className="flex items-center justify-end gap-2">
-                                <span className="text-[10px] font-mono text-slate-400 tabular-nums">{pct.toFixed(0)}%</span>
-                                <div className="w-16 h-1 bg-slate-700 rounded-full overflow-hidden">
+                                <span className="text-[10px] font-mono text-dax-muted tabular-nums">{pct.toFixed(0)}%</span>
+                                <div className="w-16 h-1 bg-dax-surface rounded-full overflow-hidden">
                                   <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.round(pct)}%` }} />
                                 </div>
                               </div>
@@ -610,25 +610,25 @@ export function HQOperations() {
 
             <div className="dax-card rounded-2xl p-5 border border-white/5">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs font-black uppercase text-white tracking-widest flex items-center gap-2">
+                <h3 className="text-xs font-black uppercase text-dax-text tracking-widest flex items-center gap-2">
                   <i className="fas fa-satellite-dish text-violet-500" /> Live Comm Feed
                 </h3>
                 {unreadAlertsCount > 0 && (
                   <button onClick={markAllRead}
-                    className="text-[10px] font-bold uppercase text-slate-500 hover:text-emerald-400 transition">
+                    className="text-[10px] font-bold uppercase text-dax-muted hover:text-sem-success transition">
                     Marcar leídas
                   </button>
                 )}
               </div>
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {alertsByType.length === 0 ? (
-                  <div className="text-center text-xs text-slate-600 py-4 italic flex items-center justify-center gap-2">
-                    <i className="fas fa-check-circle text-emerald-500" /> All Systems Nominal.
+                  <div className="text-center text-xs text-dax-faint py-4 italic flex items-center justify-center gap-2">
+                    <i className="fas fa-check-circle text-sem-success" /> All Systems Nominal.
                   </div>
                 ) : (
                   alertsByType.map(([type, items]) => (
                     <div key={type} className="space-y-2">
-                      <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-rose-400/70">
+                      <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-sem-critical">
                         <i className="fas fa-tag" /> {type}
                         <span className="bg-rose-500/10 border border-rose-500/20 px-1.5 rounded tabular-nums">{items.length}</span>
                       </div>
@@ -638,13 +638,13 @@ export function HQOperations() {
                           <div key={i}
                             className={`flex gap-3 text-xs p-2.5 rounded-xl border transition ${
                               read
-                                ? 'bg-slate-800/30 border-slate-700/40 opacity-60'
+                                ? 'bg-dax-card border-dax-border opacity-60'
                                 : 'bg-rose-500/10 border-rose-500/20'
                             }`}>
-                            <i className={`fas fa-exclamation-triangle mt-0.5 shrink-0 ${read ? 'text-slate-500' : 'text-rose-500'}`} />
+                            <i className={`fas fa-exclamation-triangle mt-0.5 shrink-0 ${read ? 'text-dax-muted' : 'text-sem-critical'}`} />
                             <div className="flex-1 min-w-0">
-                              <p className={`font-bold ${read ? 'text-slate-400' : 'text-rose-200'}`}>{a.msg}</p>
-                              <p className="text-[9px] text-rose-400/60 mt-0.5 uppercase tracking-wide">
+                              <p className={`font-bold ${read ? 'text-dax-muted' : 'text-rose-200'}`}>{a.msg}</p>
+                              <p className="text-[9px] text-sem-critical mt-0.5 uppercase tracking-wide">
                                 {a.source} · {sinceFmt(a.time)}
                               </p>
                             </div>
