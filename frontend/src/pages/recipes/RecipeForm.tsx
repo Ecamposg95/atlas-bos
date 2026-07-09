@@ -132,7 +132,7 @@ export function RecipeForm() {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+        className="w-full px-3 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
       >
         <option value="">— Selecciona —</option>
         {options.map((o) => (
@@ -144,7 +144,7 @@ export function RecipeForm() {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="ID de variante (UUID)"
-        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+        className="w-full px-3 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
       />
     )
 
@@ -153,31 +153,31 @@ export function RecipeForm() {
   return (
     <div className="space-y-5 max-w-3xl">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-white">{isEdit ? 'Editar receta' : 'Nueva receta'}</h1>
+        <h1 className="text-2xl font-black text-dax-text">{isEdit ? 'Editar receta' : 'Nueva receta'}</h1>
         <Button variant="secondary" onClick={() => navigate('/recipes')}>Cancelar</Button>
       </div>
 
       <DaxCard className="space-y-4">
         <div>
-          <label className="block text-sm font-bold text-slate-300 mb-1">Platillo (producto vendible)</label>
+          <label className="block text-sm font-bold text-dax-muted mb-1">Platillo (producto vendible)</label>
           {variantSelect(variantId, setVariantId)}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-1">Nombre de la receta</label>
+            <label className="block text-sm font-bold text-dax-muted mb-1">Nombre de la receta</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              className="w-full px-3 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-1">Rinde (porciones)</label>
+            <label className="block text-sm font-bold text-dax-muted mb-1">Rinde (porciones)</label>
             <input
               type="number" min="1"
               value={yieldQty}
               onChange={(e) => setYieldQty(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              className="w-full px-3 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
             />
           </div>
         </div>
@@ -185,7 +185,7 @@ export function RecipeForm() {
 
       <DaxCard className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-white">Insumos</h2>
+          <h2 className="font-bold text-dax-text">Insumos</h2>
           <Button variant="ghost" size="sm" icon="fa-plus" onClick={() => setRows((p) => [...p, emptyRow()])}>
             Insumo
           </Button>
@@ -196,21 +196,21 @@ export function RecipeForm() {
             <input
               type="number" step="0.0001" value={r.qty} placeholder="Cant."
               onChange={(e) => updateRow(idx, { qty: e.target.value })}
-              className="col-span-2 px-2 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              className="col-span-2 px-2 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
             />
             <input
               value={r.unit} placeholder="Unidad"
               onChange={(e) => updateRow(idx, { unit: e.target.value })}
-              className="col-span-2 px-2 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              className="col-span-2 px-2 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
             />
             <input
               type="number" step="0.01" value={r.waste_pct} placeholder="Merma %"
               onChange={(e) => updateRow(idx, { waste_pct: e.target.value })}
-              className="col-span-1 px-2 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+              className="col-span-1 px-2 py-2 bg-dax-card border border-dax-border rounded-lg text-dax-text"
             />
             <button
               onClick={() => setRows((p) => p.filter((_, i) => i !== idx))}
-              className="col-span-1 text-slate-500 hover:text-red-400"
+              className="col-span-1 text-dax-muted hover:text-sem-critical"
               title="Quitar"
             >
               <i className="fa-solid fa-xmark" />
@@ -221,11 +221,11 @@ export function RecipeForm() {
 
       {cost && (
         <DaxCard>
-          <h2 className="font-bold text-white mb-2">Costeo</h2>
+          <h2 className="font-bold text-dax-text mb-2">Costeo</h2>
           <div className="grid grid-cols-3 gap-3 text-sm">
-            <div><p className="text-slate-400">Costo / porción</p><p className="text-white font-black">${Number(cost.cost_per_portion).toFixed(2)}</p></div>
-            <div><p className="text-slate-400">Precio venta</p><p className="text-white font-black">{cost.sale_price != null ? `$${Number(cost.sale_price).toFixed(2)}` : '—'}</p></div>
-            <div><p className="text-slate-400">Margen</p><p className="text-emerald-400 font-black">{cost.margin != null ? `$${Number(cost.margin).toFixed(2)}` : '—'}{cost.margin_pct != null ? ` (${Number(cost.margin_pct).toFixed(0)}%)` : ''}</p></div>
+            <div><p className="text-dax-muted">Costo / porción</p><p className="text-dax-text font-black">${Number(cost.cost_per_portion).toFixed(2)}</p></div>
+            <div><p className="text-dax-muted">Precio venta</p><p className="text-dax-text font-black">{cost.sale_price != null ? `$${Number(cost.sale_price).toFixed(2)}` : '—'}</p></div>
+            <div><p className="text-dax-muted">Margen</p><p className="text-sem-success font-black">{cost.margin != null ? `$${Number(cost.margin).toFixed(2)}` : '—'}{cost.margin_pct != null ? ` (${Number(cost.margin_pct).toFixed(0)}%)` : ''}</p></div>
           </div>
         </DaxCard>
       )}
