@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Atlas One · Gastro Suite — Deck ejecutivo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #0B0A09; font-family: 'IBM Plex Sans', system-ui, sans-serif; color: #F6F1E9; }
+    *, *::before, *::after { box-sizing: border-box; }
+    deck-stage:not(:defined) { visibility: hidden; }
+    deck-stage section { background: #0B0A09; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="deck-stage.js"></script>
+  <script src="image-slot.js"></script>
+</head>
+<body>
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 1200 1200" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="1200" fill="#0B0A09"/>
+      <rect x="360" y="420" width="480" height="360" rx="40" fill="#E8A33D"/>
+      <text x="600" y="640" font-family="Georgia, serif" font-size="200" fill="#0B0A09" text-anchor="middle" font-style="italic">A1</text>
+    </svg>
+  </template>
+  <div id="deck-root"></div>
+  <script type="text/babel" src="system.jsx"></script>
+  <script type="text/babel" src="restaurant.jsx"></script>
+  <script type="text/babel" src="cafe.jsx"></script>
+  <script type="text/babel" src="bar.jsx"></script>
+  <script type="text/babel" src="enterprise.jsx"></script>
+  <script type="text/babel" src="gastro-deck.jsx"></script>
+</body>
+</html>
