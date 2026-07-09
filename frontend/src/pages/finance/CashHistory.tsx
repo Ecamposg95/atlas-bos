@@ -24,16 +24,16 @@ function MovementModal({ type, onClose, onConfirm }: { type: 'IN' | 'OUT'; onClo
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-black text-white mb-4">
+        <h3 className="text-lg font-black text-dax-text mb-4">
           {type === 'IN' ? '💰 Entrada de Efectivo' : '💸 Salida / Gasto'}
         </h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Monto</label>
+            <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">Monto</label>
             <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="dax-input" placeholder="0.00" min="0" step="0.01" autoFocus />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Concepto</label>
+            <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">Concepto</label>
             <input type="text" value={concept} onChange={(e) => setConcept(e.target.value)} className="dax-input" placeholder="Ej: Fondo de cambio, Gasto operativo..." />
           </div>
         </div>
@@ -62,27 +62,27 @@ function CloseModal({ summary, onClose, onConfirm }: { summary: CashSummary; onC
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-black text-white mb-4">Finalizar Turno</h3>
+        <h3 className="text-lg font-black text-dax-text mb-4">Finalizar Turno</h3>
         <div className="space-y-3 text-sm mb-4">
-          <div className="flex justify-between"><span className="text-slate-500">Fondo inicial</span><span>{formatCurrency(summary.opening_amount)}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Ventas efectivo</span><span>{formatCurrency(summary.total_cash)}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Entradas</span><span className="text-emerald-400">+{formatCurrency(summary.total_inflows)}</span></div>
-          <div className="flex justify-between"><span className="text-slate-500">Salidas</span><span className="text-red-400">-{formatCurrency(summary.total_outflows)}</span></div>
+          <div className="flex justify-between"><span className="text-dax-muted">Fondo inicial</span><span>{formatCurrency(summary.opening_amount)}</span></div>
+          <div className="flex justify-between"><span className="text-dax-muted">Ventas efectivo</span><span>{formatCurrency(summary.total_cash)}</span></div>
+          <div className="flex justify-between"><span className="text-dax-muted">Entradas</span><span className="text-sem-success">+{formatCurrency(summary.total_inflows)}</span></div>
+          <div className="flex justify-between"><span className="text-dax-muted">Salidas</span><span className="text-sem-critical">-{formatCurrency(summary.total_outflows)}</span></div>
           {summary.cash_refunds > 0 && (
             <div className="flex justify-between">
-              <span className="text-slate-500">Reembolsos efectivo {summary.returns_count > 0 ? `(${summary.returns_count})` : ''}</span>
-              <span className="text-red-400">-{formatCurrency(summary.cash_refunds)}</span>
+              <span className="text-dax-muted">Reembolsos efectivo {summary.returns_count > 0 ? `(${summary.returns_count})` : ''}</span>
+              <span className="text-sem-critical">-{formatCurrency(summary.cash_refunds)}</span>
             </div>
           )}
-          <div className="flex justify-between font-bold text-white border-t border-slate-700/50 pt-2">
+          <div className="flex justify-between font-bold text-dax-text border-t border-dax-border pt-2">
             <span>Esperado en caja</span><span>{formatCurrency(summary.expected_cash)}</span>
           </div>
         </div>
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Efectivo contado</label>
+          <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">Efectivo contado</label>
           <input type="number" value={closing} onChange={(e) => setClosing(e.target.value)} className="dax-input" step="0.01" />
           {diff !== 0 && (
-            <p className={`text-xs mt-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className={`text-xs mt-1 ${diff > 0 ? 'text-sem-success' : 'text-sem-critical'}`}>
               Diferencia: {diff > 0 ? '+' : ''}{formatCurrency(diff)}
             </p>
           )}
@@ -171,7 +171,7 @@ export function CashHistory() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-vault text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Control de Caja</h1>
+          <h1 className="text-2xl font-black text-dax-text">Control de Caja</h1>
         </div>
         <div className="flex gap-2">
           <button onClick={load} className="dax-btn-secondary text-xs"><i className="fa-solid fa-rotate-right" /></button>
@@ -182,9 +182,9 @@ export function CashHistory() {
       {noSession ? (
         <DaxCard>
           <div className="text-center py-8">
-            <i className="fa-solid fa-lock text-slate-600 text-4xl mb-4" />
-            <p className="text-slate-400 font-semibold">No hay turno activo</p>
-            <p className="text-slate-600 text-sm mt-1">Abre un turno desde el Punto de Venta</p>
+            <i className="fa-solid fa-lock text-dax-faint text-4xl mb-4" />
+            <p className="text-dax-muted font-semibold">No hay turno activo</p>
+            <p className="text-dax-faint text-sm mt-1">Abre un turno desde el Punto de Venta</p>
           </div>
         </DaxCard>
       ) : (
@@ -193,15 +193,15 @@ export function CashHistory() {
           {summary && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: 'Ventas totales', value: formatCurrency(summary.total_sales), icon: 'fa-coins', color: 'text-emerald-400' },
-                { label: 'Efectivo', value: formatCurrency(summary.total_cash), icon: 'fa-money-bill', color: 'text-white' },
+                { label: 'Ventas totales', value: formatCurrency(summary.total_sales), icon: 'fa-coins', color: 'text-sem-success' },
+                { label: 'Efectivo', value: formatCurrency(summary.total_cash), icon: 'fa-money-bill', color: 'text-dax-text' },
                 { label: 'Tarjeta', value: formatCurrency(summary.total_card), icon: 'fa-credit-card', color: 'text-indigo-400' },
-                { label: 'Transferencia', value: formatCurrency(summary.total_transfer), icon: 'fa-mobile-screen', color: 'text-blue-400' },
+                { label: 'Transferencia', value: formatCurrency(summary.total_transfer), icon: 'fa-mobile-screen', color: 'text-sem-info' },
               ].map((k) => (
                 <DaxCard key={k.label}>
                   <div className="flex items-center gap-2 mb-1">
-                    <i className={`fa-solid ${k.icon} text-slate-500 text-xs`} />
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{k.label}</p>
+                    <i className={`fa-solid ${k.icon} text-dax-muted text-xs`} />
+                    <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider">{k.label}</p>
                   </div>
                   <p className={`text-xl font-black tabular-nums ${k.color}`}>{k.value}</p>
                 </DaxCard>
@@ -213,12 +213,12 @@ export function CashHistory() {
           {summary && (
             <div className="grid grid-cols-2 gap-3">
               <DaxCard>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Entradas manuales</p>
-                <p className="text-2xl font-black text-emerald-400 tabular-nums">+{formatCurrency(summary.total_inflows)}</p>
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1">Entradas manuales</p>
+                <p className="text-2xl font-black text-sem-success tabular-nums">+{formatCurrency(summary.total_inflows)}</p>
               </DaxCard>
               <DaxCard>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Salidas / Gastos</p>
-                <p className="text-2xl font-black text-red-400 tabular-nums">-{formatCurrency(summary.total_outflows)}</p>
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1">Salidas / Gastos</p>
+                <p className="text-2xl font-black text-sem-critical tabular-nums">-{formatCurrency(summary.total_outflows)}</p>
               </DaxCard>
             </div>
           )}
@@ -226,7 +226,7 @@ export function CashHistory() {
           {/* Movimientos recientes */}
           {summary?.movements && summary.movements.length > 0 && (
             <DaxCard padding={false}>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 py-3 border-b border-slate-700/50">Movimientos recientes</p>
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest px-4 py-3 border-b border-dax-border">Movimientos recientes</p>
               <table className="dax-table w-full">
                 <thead><tr><th>Tipo</th><th>Concepto</th><th className="text-right">Monto</th><th>Hora</th></tr></thead>
                 <tbody>
@@ -234,10 +234,10 @@ export function CashHistory() {
                     <tr key={m.id}>
                       <td><span className={`dax-badge ${m.type === 'IN' ? 'dax-badge-green' : 'dax-badge-red'}`}>{m.type === 'IN' ? 'Entrada' : 'Salida'}</span></td>
                       <td className="text-sm">{m.concept}</td>
-                      <td className={`text-right font-semibold ${m.type === 'IN' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <td className={`text-right font-semibold ${m.type === 'IN' ? 'text-sem-success' : 'text-sem-critical'}`}>
                         {m.type === 'IN' ? '+' : '-'}{formatCurrency(m.amount)}
                       </td>
-                      <td className="text-xs text-slate-500">
+                      <td className="text-xs text-dax-muted">
                         {new Date(m.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                       </td>
                     </tr>
@@ -250,20 +250,20 @@ export function CashHistory() {
           {/* Acciones */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <button onClick={() => setModal('IN')} className="dax-card p-4 text-center hover:border-emerald-500/40 transition-colors group">
-              <i className="fa-solid fa-arrow-down text-emerald-400 text-xl mb-2 group-hover:scale-110 transition-transform block" />
-              <p className="text-sm font-semibold text-white">Entrada</p>
+              <i className="fa-solid fa-arrow-down text-sem-success text-xl mb-2 group-hover:scale-110 transition-transform block" />
+              <p className="text-sm font-semibold text-dax-text">Entrada</p>
             </button>
             <button onClick={() => setModal('OUT')} className="dax-card p-4 text-center hover:border-red-500/40 transition-colors group">
-              <i className="fa-solid fa-arrow-up text-red-400 text-xl mb-2 group-hover:scale-110 transition-transform block" />
-              <p className="text-sm font-semibold text-white">Salida / Gasto</p>
+              <i className="fa-solid fa-arrow-up text-sem-critical text-xl mb-2 group-hover:scale-110 transition-transform block" />
+              <p className="text-sm font-semibold text-dax-text">Salida / Gasto</p>
             </button>
             <button onClick={() => { }} className="dax-card p-4 text-center opacity-40 cursor-not-allowed">
-              <i className="fa-solid fa-scissors text-slate-400 text-xl mb-2 block" />
-              <p className="text-sm font-semibold text-slate-400">Corte Parcial</p>
+              <i className="fa-solid fa-scissors text-dax-muted text-xl mb-2 block" />
+              <p className="text-sm font-semibold text-dax-muted">Corte Parcial</p>
             </button>
             <button onClick={() => session?.id && downloadPdf(session.id)} className="dax-card p-4 text-center hover:border-indigo-500/40 transition-colors group">
               <i className="fa-solid fa-file-pdf text-indigo-400 text-xl mb-2 group-hover:scale-110 transition-transform block" />
-              <p className="text-sm font-semibold text-white">Exportar PDF</p>
+              <p className="text-sm font-semibold text-dax-text">Exportar PDF</p>
             </button>
           </div>
 
@@ -283,7 +283,7 @@ export function CashHistory() {
       {/* Historial de cortes */}
       {history.length > 0 && (
         <DaxCard padding={false}>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 py-3 border-b border-slate-700/50">
+          <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest px-4 py-3 border-b border-dax-border">
             Historial de cortes
           </p>
           <div className="overflow-x-auto">
@@ -302,8 +302,8 @@ export function CashHistory() {
               <tbody>
                 {history.map((h) => (
                   <tr key={h.id}>
-                    <td className="text-slate-400">{fmtDate(h.opened_at)}</td>
-                    <td className="text-slate-400">{h.closed_at ? fmtDate(h.closed_at) : <span className="text-emerald-400">Activo</span>}</td>
+                    <td className="text-dax-muted">{fmtDate(h.opened_at)}</td>
+                    <td className="text-dax-muted">{h.closed_at ? fmtDate(h.closed_at) : <span className="text-sem-success">Activo</span>}</td>
                     <td>{h.user_name ?? `#${h.user_id}`}</td>
                     <td className="text-right tabular-nums">{formatCurrency(h.opening_balance)}</td>
                     <td className="text-right tabular-nums">{h.closing_balance != null ? formatCurrency(h.closing_balance) : '—'}</td>
@@ -316,7 +316,7 @@ export function CashHistory() {
                       <div className="flex gap-1">
                         <button
                           onClick={() => downloadPdf(h.id)}
-                          className="text-slate-500 hover:text-indigo-400 transition-colors"
+                          className="text-dax-muted hover:text-indigo-400 transition-colors"
                           title="Descargar PDF"
                         >
                           <i className="fa-solid fa-file-pdf" />
@@ -325,7 +325,7 @@ export function CashHistory() {
                           <button
                             onClick={() => printCut(h.id)}
                             disabled={printingId === h.id}
-                            className="text-slate-500 hover:text-white transition-colors disabled:opacity-40"
+                            className="text-dax-muted hover:text-dax-text transition-colors disabled:opacity-40"
                             title="Reimprimir corte"
                           >
                             {printingId === h.id

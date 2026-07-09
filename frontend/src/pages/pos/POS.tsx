@@ -350,7 +350,7 @@ export function POS() {
       <div className="flex items-center justify-center h-full min-h-[60vh]">
         <div className="text-center">
           <i className="fa-solid fa-spinner fa-spin text-purple-400 text-3xl mb-3 block" />
-          <p className="text-slate-400 text-sm">Verificando turno...</p>
+          <p className="text-dax-muted text-sm">Verificando turno...</p>
         </div>
       </div>
     )
@@ -393,8 +393,8 @@ export function POS() {
           onClick={() => setLeftTab('products')}
           className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors border ${
             leftTab === 'products'
-              ? 'border-purple-500/60 text-white bg-purple-500/15'
-              : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+              ? 'border-purple-500/60 text-dax-text bg-purple-500/15'
+              : 'border-transparent text-dax-muted hover:text-dax-text hover:bg-white/5'
           }`}
         >
           <i className="fa-solid fa-barcode text-[10px]" /> Productos
@@ -403,8 +403,8 @@ export function POS() {
           onClick={() => setLeftTab('pending')}
           className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors border ${
             leftTab === 'pending'
-              ? 'border-amber-500/60 text-white bg-amber-500/15'
-              : 'border-transparent text-slate-500 hover:text-white hover:bg-white/5'
+              ? 'border-amber-500/60 text-dax-text bg-amber-500/15'
+              : 'border-transparent text-dax-muted hover:text-dax-text hover:bg-white/5'
           }`}
         >
           <i className="fa-solid fa-clock text-[10px]" /> Pendientes
@@ -535,7 +535,7 @@ export function POS() {
           <div className="w-px h-4 flex-shrink-0" style={{ background: 'var(--dax-border-dim)' }} />
           <button
             onClick={() => setClosingSession(true)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 rounded-lg transition-colors hover:text-red-500"
+            className="flex items-center gap-1.5 text-xs font-semibold px-2.5 rounded-lg transition-colors hover:text-sem-critical"
             style={{ minHeight: 34, color: 'var(--dax-text-muted)' }}
             title="Cerrar turno"
           >
@@ -670,7 +670,7 @@ export function POS() {
           >
             <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--dax-border-dim)' }}>
               <div className="flex items-center gap-2 text-sm font-bold" style={{ color: 'var(--dax-text)' }}>
-                <i className="fa-solid fa-cloud-arrow-up text-amber-500" />
+                <i className="fa-solid fa-cloud-arrow-up text-sem-warning" />
                 Ventas pendientes de enviar
                 <span className="bg-amber-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">
                   {offlineQueue.length}
@@ -678,7 +678,7 @@ export function POS() {
               </div>
               <button
                 onClick={() => setShowOfflineModal(false)}
-                className="text-slate-400 hover:text-white text-sm"
+                className="text-dax-muted hover:text-dax-text text-sm"
                 title="Cerrar"
               >
                 <i className="fa-solid fa-xmark" />
@@ -686,14 +686,14 @@ export function POS() {
             </div>
             <div className="max-h-80 overflow-y-auto">
               {offlineQueue.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-400">Sin pendientes.</div>
+                <div className="p-6 text-center text-xs text-dax-muted">Sin pendientes.</div>
               ) : (
                 <ul className="divide-y" style={{ borderColor: 'var(--dax-border-dim)' }}>
                   {offlineQueue.map((p) => (
                     <li key={p.id} className="px-4 py-2.5 text-xs flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="font-mono truncate" style={{ color: 'var(--dax-text)' }}>{p.id}</div>
-                        <div className="text-slate-500">
+                        <div className="text-dax-muted">
                           {new Date(p.enqueued_at).toLocaleString('es-MX')}
                           {p.attempts > 0 && ` · ${p.attempts} intento(s)`}
                         </div>
