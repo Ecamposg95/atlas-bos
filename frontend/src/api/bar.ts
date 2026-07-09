@@ -5,7 +5,7 @@ export type BottleStatus = 'OPEN' | 'EMPTY' | 'ARCHIVED'
 export interface BarBottle {
   id: number
   branch_id: number
-  variant_id: number | null
+  variant_id: string | null
   name: string
   full_volume_ml: number
   remaining_ml: number
@@ -17,7 +17,7 @@ export interface BarBottle {
 export interface BottleCreate {
   branch_id: number
   name: string
-  variant_id?: number | null
+  variant_id?: string | null
   full_volume_ml?: number
   pour_size_ml?: number
 }

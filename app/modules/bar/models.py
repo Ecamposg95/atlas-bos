@@ -35,7 +35,8 @@ class BarBottle(Base):
     branch_id = Column(Integer, ForeignKey("branches.id"), nullable=False, index=True)
     # Variante de producto asociada (la botella de licor en catálogo). Opcional
     # para permitir registrar una botella suelta sin producto formal.
-    variant_id = Column(Integer, ForeignKey("product_variants.id"), nullable=True, index=True)
+    # product_variants.id es UUID (VARCHAR 36), NO integer.
+    variant_id = Column(String(36), ForeignKey("product_variants.id"), nullable=True, index=True)
 
     name = Column(String(160), nullable=False)          # "Tequila Don Julio 70"
     full_volume_ml = Column(Numeric(10, 2), nullable=False, default=750)
