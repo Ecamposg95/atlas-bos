@@ -168,6 +168,7 @@ from app.modules.ai.router           import router as ai_router
 from app.modules.purchasing.router   import router as purchasing_router
 # Gastro modules (2026-06-22) — Mesas, Cocina/KDS, Recetas
 from app.modules.tables.router       import router as tables_router
+from app.modules.bar.router          import router as bar_router
 from app.modules.kitchen.router      import router as kitchen_router
 
 app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda"])
@@ -185,6 +186,7 @@ app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recet
 app.include_router(ai_router,           prefix="/api/ai",           tags=["IA (Beta)"])
 app.include_router(purchasing_router,   prefix="/api/purchasing",   tags=["Compras (Beta)"])
 app.include_router(tables_router,       prefix="/api/tables",       tags=["Mesas"])
+app.include_router(bar_router,          prefix="/api/bar",          tags=["Bar líquido"])
 app.include_router(kitchen_router,      prefix="/api/kitchen",      tags=["Cocina / KDS"])
 # daxpos.router eliminado en Sprint 3 (tech-debt roadmap).
 # Sus 15 rutas SSR fueron desactivadas: las que coinciden con rutas React

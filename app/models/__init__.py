@@ -97,3 +97,4 @@ from app.modules.appointments import models as _appointments_models  # noqa: F40
 from app.modules.tables import models as _tables_models  # noqa: F401
 from app.modules.kitchen import models as _kitchen_models  # noqa: F401
 from app.modules.recipes import models as _recipes_models  # noqa: F401
+from app.modules.bar import models as _bar_models  # noqa: F401

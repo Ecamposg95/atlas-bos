@@ -14,7 +14,7 @@ const RETURNS_URLS = new Set(['/returns', '/hq/returns'])
 // Branch nav group labels — keyed by URL, defines section header shown above each group
 const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
   { header: 'Mi día',        urls: ['/atlas-pos', '/pos'] },
-  { header: 'Restaurante',   urls: ['/tables', '/kitchen'] },
+  { header: 'Restaurante',   urls: ['/tables', '/kitchen', '/bar/bottles'] },
   { header: 'Mi turno',      urls: ['/cash-history', '/sales'] },
   { header: 'Inventario',    urls: ['/products'] },
   { header: 'Reportes',      urls: ['/reports', '/meseros'] },
@@ -80,6 +80,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Mesas',             short: 'MSA', icon: 'fa-chair',               url: '/tables',           group: 'hq',   sort: 28, module: 'tables' },
   { label: 'Cocina (KDS)',      short: 'KDS', icon: 'fa-fire-burner',         url: '/kitchen',          group: 'hq',   sort: 29, module: 'kitchen' },
   { label: 'Meseros',           short: 'MSR', icon: 'fa-user-tie',            url: '/meseros',          group: 'hq',   sort: 30, module: 'tables' },
+  { label: 'Botellas',          short: 'BTL', icon: 'fa-wine-bottle',         url: '/bar/bottles',      group: 'hq',   sort: 31, module: 'tables' },
   { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/atlas-pos',         group: 'pos',  sort: 0  },
   { label: 'Cobrar',            short: 'POS', icon: 'fa-cash-register',       url: '/pos',              group: 'pos',  sort: 1  },
   { label: 'Mis ventas',        short: 'HST', icon: 'fa-history',             url: '/sales',            group: 'pos',  sort: 2  },
@@ -96,10 +97,10 @@ const ALL_NAV: NavItem[] = [
 ]
 
 const ROLE_ROUTES: Record<Role, string[]> = {
-  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros'],
-  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros'],
-  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes','/meseros'],
-  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos','/tables','/kitchen'],
+  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles'],
+  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles'],
+  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes','/meseros','/bar/bottles'],
+  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos','/tables','/kitchen','/bar/bottles'],
   VENDEDOR:         ['/mobile/dashboard','/mobile/query','/mobile/sales','/mobile/profile','/hr/me','/atlas-pos'],
   SOPORTE_OPERATIVO:['/mobile/dashboard','/mobile/query','/mobile/profile','/hr/me','/atlas-pos'],
   CLIENTE:          ['/portal'],

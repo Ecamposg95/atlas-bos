@@ -92,6 +92,7 @@ const RecipeForm      = lazy(() => import('./pages/recipes/RecipeForm').then(m =
 const ComandaTables   = lazy(() => import('./pages/mobile/ComandaTables').then(m => ({ default: m.ComandaTables })))
 const ComandaOrder    = lazy(() => import('./pages/mobile/ComandaOrder').then(m => ({ default: m.ComandaOrder })))
 const Meseros         = lazy(() => import('./pages/reports/Meseros').then(m => ({ default: m.Meseros })))
+const Botellas        = lazy(() => import('./pages/bar/Botellas').then(m => ({ default: m.Botellas })))
 
 // Portal (CLIENTE)
 const Portal          = lazy(() => import('./pages/portal/Portal').then(m => ({ default: m.Portal })))
@@ -347,6 +348,7 @@ export default function App() {
           <Route path="tables"       element={<Suspense fallback={<PageLoader />}><FloorPlan /></Suspense>} />
           <Route path="kitchen"      element={<Suspense fallback={<PageLoader />}><KDS /></Suspense>} />
           <Route path="meseros"      element={<Suspense fallback={<PageLoader />}><Meseros /></Suspense>} />
+          <Route path="bar/bottles"  element={<Suspense fallback={<PageLoader />}><Botellas /></Suspense>} />
           <Route path="ai"           element={<Suspense fallback={<PageLoader />}><AIComingSoon /></Suspense>} />
           <Route path="purchasing"   element={<Suspense fallback={<PageLoader />}><PurchasingComingSoon /></Suspense>} />
 
