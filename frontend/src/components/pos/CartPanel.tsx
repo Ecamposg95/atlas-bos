@@ -36,6 +36,9 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
   const globalDiscount = usePOSStore((s) => s.globalDiscount)
   const globalDiscountAmount = usePOSStore((s) => s.globalDiscountAmount())
   const setGlobalDiscount = usePOSStore((s) => s.setGlobalDiscount)
+  const tip = usePOSStore((s) => s.tip)
+  const setTip = usePOSStore((s) => s.setTip)
+  const discountedSubtotal = usePOSStore((s) => s.discountedSubtotal())
   const [editingGlobalDisc, setEditingGlobalDisc] = useState(false)
   const [globalDiscInput, setGlobalDiscInput] = useState('0')
 
@@ -874,6 +877,31 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
             <span>IVA 16%</span><span className="tabular-nums">{formatCurrency(tax)}</span>
           </div>
         )}
+        {/* Propina (gastro): quick % sobre el subtotal con descuento */}
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <span className="text-xs uppercase tracking-wide" style={{ color: 'var(--dax-text-muted)' }}>
+            Propina{tip > 0 && <span className="ml-1 tabular-nums" style={{ color: 'var(--p-accent)' }}>{formatCurrency(tip)}</span>}
+          </span>
+          <div className="flex items-center gap-1">
+            {[0, 0.10, 0.15].map((pct) => {
+              const amt = pct === 0 ? 0 : Math.round(discountedSubtotal * pct)
+              const active = pct === 0 ? tip === 0 : tip > 0 && Math.abs(tip - amt) < 0.5
+              return (
+                <button
+                  key={pct}
+                  onClick={() => setTip(amt)}
+                  className="text-xs font-bold px-2.5 py-1 rounded-lg transition-colors"
+                  style={{
+                    background: active ? 'var(--p-accent)' : 'var(--dax-elevated)',
+                    color: active ? '#fff' : 'var(--dax-text-muted)',
+                  }}
+                >
+                  {pct === 0 ? 'Sin' : `${pct * 100}%`}
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <div className="flex justify-between items-baseline font-black pt-2" style={{ borderTop: '1px solid var(--dax-row-border)', color: 'var(--dax-text)' }}>
           <span className="text-base uppercase tracking-wide">Total</span>
           <span className="tabular-nums text-emerald-600 text-3xl">{formatCurrency(total)}</span>

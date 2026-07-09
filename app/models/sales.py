@@ -69,12 +69,18 @@ class SalesDocument(Base, UUIDMixin, AuditMixin, TenantMixin):
     change_given = Column(Numeric(12, 2), nullable=True)
 
     requires_invoice = Column(Boolean, default=False)
-    
+
+    # Gastro — propina cobrada (se suma al total) y atribución al mesero de la
+    # mesa para el reporte "ventas por mesero". server_user_id se copia del
+    # DiningTable.server_user_id al cobrar; NULL para ventas de mostrador.
+    tip_amount = Column(Numeric(10, 2), default=0)
+    server_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+
     notes = Column(String, nullable=True)
-    
+
     # Relaciones
     branch = relationship("Branch")
-    seller = relationship("User")
+    seller = relationship("User", foreign_keys=[seller_id])
     customer = relationship("Customer")
     
     lines = relationship("SalesLineItem", back_populates="document", cascade="all, delete-orphan")

@@ -171,6 +171,7 @@ export function POS() {
       requires_invoice: store.requiresInvoice,
       // Wave-1: backend audita el descuento global y marca el parked CONVERTED.
       global_discount_pct: store.globalDiscount || 0,
+      tip_amount: store.tip || 0,
       parked_ticket_id: store.currentParkedId ?? undefined,
     }
     try {

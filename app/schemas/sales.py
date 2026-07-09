@@ -36,6 +36,8 @@ class SaleCreate(BaseModel):
     # H-2: descuento global aplicado por el cajero (auditoría). El frontend ya
     # multiplica el factor en cada unit_price; aquí guardamos el % para reportes.
     global_discount_pct: Optional[Decimal] = Decimal("0")
+    # Gastro — propina cobrada al cliente (se suma al total; los pagos deben cubrirla).
+    tip_amount: Optional[Decimal] = Decimal("0")
     # M-3: si la venta proviene de un ticket pausado, lo marcamos CONVERTED al
     # crear (o lo soft-deleteamos) para evitar doble cobro por reanudar dos veces.
     parked_ticket_id: Optional[str] = None

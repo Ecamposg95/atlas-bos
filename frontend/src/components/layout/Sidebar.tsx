@@ -17,7 +17,7 @@ const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
   { header: 'Restaurante',   urls: ['/tables', '/kitchen'] },
   { header: 'Mi turno',      urls: ['/cash-history', '/sales'] },
   { header: 'Inventario',    urls: ['/products'] },
-  { header: 'Reportes',      urls: ['/reports'] },
+  { header: 'Reportes',      urls: ['/reports', '/meseros'] },
   { header: 'Configuración', urls: ['/printer-settings'] },
 ]
 
@@ -79,6 +79,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Pedidos compras',   short: 'OC',  icon: 'fa-truck',               url: '/purchasing',       group: 'hq',   sort: 27, module: 'purchasing' },
   { label: 'Mesas',             short: 'MSA', icon: 'fa-chair',               url: '/tables',           group: 'hq',   sort: 28, module: 'tables' },
   { label: 'Cocina (KDS)',      short: 'KDS', icon: 'fa-fire-burner',         url: '/kitchen',          group: 'hq',   sort: 29, module: 'kitchen' },
+  { label: 'Meseros',           short: 'MSR', icon: 'fa-user-tie',            url: '/meseros',          group: 'hq',   sort: 30, module: 'tables' },
   { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/atlas-pos',         group: 'pos',  sort: 0  },
   { label: 'Cobrar',            short: 'POS', icon: 'fa-cash-register',       url: '/pos',              group: 'pos',  sort: 1  },
   { label: 'Mis ventas',        short: 'HST', icon: 'fa-history',             url: '/sales',            group: 'pos',  sort: 2  },
@@ -95,9 +96,9 @@ const ALL_NAV: NavItem[] = [
 ]
 
 const ROLE_ROUTES: Record<Role, string[]> = {
-  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen'],
-  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen'],
-  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes'],
+  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros'],
+  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros'],
+  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes','/meseros'],
   CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos','/tables','/kitchen'],
   VENDEDOR:         ['/mobile/dashboard','/mobile/query','/mobile/sales','/mobile/profile','/hr/me','/atlas-pos'],
   SOPORTE_OPERATIVO:['/mobile/dashboard','/mobile/query','/mobile/profile','/hr/me','/atlas-pos'],

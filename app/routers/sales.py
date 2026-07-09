@@ -565,6 +565,14 @@ def create_sale(
                 organization_id=org_id
             ))
 
+    # --- Gastro: propina ---
+    # La propina se suma al total a cobrar (los pagos deben cubrir bienes + propina).
+    # Se persiste por separado en tip_amount para el reporte de propinas por mesero.
+    tip_amount = Decimal(str(sale_in.tip_amount or 0))
+    if tip_amount < 0:
+        raise HTTPException(status_code=400, detail="La propina no puede ser negativa")
+    total_sale += tip_amount
+
     # --- 2. Análisis Financiero ---
     # Guard 0: Montos negativos en pagos nunca son válidos. Devoluciones van por /api/returns.
     if any(Decimal(str(p.amount)) < 0 for p in sale_in.payments):
@@ -659,6 +667,7 @@ def create_sale(
         sales_doc.tax_amount = accumulated_tax
         sales_doc.requires_invoice = sale_in.requires_invoice
         sales_doc.change_given = change_given
+        sales_doc.tip_amount = tip_amount
     else:
         current_series = "A"
         next_folio = get_next_folio(db, branch_id=current_user.branch_id, series=current_series)
@@ -680,6 +689,7 @@ def create_sale(
             series=current_series, folio=next_folio, organization_id=org_id,
             cash_session_id=cash_session_id_value,
             change_given=change_given,
+            tip_amount=tip_amount,
         )
         db.add(sales_doc)
     
@@ -692,6 +702,21 @@ def create_sale(
     if global_disc_pct > 0:
         try:
             setattr(sales_doc, 'global_discount_pct', global_disc_pct)
+        except Exception:
+            pass
+
+    # --- Gastro: atribuir la venta al mesero de la mesa (ventas por mesero) ---
+    # Al cobrar una mesa, la venta viene de un parked ticket; la mesa que apunta
+    # a ese ticket guarda el mesero asignado. Lo copiamos a la venta.
+    if sale_in.parked_ticket_id:
+        try:
+            from app.modules.tables.models import DiningTable
+            row = db.query(DiningTable.server_user_id).filter(
+                DiningTable.current_ticket_id == sale_in.parked_ticket_id,
+                DiningTable.organization_id == org_id,
+            ).first()
+            if row and row[0]:
+                sales_doc.server_user_id = row[0]
         except Exception:
             pass
 
