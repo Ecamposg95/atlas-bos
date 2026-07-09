@@ -152,26 +152,26 @@ function BranchNav({ items, pendingReturns }: { items: NavItem[]; pendingReturns
                       borderRadius: '14px',
                       textDecoration: 'none', transition: 'all 0.15s ease',
                       background: active
-                        ? 'rgba(139,92,246,0.18)'
+                        ? 'var(--sb-active-bg)'
                         : 'rgba(255,255,255,0.055)',
-                      border: `1px solid ${active ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                      border: `1px solid ${active ? 'var(--sb-active-line)' : 'rgba(255,255,255,0.07)'}`,
                       borderLeft: active
-                        ? '4px solid #9333ea'
+                        ? '4px solid var(--p-accent)'
                         : '4px solid transparent',
-                      boxShadow: active ? '0 0 12px rgba(139,92,246,0.18)' : 'none',
+                      boxShadow: active ? '0 0 12px var(--sb-glow)' : 'none',
                     }}
                   >
                     <i
                       className={`fa-solid ${item.icon}`}
                       style={{
                         fontSize: '18px', flexShrink: 0,
-                        color: active ? '#c4b5fd' : 'rgba(255,255,255,0.78)',
+                        color: active ? 'var(--sb-active-icon)' : 'rgba(255,255,255,0.78)',
                       }}
                     />
                     <span style={{
                       fontSize: '13px',
                       fontWeight: active ? 700 : 500,
-                      color: active ? '#e9d5ff' : 'rgba(255,255,255,0.82)',
+                      color: active ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.82)',
                       letterSpacing: '-0.01em',
                       flex: 1,
                     }}>
@@ -228,8 +228,8 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-            boxShadow: '0 0 16px rgba(139,92,246,0.45)',
+            background: 'var(--sb-logo-grad)',
+            boxShadow: '0 0 16px var(--sb-glow)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <i className="fa fa-bolt" style={{ color: 'white', fontSize: '13px' }} />
@@ -338,8 +338,8 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
                     gap: '5px', height: '68px', borderRadius: '10px',
                     textDecoration: 'none', transition: 'all 0.15s ease',
                     background: active ? 'var(--sb-active-bg)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${active ? 'rgba(167,139,250,0.45)' : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: active ? '0 0 14px rgba(139,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none',
+                    border: `1px solid ${active ? 'var(--sb-active-line)' : 'rgba(255,255,255,0.08)'}`,
+                    boxShadow: active ? '0 0 14px var(--sb-glow), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none',
                   }}
                 >
                   <i
@@ -384,7 +384,7 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
         }}>
           <div style={{
             width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
-            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            background: 'var(--sb-logo-grad)',
             boxShadow: `0 0 10px ${ROLE_COLOR[role]}55`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '12px', fontWeight: 900, color: 'white',
@@ -409,12 +409,12 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
               width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
               padding: '8px 10px', borderRadius: '9px', cursor: 'pointer', transition: 'all 0.15s',
               fontSize: '11px', fontWeight: 600,
-              color: pathname === '/hr/me' ? '#c4b5fd' : 'rgba(255,255,255,0.65)',
-              background: pathname === '/hr/me' ? 'rgba(139,92,246,0.18)' : 'transparent',
-              border: `1px solid ${pathname === '/hr/me' ? 'rgba(167,139,250,0.35)' : 'rgba(255,255,255,0.08)'}`,
+              color: pathname === '/hr/me' ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.65)',
+              background: pathname === '/hr/me' ? 'var(--sb-active-bg)' : 'transparent',
+              border: `1px solid ${pathname === '/hr/me' ? 'var(--sb-active-line)' : 'rgba(255,255,255,0.08)'}`,
               marginBottom: '6px',
             }}
-            onMouseEnter={e => { if (pathname !== '/hr/me') { const el = e.currentTarget as HTMLElement; el.style.color = '#c4b5fd'; el.style.background = 'rgba(139,92,246,0.1)'; } }}
+            onMouseEnter={e => { if (pathname !== '/hr/me') { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--sb-active-text)'; el.style.background = 'var(--sb-active-bg)'; } }}
             onMouseLeave={e => { if (pathname !== '/hr/me') { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.65)'; el.style.background = 'transparent'; } }}
           >
             <i className="fa-solid fa-id-card" style={{ fontSize: '11px', flexShrink: 0 }} />
@@ -488,8 +488,8 @@ function IconRail({ items, logout }: { items: NavItem[]; logout: () => void }) {
       }}>
         <div style={{
           width: '34px', height: '34px', borderRadius: '10px',
-          background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-          boxShadow: '0 0 12px rgba(139,92,246,0.4)',
+          background: 'var(--sb-logo-grad)',
+          boxShadow: '0 0 12px var(--sb-glow)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <i className="fa fa-bolt" style={{ color: 'white', fontSize: '12px' }} />
@@ -577,7 +577,7 @@ function IconRail({ items, logout }: { items: NavItem[]; logout: () => void }) {
           title={`${user?.full_name || user?.username} · ${user?.role}`}
           style={{
             width: '34px', height: '34px', borderRadius: '9px',
-            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            background: 'var(--sb-logo-grad)',
             boxShadow: `0 0 8px ${ROLE_COLOR[role]}55`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '13px', fontWeight: 900, color: 'white',

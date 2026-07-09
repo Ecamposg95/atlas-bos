@@ -88,9 +88,12 @@
     --sb-text:        rgba(244, 233, 223, 0.82);
     --sb-text-hover:  #fff7ef;
     --sb-hover-bg:    rgba(255, 255, 255, 0.06);
-    --sb-active-bg:   var(--p-accent-soft);
-    --sb-active-text: var(--p-accent);
-    --sb-active-icon: var(--p-accent);
+    --sb-active-bg:   color-mix(in srgb, var(--p-accent) 20%, transparent);
+    --sb-active-text: color-mix(in srgb, var(--p-accent) 55%, #ffffff);
+    --sb-active-icon: color-mix(in srgb, var(--p-accent) 62%, #ffffff);
+    --sb-active-line: color-mix(in srgb, var(--p-accent) 48%, transparent);
+    --sb-glow:        color-mix(in srgb, var(--p-accent) 42%, transparent);
+    --sb-logo-grad:   linear-gradient(135deg, var(--p-accent) 0%, var(--p-accent-hover) 100%);
   }
 
   /* ── PRESET THEMING (2026-05-14) ──
@@ -214,9 +217,12 @@
     --sb-text:        rgba(244, 233, 223, 0.82);
     --sb-text-hover:  #fff7ef;
     --sb-hover-bg:    rgba(255, 255, 255, 0.06);
-    --sb-active-bg:   var(--p-accent-soft);
-    --sb-active-text: var(--p-accent);
-    --sb-active-icon: var(--p-accent);
+    --sb-active-bg:   color-mix(in srgb, var(--p-accent) 20%, transparent);
+    --sb-active-text: color-mix(in srgb, var(--p-accent) 55%, #ffffff);
+    --sb-active-icon: color-mix(in srgb, var(--p-accent) 62%, #ffffff);
+    --sb-active-line: color-mix(in srgb, var(--p-accent) 48%, transparent);
+    --sb-glow:        color-mix(in srgb, var(--p-accent) 42%, transparent);
+    --sb-logo-grad:   linear-gradient(135deg, var(--p-accent) 0%, var(--p-accent-hover) 100%);
   }
 
   html {
