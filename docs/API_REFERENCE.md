@@ -1,0 +1,178 @@
+# Referencia de API · Atlas BOS
+
+Catálogo de endpoints por dominio. Todos bajo `/api`. Swagger vivo en `/docs`. Fuente: auditoría profunda (julio 2026).
+
+**Convenciones de gating** (ver [`RBAC.md`](RBAC.md)):
+- `auth` = requiere `get_current_user` (JWT). `org` = requiere org activa (`get_current_active_organization`).
+- Rol entre corchetes = restricción de rol en el endpoint. `[module:x]` = requiere módulo habilitado (`require_module`).
+- HQ = ADMINISTRADOR/DUEÑO (org-wide); branch = GERENTE/CAJERO (limitado a su sucursal).
+
+> ⚠️ Solo 3 routers exigen módulo (`sales`→pos, `logistics`→warehouse, `quotes`→quotes). El resto (incluidos los gastro) solo pide auth + tenant scope. ADMIN/DUEÑO hacen bypass del gating por módulo.
+
+---
+
+## Auth · `/api/auth`
+| Método | Ruta | Qué hace | Gating |
+|---|---|---|---|
+| POST | /login | Login PIN (OAuth2), emite JWT + cookie | público |
+| POST | /context/switch | Reemite JWT con otra sucursal/contexto | [ADMIN/SUPERADMIN o org_role=ADMIN] |
+| POST | /logout | Borra cookies | público |
+
+## Users · `/api/users`
+| Método | Ruta | Qué hace | Gating |
+|---|---|---|---|
+| GET | /me/context | **Contexto del frontend**: user, org, branch, preset, `enabled_modules`, templates | auth |
+| GET | / · GET /me · GET /{id} | Lista / actual / detalle | auth+org |
+| POST | / · PUT /{id} · DELETE /{id} | Crear / editar / soft-delete | auth+org (⚠️ sin check de rol admin) |
+
+## Organización · `/api/organization` (+ `/api/org/capabilities`, `/api/departments`, `/api/brands`)
+| Método | Ruta | Qué hace | Gating |
+|---|---|---|---|
+| GET/PUT | /organization/ | Org activa / update (no-admin solo campos de impresora) | auth (admin p/ resto) |
+| POST/DELETE | /organization/logo | Logo | [admin] |
+| GET | /org/capabilities/ | enabled_modules + nav + default_routes por industria | auth |
+| — | /departments, /brands | CRUD de departamentos y marcas | auth+org |
+
+## Setup · `/api/setup`
+`POST /initialize` — aplica preset de industria a la org `[ADMINISTRADOR/DUEÑO]`.
+
+---
+
+## Ventas / POS · `/api/sales` `[module:pos]` — motor ATS-crítico
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | /stats | KPIs de ventas (branch-scoped salvo HQ) |
+| GET · POST | / | Lista paginada · **create_sale** (checkout) |
+| GET | /by-folio/{series}/{folio} · /my-last · /{id} · /{id}/print-view | Detalle / última / ticket HTML |
+| DELETE | /{id} | **cancel_sale** (revierte stock + deuda) |
+| POST | /{id}/refund | Stub (no-op) |
+| GET | /export/csv | Export CSV |
+| POST/GET/PATCH/DELETE | /parked[/{id}] | Tickets pausados / cuentas de mesa (park, resume, merge cart, soft-delete) |
+
+**create_sale** (resumen): gate de caja abierta (branch users); resolución batch de variantes/stock/PBS; validación de stock + techo de descuento (50%); IVA; **propina** (`tip_amount` suma al total y se persiste para reporte por-mesero); validación de pagos + `change_given`; crédito a cliente (→PENDING); `server_user_id` copiado de la mesa; parked→CONVERTED; **`EventBus.enqueue(SalesDocumentCreated)` en la misma txn** + `drain_now`. Commit atómico. Ver [`ARCHITECTURE.md`](ARCHITECTURE.md) §3.
+
+## Caja · `/api/cash`
+| Método | Ruta | Qué hace | Gating |
+|---|---|---|---|
+| GET | /status · /history · /summary | Sesión abierta / cortes / audit UI | auth |
+| POST | /open · /close · /sessions/{id}/close-guided | Abrir / cerrar / cierre guiado | dueño de turno (guiado: +GERENTE) |
+| POST | /movements · /inflow · /outflow | Movimientos de efectivo | auth |
+| GET | /{id}/audit-log · /branch-summary | Timeline / corte consolidado | [ADMIN/DUEÑO/GERENTE] |
+| GET | /{id}/pdf · /{id}/ticket | Corte PDF / JSON ESC-POS | acceso a sesión |
+
+> Cerrar bloquea si hay parked tickets sin convertir (409). Reconciliación vía `services/cash_reconciliation`.
+
+## Inventario · `/api/inventory`
+| Método | Ruta | Qué hace | Gating |
+|---|---|---|---|
+| POST | /adjust | Ajuste IN/OUT (merma = ADJUSTMENT_OUT) — `with_for_update` | non-admin forzado a su branch |
+| POST | /transfer | Traspaso inmediato entre sucursales | non-admin solo desde su branch |
+| GET | /kardex/{variant_id} | Historial (100 movs) | HQ ve otras branches |
+
+## Logística · `/api/logistics` `[module:warehouse]`
+| Método | Ruta | Qué hace |
+|---|---|---|
+| POST/GET | /containers · /boxes | Tipos de contenedor/caja (⚠️ sin tenant scope; sin user) |
+| POST | /calculate | Cálculo de carga + histórico |
+| CRUD | /shipments[/{id}[/items]] | Entradas de mercancía |
+| POST | /shipments/{id}/receive | Finaliza: StockOnHand + Movement(PURCHASE_IN) |
+
+## Transferencias · `/api/transfers`
+`POST /` crear · `GET /` listar · `POST /{id}/fulfill` · `POST /fulfillment/{id}/ship` (Movement TRANSFER_OUT) · `POST /fulfillment/{id}/receive` (TRANSFER_IN). Traspaso formal con fulfillment (distinto de `/inventory/transfer`).
+
+## Productos / Catálogo · `/api/products` (10 sub-routers)
+CRUD productos + aprobar/rechazar/restore/duplicate/imagen; `search` (variants/pos search); `stats` (catalog-kpis, branch-kpis); `packaging`; `branch_status` (habilitación de catálogo por sucursal); `bulk` (batch-action); `import_export` (excel upload/export); `reports` (hq-inventory); `audit` ({id}/audit-log). Todo tenant-scoped.
+
+---
+
+## CRM / Clientes · `/api/customers`
+`GET /stats · / · /{id}` · `POST / · PUT/DELETE /{id}` · `GET /{id}/statement · /{id}/unpaid-documents · /{id}/pdf-statement` · `POST /{id}/pay`. Crédito + estado de cuenta. Tenant-scoped correcto.
+
+## Cotizaciones · `/api/quotes` `[module:quotes]`
+`POST / · GET / · GET/PUT/DELETE /{id}` · `GET /{id}/pdf` · **`POST /{id}/convert-to-sale`** (crea venta PAID; ⚠️ **no** emite el evento outbox → no dispara consumo de insumos/mesa) · `GET /stats/kpi`.
+
+## Devoluciones · `/api/returns`
+`GET /stats` (⚠️ sin user) · `POST /` crear PENDING · `GET /sale/{id} · / · /{id}` · `POST /{id}/approve` (force p/ refunds >$10k; 409 si caja cerrada) · `POST /{id}/reject`. Approve/reject `[ADMIN/DUEÑO/GERENTE]`.
+
+## Compras · `/api/purchases`
+`GET /stats · / · /{id}` (⚠️ sin user) · `POST /` crear PO · `PATCH /{id}/status` · `POST /{id}/receive` (stock + costo promedio + Movement) · `DELETE /{id}`.
+
+## Gastos · `/api/expenses`
+`GET /stats · /categories · /` (⚠️ sin user) · `POST /` · `DELETE /{id}`.
+
+## RRHH · `/api/hr`
+`GET/PUT /employees/me` (self-service) · CRUD `/employees[/{id}]` · `POST /employees/{id}/assign` · `POST /attendance/check-in|check-out` · `GET /attendance/report`. (⚠️ sin gate de rol admin.)
+
+## Reportes · `/api/reports`
+| Ruta | Qué hace |
+|---|---|
+| /daily-summary · /dashboard · /sales-by-hour | Ventas del día / KPIs+charts+alerts / por hora |
+| /command-center/stats | Mission control multi-sucursal (agregado, sin N+1) |
+| **/by-waiter** | Ventas + **propinas** por mesero (`coalesce(server_user_id, seller_id)`) |
+| /audit/discrepancies · /aging-report · /product/{id} · /export/csv | Arqueos / antigüedad de saldos / analítica de producto / CSV |
+
+## Impresora · `/api/printer`
+`POST /test-print · /print-ticket · /reprint-ticket/{id} · /reprint-refunded/{id} · /print-cash-cut` · `GET /printers · /download-agent`. Genera ESC/POS base64 (el agente local imprime, no el server). Registra `PrintJob`.
+
+## Portal cliente · `/api/portal`
+`GET /accounts · /my-account/balance · /quotes · /my-account/transactions`. **Sin tenant scope** (cross-org por email del usuario). ⚠️ Contiene fallbacks demo y accesos a atributos posiblemente inexistentes.
+
+## Branch dashboard · `/api/branch`
+`GET /dashboard` — dashboard de una sucursal (branch de `current_user.branch_id` o header `X-Branch-ID`).
+
+---
+
+## Gastro
+
+### Mesas · `/api/tables`
+CRUD `/areas` y `/` (mesas) · `POST /{id}/open` (crea ParkedTicket, lock anti doble-apertura) · `POST /{id}/free` (abandona cuenta + cancela KDS) · `POST /{id}/transfer` · `POST /{id}/assign-server` · `PATCH /{id}/status` (máquina de estados validada). Subscriber libera la mesa al cobrar.
+
+### Cocina / KDS · `/api/kitchen`
+CRUD `/stations`, `/routes` (dept→estación) · `POST /tickets` (fire) · `GET /tickets[/{id}]` (feed) · `POST /tickets/{id}/bump?station_id=` (avance por estación) · `/recall` · `/cancel` · `POST /items/{id}/bump|void` · `GET /stats` (ventana 24h).
+
+### Recetas · `/api/recipes`
+`GET / · GET/POST/PUT/DELETE /{id}` · `GET /{id}/cost` (costeo + margen). Subscriber descuenta insumos al vender (idempotente).
+
+### Bar · `/api/bar`
+`GET/POST /bottles` · `GET /report` (**corte de turno**: servido/merma/varianza) · `POST /bottles/{id}/pour|waste|refill` · `DELETE /bottles/{id}` (archiva). Ledger inmutable `bar_bottle_events`.
+
+### Appointments · `/api/appointments` (staff) + `/api/portal/booking` (cliente)
+**Staff** (27): CRUD `/resources`, `/professionals` (+ `/schedule`, `/blocks`), `/services` (`/from-variant`); `GET /availability` (slots); `GET/POST/PUT /appointments`; transiciones `/confirm · /start · /complete · /cancel · /no-show`. **Portal público** (9): `/register` (crea CLIENTE+JWT), `/me`, `/branches`, `/services`, `/professionals`, `/availability`, `POST/GET /appointments`, `/appointments/{id}/cancel` (política 24h). Anti double-booking con `pg_advisory_xact_lock`.
+
+---
+
+## Platform (SaaS) · `/api/platform/*` — todo `[SUPERADMIN o SUPPORT]`
+16 sub-routers (`app/routers/platform/`), montados con guard `require_platform_admin` a nivel router. Ops destructivas revalidan SUPERADMIN en el handler.
+
+| Sub-router | Prefijo | Qué gestiona |
+|---|---|---|
+| stats | /stats/* | KPIs cross-tenant (global, trends, top-tenants, cohort, heatmap…) — caché TTL |
+| control_tower | /control-tower/* | Dashboard tiempo-real (sales-now, active-sessions, deltas) |
+| organizations | /organizations | **CRUD de tenants** + módulos/preset por org; `apply-preset`, `modules/{key}` toggle, `industry`, `bootstrap`, `reset-preset`, delete `?force=` (cascade ~30 tablas) `[SUPERADMIN]` |
+| branches | /branches | Sucursales cross-tenant (CRUD, archive) |
+| users | /users | Usuarios cross-tenant (CRUD, reset-password, `role` `[SUPERADMIN]`) |
+| admins | /admins | Platform-admins (invite, manual, role, revoke) `[SUPERADMIN]` |
+| modules | /modules | Catálogo global (catalog, counts, dependencies; CRUD `[SUPERADMIN]`) |
+| presets | /presets | CRUD de industry presets (system presets protegidos) |
+| feature_flags | /flags | Flags con rollout determinístico (crc32) + overrides por org; resolved/preview |
+| incidents | /incidents | Incident mode (suspensión masiva por scope; restaura por snapshot) `[SUPERADMIN]` |
+| alerts | /alerts | Inbox de anomalías (scan, ack, resolve) |
+| announcements | /announcements | Broadcast a tenants (targeting, publish) |
+| api_keys | /api-keys | API keys server-to-server (SHA-256, secreto una vez) |
+| health | /health/matrix | Salud por tenant (score, última venta, revenue) |
+| reports | /reports/* | Reportería cross-tenant + export CSV streaming |
+| audit | /audit/logs | Bitácora de acciones del superadmin |
+| impersonation | /impersonate[/exit] | ⚠️ **Stub**: audita pero no emite JWT scoped |
+
+---
+
+## Stubs / Beta (solo `GET /health`, `ready:false`)
+`/api/commissions`, `/api/memberships`, `/api/ai`, `/api/purchasing`. (Nota: compras REAL vive en `/api/purchases`; `/api/purchasing` es el placeholder del rediseño modular.)
+
+---
+
+## Gotchas transversales (para quien consume la API)
+- **`convert-to-sale` de quotes NO dispara el evento outbox** (a diferencia de `create_sale`): no descuenta insumos ni libera mesa.
+- **Endpoints sin `get_current_user`** (solo `org_id`, menor atribución de auditoría): `returns:/stats`, `purchases:/stats,/,/{id}`, `expenses:/stats,/categories,/`, `transfers:/,/{id}/fulfill`. Logistics `/containers`,`/boxes` no tienen ni org (sin tenant scope).
+- **Debug prints en prod**: `sales.py` (export CSV), `quotes.py` (create).
+- **Definición de "HQ" divergente**: `reports/dashboard` y `command-center` excluyen GERENTE; pero `sales-by-hour`/`by-waiter`/`export-csv` lo incluyen como HQ.

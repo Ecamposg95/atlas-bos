@@ -8,7 +8,7 @@ Cada push (a cualquier rama) y cada PR contra `main` dispara tres jobs en parale
 
 | Job                  | Qué hace                                  | Falla si…                                  |
 | -------------------- | ----------------------------------------- | ------------------------------------------ |
-| `backend-tests`      | `pytest tests/ -v --tb=short` (Python 3.12) | Cualquier test del backend falla           |
+| `backend-tests`      | `pytest tests/ -v --tb=short` (Python 3.11) | Cualquier test del backend falla           |
 | `frontend-typecheck` | `npx tsc --noEmit` dentro de `frontend/` | Hay errores de TypeScript                  |
 | `frontend-build`     | `npm run build` dentro de `frontend/`    | Build de Vite rompe (imports, loaders, …) |
 
