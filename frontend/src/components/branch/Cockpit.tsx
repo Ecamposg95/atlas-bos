@@ -33,14 +33,14 @@ export function Cockpit() {
   if (error) {
     return (
       <div className={`min-h-screen ${ui.page} flex items-center justify-center`}>
-        <p className="p-6 text-rose-600 dark:text-rose-400 text-sm">{error}</p>
+        <p className="p-6 text-rose-600 dark:text-sem-critical text-sm">{error}</p>
       </div>
     )
   }
   if (!data) {
     return (
       <div className={`min-h-screen ${ui.page} flex items-center justify-center`}>
-        <p className="p-6 text-slate-400 dark:text-slate-600 text-sm">{BRANCH_COPY.states.loading}</p>
+        <p className="p-6 text-dax-muted dark:text-dax-faint text-sm">{BRANCH_COPY.states.loading}</p>
       </div>
     )
   }

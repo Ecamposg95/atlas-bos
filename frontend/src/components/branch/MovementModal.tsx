@@ -37,10 +37,10 @@ export function MovementModal({ type, onClose, onConfirm, onMovementSuccess }: P
     >
       <div className={`${ui.card} w-full max-w-sm p-6`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-dax-text">{title}</h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1"
+            className="text-dax-muted hover:text-slate-700 dark:hover:text-dax-text p-1"
             aria-label="Cerrar"
           >
             <i className="fa-solid fa-xmark text-lg" />

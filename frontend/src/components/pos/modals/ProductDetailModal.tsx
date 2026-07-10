@@ -487,7 +487,7 @@ export function ProductDetailModal({
             mode === 'create' ? (
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--dax-text-muted)' }}>
-                  Stock inicial <span className="text-red-500">*</span>
+                  Stock inicial <span className="text-sem-critical">*</span>
                 </span>
                 <input
                   type="number"
@@ -748,7 +748,7 @@ export function ProductDetailModal({
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--dax-text-muted)' }}>
-                  Marca <span className="text-red-500">*</span>
+                  Marca <span className="text-sem-critical">*</span>
                 </span>
                 <select className="dax-input w-full mt-1" value={brandId} onChange={e => setBrandId(e.target.value)}>
                   <option value="">— Selecciona —</option>
@@ -757,7 +757,7 @@ export function ProductDetailModal({
               </label>
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--dax-text-muted)' }}>
-                  Departamento <span className="text-red-500">*</span>
+                  Departamento <span className="text-sem-critical">*</span>
                 </span>
                 <select className="dax-input w-full mt-1" value={departmentId} onChange={e => setDepartmentId(e.target.value)}>
                   <option value="">— Selecciona —</option>
@@ -772,7 +772,7 @@ export function ProductDetailModal({
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--dax-text-muted)' }}>
-                  Costo {mode === 'create' && <span className="text-red-500">*</span>}
+                  Costo {mode === 'create' && <span className="text-sem-critical">*</span>}
                 </span>
                 <input type="number" min="0" step="0.01" className="dax-input w-full mt-1" value={cost} onChange={e => setCost(e.target.value)} />
               </label>
@@ -794,7 +794,7 @@ export function ProductDetailModal({
                     ) : imageUrl ? (
                       <img src={imageUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <i className="fa-solid fa-camera text-slate-400" />
+                      <i className="fa-solid fa-camera text-dax-muted" />
                     )}
                   </div>
                   <input
@@ -818,7 +818,7 @@ export function ProductDetailModal({
                     <button
                       type="button"
                       onClick={deleteImage}
-                      className="text-[10px] text-rose-500 hover:text-rose-600 font-bold flex-shrink-0"
+                      className="text-[10px] text-sem-critical hover:text-rose-600 font-bold flex-shrink-0"
                     >
                       Quitar
                     </button>
@@ -882,7 +882,7 @@ export function ProductDetailModal({
                     <button
                       type="button"
                       onClick={() => setPacks((arr) => arr.filter((_, idx) => idx !== i))}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center text-rose-500 hover:bg-rose-50"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-sem-critical hover:bg-rose-50"
                     >
                       <i className="fa-solid fa-trash text-xs" />
                     </button>
@@ -906,7 +906,7 @@ export function ProductDetailModal({
             )
           )}
 
-          {error && <p className="text-xs text-red-500 font-semibold">{error}</p>}
+          {error && <p className="text-xs text-sem-critical font-semibold">{error}</p>}
 
           {/* Botones */}
           <div className="flex flex-wrap gap-2 pt-1">

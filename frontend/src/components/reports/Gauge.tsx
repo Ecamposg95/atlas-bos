@@ -29,9 +29,9 @@ interface Props {
 }
 
 function colorFor(pct: number): { track: string; text: string } {
-  if (pct >= 80) return { track: '#10b981', text: 'text-emerald-400' }
-  if (pct >= 50) return { track: '#f59e0b', text: 'text-amber-400' }
-  return { track: '#f43f5e', text: 'text-rose-400' }
+  if (pct >= 80) return { track: '#10b981', text: 'text-sem-success' }
+  if (pct >= 50) return { track: '#f59e0b', text: 'text-sem-warning' }
+  return { track: '#f43f5e', text: 'text-sem-critical' }
 }
 
 export function Gauge({ current, benchmark, label, subtitle, size = 200 }: Props) {
@@ -80,8 +80,8 @@ export function Gauge({ current, benchmark, label, subtitle, size = 200 }: Props
       />
       <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
         <p className={`text-3xl font-black tabular-nums ${text}`}>{Math.round(displayed)}%</p>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{label}</p>
-        {subtitle && <p className="text-[9px] text-slate-600 mt-0.5">{subtitle}</p>}
+        <p className="text-[10px] font-bold uppercase tracking-widest text-dax-muted">{label}</p>
+        {subtitle && <p className="text-[9px] text-dax-faint mt-0.5">{subtitle}</p>}
       </div>
     </div>
   )

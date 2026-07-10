@@ -72,7 +72,7 @@ export function ProductImageUploader({ product, onUpdated }: Props) {
               type="button"
               disabled={uploading}
               onClick={handleDelete}
-              className="text-xs px-3 py-1.5 rounded-lg font-medium text-red-400 hover:text-red-300 transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg font-medium text-sem-critical hover:text-red-300 transition-colors"
               style={{ background: 'transparent', border: '1px solid rgba(239,68,68,0.3)' }}
             >
               Eliminar imagen
@@ -101,7 +101,7 @@ export function ProductImageUploader({ product, onUpdated }: Props) {
       />
 
       {error && (
-        <p className="text-xs text-red-400">{error}</p>
+        <p className="text-xs text-sem-critical">{error}</p>
       )}
     </div>
   )

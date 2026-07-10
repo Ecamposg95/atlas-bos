@@ -156,7 +156,7 @@ export function AdminProductCreate() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-plus text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-white">Nuevo producto — Administración</h1>
+        <h1 className="text-2xl font-black text-dax-text">Nuevo producto — Administración</h1>
       </div>
       <DaxCard>
         <div className="p-4 space-y-6">
@@ -180,11 +180,11 @@ export function AdminProductCreate() {
             footer="Para stock en múltiples sucursales, usa el módulo de inventario tras crear."
           />
 
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-dax-muted">
             Precios escalonados y empaques se configuran desde el catálogo tras crear el producto.
           </p>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-dax-border">
             <button type="button" className="dax-btn-secondary text-xs"
               onClick={() => navigate('/admin/catalog')} disabled={submitting}>
               Cancelar

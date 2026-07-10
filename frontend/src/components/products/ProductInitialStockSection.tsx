@@ -24,22 +24,22 @@ export function ProductInitialStockSection({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wide">Inventario inicial (opcional)</h2>
+      <h2 className="text-sm font-bold text-dax-muted uppercase tracking-wide">Inventario inicial (opcional)</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label className="text-xs text-slate-400 space-y-1">
+        <label className="text-xs text-dax-muted space-y-1">
           Stock inicial
           <input type="number" step="0.01" min="0" className="dax-input w-full" value={value.initial_stock}
             onChange={(e) => onChange('initial_stock', e.target.value)} />
-          {errors.initial_stock && <span className="text-rose-400 text-[11px]">{errors.initial_stock}</span>}
+          {errors.initial_stock && <span className="text-sem-critical text-[11px]">{errors.initial_stock}</span>}
         </label>
         {stockNum > 0 && (
           lockedBranch ? (
-            <label className="text-xs text-slate-400 space-y-1">
+            <label className="text-xs text-dax-muted space-y-1">
               Sucursal destino
               <input className="dax-input w-full" value={lockedBranch.name} disabled readOnly />
             </label>
           ) : (
-            <label className="text-xs text-slate-400 space-y-1">
+            <label className="text-xs text-dax-muted space-y-1">
               Sucursal destino *
               <select className="dax-input w-full" value={value.initial_stock_branch_id}
                 onChange={(e) => onChange('initial_stock_branch_id', e.target.value)}>
@@ -50,13 +50,13 @@ export function ProductInitialStockSection({
                 })}
               </select>
               {errors.initial_stock_branch_id && (
-                <span className="text-rose-400 text-[11px]">{errors.initial_stock_branch_id}</span>
+                <span className="text-sem-critical text-[11px]">{errors.initial_stock_branch_id}</span>
               )}
             </label>
           )
         )}
       </div>
-      {footer && <p className="text-[11px] text-slate-500">{footer}</p>}
+      {footer && <p className="text-[11px] text-dax-muted">{footer}</p>}
     </section>
   )
 }

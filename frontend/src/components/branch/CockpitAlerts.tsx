@@ -29,8 +29,8 @@ export function CockpitAlerts({ alerts }: Props) {
               to={a.deeplink}
               className="
                 flex items-center gap-3 py-3
-                text-sm text-slate-700 dark:text-slate-300
-                hover:text-slate-900 dark:hover:text-slate-100
+                text-sm text-slate-700 dark:text-dax-muted
+                hover:text-slate-900 dark:hover:text-dax-text
                 transition-colors duration-150
                 group
               "
@@ -40,7 +40,7 @@ export function CockpitAlerts({ alerts }: Props) {
                 aria-hidden="true"
               />
               <span className="flex-1 leading-snug">{describe(a)}</span>
-              <span className="text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors flex-shrink-0">
+              <span className="text-dax-muted dark:text-dax-faint group-hover:text-dax-muted dark:group-hover:text-dax-muted transition-colors flex-shrink-0">
                 ›
               </span>
             </Link>

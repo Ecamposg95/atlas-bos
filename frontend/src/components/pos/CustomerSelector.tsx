@@ -51,7 +51,7 @@ export function CustomerSelector() {
   return (
     <div className="relative">
       <div className="flex gap-2 items-center px-4 py-2" style={{ borderBottom: '1px solid var(--dax-row-border)' }}>
-        <i className="fa-solid fa-user-plus text-slate-500 text-xs" />
+        <i className="fa-solid fa-user-plus text-dax-muted text-xs" />
         <div className="relative flex-1">
           <input
             type="text"
@@ -59,10 +59,10 @@ export function CustomerSelector() {
             onChange={(e) => handleChange(e.target.value)}
             onFocus={() => { if (results.length > 0) setOpen(true) }}
             onBlur={() => setTimeout(() => setOpen(false), 200)}
-            className="w-full bg-transparent text-xs text-white placeholder-slate-600 outline-none"
+            className="w-full bg-transparent text-xs text-dax-text placeholder-slate-600 outline-none"
             placeholder="Buscar cliente..."
           />
-          {loading && <i className="fa-solid fa-spinner fa-spin absolute right-0 top-0.5 text-slate-500 text-xs" />}
+          {loading && <i className="fa-solid fa-spinner fa-spin absolute right-0 top-0.5 text-dax-muted text-xs" />}
         </div>
         <button
           onClick={() => setCreating(true)}
@@ -84,8 +84,8 @@ export function CustomerSelector() {
               className="w-full text-left px-4 py-2 transition-colors"
               style={{ color: 'var(--dax-text-muted)' }}
             >
-              <p className="text-sm text-white">{c.name}</p>
-              {c.phone && <p className="text-xs text-slate-500">{c.phone}</p>}
+              <p className="text-sm text-dax-text">{c.name}</p>
+              {c.phone && <p className="text-xs text-dax-muted">{c.phone}</p>}
             </button>
           ))}
         </div>
@@ -95,7 +95,7 @@ export function CustomerSelector() {
       {creating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setCreating(false)}>
           <div className="dax-card p-5 w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
-            <h4 className="text-base font-black text-white mb-3">Nuevo cliente</h4>
+            <h4 className="text-base font-black text-dax-text mb-3">Nuevo cliente</h4>
             <div className="space-y-2 mb-4">
               <input
                 type="text"

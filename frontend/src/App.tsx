@@ -126,7 +126,7 @@ const MobileOrgDetail       = lazy(() => import('./pages/platform/MobileOrgDetai
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const hydrated = useAuthStore((s) => s.hydrated)
-  if (!hydrated) return <div className="flex items-center justify-center h-screen bg-slate-950"><Spinner size="lg" /></div>
+  if (!hydrated) return <div className="flex items-center justify-center h-screen bg-dax-bg"><Spinner size="lg" /></div>
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
 }
 
@@ -134,7 +134,7 @@ function SuperAdminRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const hydrated = useAuthStore((s) => s.hydrated)
-  if (!hydrated) return <div className="flex items-center justify-center h-screen bg-slate-950"><Spinner size="lg" /></div>
+  if (!hydrated) return <div className="flex items-center justify-center h-screen bg-dax-bg"><Spinner size="lg" /></div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (user?.platform_role !== 'SUPERADMIN') return <Navigate to="/hq/operations" replace />
   return <>{children}</>
@@ -144,7 +144,7 @@ function PlatformRoute({ children }: { children: React.ReactNode }) {
   const user = useAuthStore((s) => s.user)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const hydrated = useAuthStore((s) => s.hydrated)
-  if (!hydrated) return <div className="flex items-center justify-center h-screen bg-slate-950"><Spinner size="lg" /></div>
+  if (!hydrated) return <div className="flex items-center justify-center h-screen bg-dax-bg"><Spinner size="lg" /></div>
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (user?.platform_role !== 'SUPERADMIN' && user?.platform_role !== 'SUPPORT') {
     return <Navigate to="/hq/operations" replace />
@@ -227,7 +227,7 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div className="flex items-center justify-center h-screen bg-slate-950">
+      <div className="flex items-center justify-center h-screen bg-dax-bg">
         <Spinner size="lg" text="Iniciando..." />
       </div>
     )
@@ -384,7 +384,7 @@ export default function App() {
           path="/platform"
           element={
             <SuperAdminRoute>
-              <Suspense fallback={<div className="flex items-center justify-center h-screen bg-slate-950"><Spinner size="lg" /></div>}>
+              <Suspense fallback={<div className="flex items-center justify-center h-screen bg-dax-bg"><Spinner size="lg" /></div>}>
                 <PlatformLayout />
               </Suspense>
             </SuperAdminRoute>

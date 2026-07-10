@@ -26,18 +26,18 @@ export function CardPaymentModal({ total, onClose, onConfirm }: Props) {
         <div className="flex items-center gap-3 mb-4">
           <i className="fa-solid fa-credit-card text-indigo-400 text-xl" />
           <div>
-            <h3 className="text-lg font-black text-white">Pago con Tarjeta</h3>
-            <p className="text-slate-500 text-sm">{formatCurrency(total)}</p>
+            <h3 className="text-lg font-black text-dax-text">Pago con Tarjeta</h3>
+            <p className="text-dax-muted text-sm">{formatCurrency(total)}</p>
           </div>
         </div>
 
         <div className="rounded-xl p-4 mb-4 text-center" style={{ background: 'var(--dax-elevated)', border: '1px solid var(--dax-border-dim)' }}>
           <i className="fa-solid fa-contactless-pay text-indigo-400 text-3xl mb-2 block" />
-          <p className="text-slate-400 text-sm">Pasa la tarjeta en la terminal</p>
+          <p className="text-dax-muted text-sm">Pasa la tarjeta en la terminal</p>
         </div>
 
         <div className="mb-4">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+          <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
             Referencia (opcional)
           </label>
           <input

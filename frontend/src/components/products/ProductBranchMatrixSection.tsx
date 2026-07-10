@@ -18,7 +18,7 @@ export function ProductBranchMatrixSection({ branches, activation, onToggle, onS
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wide">Activación por sucursal</h2>
+        <h2 className="text-sm font-bold text-dax-muted uppercase tracking-wide">Activación por sucursal</h2>
         <div className="flex gap-2">
           <button type="button" className="dax-btn-secondary text-[11px]" onClick={() => onSetAll(true)}>
             Seleccionar todas
@@ -29,11 +29,11 @@ export function ProductBranchMatrixSection({ branches, activation, onToggle, onS
         </div>
       </div>
       {errors.target_branch_ids && (
-        <div className="text-rose-400 text-[11px]">{errors.target_branch_ids}</div>
+        <div className="text-sem-critical text-[11px]">{errors.target_branch_ids}</div>
       )}
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead className="text-slate-500">
+          <thead className="text-dax-muted">
             <tr>
               <th className="text-left py-1">Sucursal</th>
               <th className="py-1">Activar</th>
@@ -46,9 +46,9 @@ export function ProductBranchMatrixSection({ branches, activation, onToggle, onS
             {branches.map((b) => {
               const row = activation[b.id] ?? DEFAULT_ROW
               return (
-                <tr key={b.id} className="border-t border-slate-800/60">
-                  <td className="py-1.5 text-slate-300">
-                    {b.name} <span className="text-slate-600">({b.branch_type})</span>
+                <tr key={b.id} className="border-t border-dax-border">
+                  <td className="py-1.5 text-dax-muted">
+                    {b.name} <span className="text-dax-faint">({b.branch_type})</span>
                   </td>
                   <td className="py-1.5 text-center">
                     <input type="checkbox" checked={row.enabled}
@@ -73,7 +73,7 @@ export function ProductBranchMatrixSection({ branches, activation, onToggle, onS
         </table>
       </div>
       {anyNonDefaultFlag && (
-        <div className="text-amber-400 text-[11px]">
+        <div className="text-sem-warning text-[11px]">
           Las banderas por sucursal (POS/HQ/Visible) con valores no-default se ajustarán desde la matriz de catálogo después de crear.
         </div>
       )}
