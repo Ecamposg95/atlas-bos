@@ -61,7 +61,7 @@ export function Expenses() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-money-bill-wave text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Gastos</h1>
+          <h1 className="text-2xl font-black text-dax-text">Gastos</h1>
         </div>
         <button onClick={() => setModal(true)} className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Registrar Gasto
@@ -72,15 +72,15 @@ export function Expenses() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Este mes', value: formatCurrency(stats.total_month), icon: 'fa-calendar', color: 'text-red-400' },
-            { label: 'Esta semana', value: formatCurrency(stats.total_week), icon: 'fa-calendar-week', color: 'text-amber-400' },
-            { label: 'Registros mes', value: String(stats.count_month), icon: 'fa-receipt', color: 'text-white' },
+            { label: 'Este mes', value: formatCurrency(stats.total_month), icon: 'fa-calendar', color: 'text-sem-critical' },
+            { label: 'Esta semana', value: formatCurrency(stats.total_week), icon: 'fa-calendar-week', color: 'text-sem-warning' },
+            { label: 'Registros mes', value: String(stats.count_month), icon: 'fa-receipt', color: 'text-dax-text' },
             { label: 'Promedio diario', value: formatCurrency(stats.avg_daily), icon: 'fa-chart-bar', color: 'text-indigo-400' },
           ].map((k) => (
             <DaxCard key={k.label}>
               <div className="flex items-center gap-2 mb-1">
-                <i className={`fa-solid ${k.icon} text-slate-500 text-xs`} />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{k.label}</p>
+                <i className={`fa-solid ${k.icon} text-dax-muted text-xs`} />
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider">{k.label}</p>
               </div>
               <p className={`text-xl font-black tabular-nums ${k.color}`}>{k.value}</p>
             </DaxCard>
@@ -91,17 +91,17 @@ export function Expenses() {
       {/* Categorías breakdown */}
       {stats?.by_category && stats.by_category.length > 0 && (
         <DaxCard>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Por Categoría (Mes)</p>
+          <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Por Categoría (Mes)</p>
           <div className="space-y-2">
             {stats.by_category.map((c) => {
               const pct = stats.total_month > 0 ? (c.total / stats.total_month) * 100 : 0
               return (
                 <div key={c.category}>
                   <div className="flex justify-between text-xs mb-1">
-                    <span className="text-slate-400">{c.category}</span>
-                    <span className="text-white font-semibold">{formatCurrency(c.total)}</span>
+                    <span className="text-dax-muted">{c.category}</span>
+                    <span className="text-dax-text font-semibold">{formatCurrency(c.total)}</span>
                   </div>
-                  <div className="h-1.5 bg-slate-700 rounded-full">
+                  <div className="h-1.5 bg-dax-surface rounded-full">
                     <div className="h-full bg-red-500/60 rounded-full" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export function Expenses() {
       {/* Tabla */}
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando gastos..." /> : expenses.length === 0 ? (
-          <div className="p-12 text-center text-slate-600">Sin gastos en este período</div>
+          <div className="p-12 text-center text-dax-faint">Sin gastos en este período</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -145,18 +145,18 @@ export function Expenses() {
               <tbody>
                 {expenses.map((e) => (
                   <tr key={e.id}>
-                    <td className="text-xs text-slate-400">
+                    <td className="text-xs text-dax-muted">
                       {new Date(e.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
                     </td>
                     <td>
                       <span className="dax-badge dax-badge-slate">{e.category}</span>
                     </td>
-                    <td className="text-slate-300 text-sm max-w-[200px] truncate">{e.description ?? '—'}</td>
-                    <td className="text-slate-400 text-xs">{e.branch_name ?? '—'}</td>
-                    <td className="text-slate-500 text-xs">{e.user_name ?? '—'}</td>
-                    <td className="text-right font-semibold text-red-400 tabular-nums">{formatCurrency(e.amount)}</td>
+                    <td className="text-dax-muted text-sm max-w-[200px] truncate">{e.description ?? '—'}</td>
+                    <td className="text-dax-muted text-xs">{e.branch_name ?? '—'}</td>
+                    <td className="text-dax-muted text-xs">{e.user_name ?? '—'}</td>
+                    <td className="text-right font-semibold text-sem-critical tabular-nums">{formatCurrency(e.amount)}</td>
                     <td>
-                      <button onClick={() => handleDelete(e.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                      <button onClick={() => handleDelete(e.id)} className="text-dax-faint hover:text-sem-critical text-xs">
                         <i className="fa-solid fa-trash" />
                       </button>
                     </td>
@@ -173,8 +173,8 @@ export function Expenses() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(false)}>
           <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-white">Nuevo Gasto</h3>
-              <button onClick={() => setModal(false)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-dax-text">Nuevo Gasto</h3>
+              <button onClick={() => setModal(false)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
             <div className="space-y-3">
               <div>

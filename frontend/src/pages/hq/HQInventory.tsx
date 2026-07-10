@@ -63,13 +63,13 @@ export function HQInventory() {
   }
 
   const movementColor = (type: string) =>
-    type.includes('IN') || type === 'ADJUSTMENT_IN' ? 'text-emerald-400' : 'text-red-400'
+    type.includes('IN') || type === 'ADJUSTMENT_IN' ? 'text-sem-success' : 'text-sem-critical'
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-globe text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-white">Inventario por Sucursal</h1>
+        <h1 className="text-2xl font-black text-dax-text">Inventario por Sucursal</h1>
       </div>
 
       <div className="flex gap-2">
@@ -99,9 +99,9 @@ export function HQInventory() {
                 {products.map((p) => (
                   <tr key={p.id}>
                     <td className="font-mono text-indigo-400 text-xs">{p.sku}</td>
-                    <td className="text-white font-semibold">{p.name}</td>
-                    <td className="text-right text-slate-300">{formatCurrency(p.price ?? 0)}</td>
-                    <td className={`text-right font-bold ${(p.stock_total ?? 0) <= 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                    <td className="text-dax-text font-semibold">{p.name}</td>
+                    <td className="text-right text-dax-muted">{formatCurrency(p.price ?? 0)}</td>
+                    <td className={`text-right font-bold ${(p.stock_total ?? 0) <= 0 ? 'text-sem-critical' : 'text-sem-success'}`}>
                       {p.stock_total ?? 0}
                     </td>
                     <td>
@@ -121,8 +121,8 @@ export function HQInventory() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Kardex</p>
-              <p className="text-lg font-black text-white">{selected.name}</p>
+              <p className="text-[10px] text-dax-muted uppercase tracking-widest">Kardex</p>
+              <p className="text-lg font-black text-dax-text">{selected.name}</p>
               <p className="text-xs font-mono text-indigo-400">{selected.sku}</p>
             </div>
             <div className="flex gap-2">
@@ -137,7 +137,7 @@ export function HQInventory() {
 
           <DaxCard padding={false}>
             {kardexLoading ? <Spinner text="Cargando kardex..." /> : kardex.length === 0 ? (
-              <div className="p-12 text-center text-slate-600">Sin movimientos registrados</div>
+              <div className="p-12 text-center text-dax-faint">Sin movimientos registrados</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="dax-table w-full">
@@ -153,7 +153,7 @@ export function HQInventory() {
                   <tbody>
                     {kardex.map((k) => (
                       <tr key={k.id}>
-                        <td className="text-xs text-slate-400">
+                        <td className="text-xs text-dax-muted">
                           {new Date(k.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
                         </td>
                         <td className="text-xs">
@@ -162,8 +162,8 @@ export function HQInventory() {
                         <td className={`text-right font-bold tabular-nums ${movementColor(k.movement_type)}`}>
                           {k.qty_change > 0 ? '+' : ''}{k.qty_change}
                         </td>
-                        <td className="text-right text-slate-400 text-xs tabular-nums">{k.qty_after}</td>
-                        <td className="text-slate-500 text-xs font-mono">{k.reference ?? '—'}</td>
+                        <td className="text-right text-dax-muted text-xs tabular-nums">{k.qty_after}</td>
+                        <td className="text-dax-muted text-xs font-mono">{k.reference ?? '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -175,11 +175,11 @@ export function HQInventory() {
       )}
 
       {!loading && !selected && products.length === 0 && search && (
-        <DaxCard><div className="p-12 text-center text-slate-600">Sin resultados para "{search}"</div></DaxCard>
+        <DaxCard><div className="p-12 text-center text-dax-faint">Sin resultados para "{search}"</div></DaxCard>
       )}
 
       {!search && !selected && (
-        <DaxCard><div className="p-12 text-center text-slate-600">Busca un producto para ver su kardex</div></DaxCard>
+        <DaxCard><div className="p-12 text-center text-dax-faint">Busca un producto para ver su kardex</div></DaxCard>
       )}
 
       {/* Modal ajuste */}
@@ -187,10 +187,10 @@ export function HQInventory() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setAdjustModal(false)}>
           <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-black text-white">Ajuste de Inventario</h3>
-              <button onClick={() => setAdjustModal(false)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-dax-text">Ajuste de Inventario</h3>
+              <button onClick={() => setAdjustModal(false)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
-            <p className="text-slate-400 text-sm mb-4">{selected.name}</p>
+            <p className="text-dax-muted text-sm mb-4">{selected.name}</p>
             <div className="space-y-3">
               <div>
                 <label className="dax-label">Sucursal</label>

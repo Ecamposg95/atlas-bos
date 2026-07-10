@@ -112,22 +112,22 @@ export function ComandaOrder() {
   }
 
   if (loading) return <Spinner size="lg" text="Cargando comanda..." />
-  if (!table) return <div className="p-6 text-slate-400">Mesa no encontrada.</div>
+  if (!table) return <div className="p-6 text-dax-muted">Mesa no encontrada.</div>
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 flex items-center justify-between border-b border-slate-800">
-        <button onClick={() => nav('/mobile/comanda')} className="text-slate-400"><i className="fa-solid fa-arrow-left" /></button>
-        <h1 className="text-lg font-black text-white">Mesa {table.code}</h1>
+      <div className="p-4 flex items-center justify-between border-b border-dax-border">
+        <button onClick={() => nav('/mobile/comanda')} className="text-dax-muted"><i className="fa-solid fa-arrow-left" /></button>
+        <h1 className="text-lg font-black text-dax-text">Mesa {table.code}</h1>
         <button onClick={requestBill} className="text-sky-300 text-sm font-bold">Pedir cuenta</button>
       </div>
 
       {/* Categorías */}
-      <div className="px-3 py-2 flex gap-2 overflow-x-auto border-b border-slate-800">
+      <div className="px-3 py-2 flex gap-2 overflow-x-auto border-b border-dax-border">
         {categories.map((c) => (
           <button key={c} onClick={() => setCat(c)}
-            className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs ${cat === c ? 'bg-amber-500 text-black font-bold' : 'bg-slate-800 text-slate-400'}`}>{c}</button>
+            className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs ${cat === c ? 'bg-amber-500 text-black font-bold' : 'bg-dax-card text-dax-muted'}`}>{c}</button>
         ))}
       </div>
 
@@ -136,25 +136,25 @@ export function ComandaOrder() {
         {menu.map((p) => (
           <button key={p.id} onClick={() => addDraft(p)}
             className="dax-card text-left active:scale-95 transition-transform">
-            <p className="text-sm font-bold text-white leading-tight">{p.name}</p>
-            <p className="mt-1 text-xs text-amber-300 font-black">{formatCurrency(p.price)}</p>
-            {draft[p.id] && <p className="mt-1 text-[11px] text-emerald-300">× {draft[p.id].qty}</p>}
+            <p className="text-sm font-bold text-dax-text leading-tight">{p.name}</p>
+            <p className="mt-1 text-xs text-sem-warning font-black">{formatCurrency(p.price)}</p>
+            {draft[p.id] && <p className="mt-1 text-[11px] text-sem-success">× {draft[p.id].qty}</p>}
           </button>
         ))}
-        {menu.length === 0 && <p className="col-span-2 text-sm text-slate-500">Sin platillos en esta categoría.</p>}
+        {menu.length === 0 && <p className="col-span-2 text-sm text-dax-muted">Sin platillos en esta categoría.</p>}
       </div>
 
       {/* Resumen "por enviar" */}
       {draftList.length > 0 && (
-        <div className="border-t border-slate-800 p-3 space-y-2 max-h-40 overflow-y-auto">
-          <p className="text-[11px] uppercase tracking-wide text-slate-500">Por enviar</p>
+        <div className="border-t border-dax-border p-3 space-y-2 max-h-40 overflow-y-auto">
+          <p className="text-[11px] uppercase tracking-wide text-dax-muted">Por enviar</p>
           {draftList.map(({ p, qty }) => (
             <div key={p.id} className="flex items-center justify-between text-sm">
-              <span className="text-white">{p.name}</span>
+              <span className="text-dax-text">{p.name}</span>
               <span className="flex items-center gap-2">
-                <button onClick={() => decDraft(p.id)} className="h-6 w-6 rounded bg-slate-700 text-white">−</button>
-                <span className="w-5 text-center text-white">{qty}</span>
-                <button onClick={() => addDraft(p)} className="h-6 w-6 rounded bg-slate-700 text-white">+</button>
+                <button onClick={() => decDraft(p.id)} className="h-6 w-6 rounded bg-dax-surface text-dax-text">−</button>
+                <span className="w-5 text-center text-dax-text">{qty}</span>
+                <button onClick={() => addDraft(p)} className="h-6 w-6 rounded bg-dax-surface text-dax-text">+</button>
               </span>
             </div>
           ))}
@@ -162,10 +162,10 @@ export function ComandaOrder() {
       )}
 
       {/* Footer fijo */}
-      <div className="border-t border-slate-800 p-3 flex items-center justify-between gap-3">
+      <div className="border-t border-dax-border p-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] text-slate-500">Cuenta</p>
-          <p className="text-lg font-black text-white">{formatCurrency(accountTotal)}</p>
+          <p className="text-[11px] text-dax-muted">Cuenta</p>
+          <p className="text-lg font-black text-dax-text">{formatCurrency(accountTotal)}</p>
         </div>
         <Button variant="primary" size="lg" loading={firing} disabled={draftList.length === 0}
           onClick={fire} icon="fa-fire-burner">

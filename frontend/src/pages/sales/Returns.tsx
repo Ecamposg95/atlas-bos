@@ -101,7 +101,7 @@ export function Returns() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-undo text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Devoluciones</h1>
+          <h1 className="text-2xl font-black text-dax-text">Devoluciones</h1>
         </div>
         <button onClick={() => { loadPending(); loadHistory() }} className="dax-btn-secondary text-xs">
           <i className="fa-solid fa-rotate-right" /> Actualizar
@@ -109,13 +109,13 @@ export function Returns() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-800/50 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-dax-card p-1 rounded-lg w-fit">
         {(['pending', 'history'] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-              tab === t ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+              tab === t ? 'bg-indigo-600 text-white' : 'text-dax-muted hover:text-white'
             }`}
           >
             {t === 'pending' ? (
@@ -127,7 +127,7 @@ export function Returns() {
 
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando..." /> : items.length === 0 ? (
-          <div className="p-12 text-center text-slate-600">
+          <div className="p-12 text-center text-dax-faint">
             {tab === 'pending' ? 'No hay devoluciones pendientes' : 'Sin historial'}
           </div>
         ) : (
@@ -149,14 +149,14 @@ export function Returns() {
                   <tr key={r.id}>
                     <td className="font-mono text-indigo-400 text-xs">{returnLabel(r)}</td>
                     <td className="text-sm">{returnRequestedBy(r)}</td>
-                    <td className="text-xs text-slate-400">
+                    <td className="text-xs text-dax-muted">
                       {new Date(r.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
                     </td>
                     <td className="text-xs max-w-[160px] truncate">{r.reason}</td>
-                    <td className="text-right font-semibold text-red-400">{formatCurrency(r.total_refunded)}</td>
+                    <td className="text-right font-semibold text-sem-critical">{formatCurrency(r.total_refunded)}</td>
                     <td><Badge variant={statusVariant(r.status)}>{r.status}</Badge></td>
                     <td>
-                      <button onClick={() => setSelected(r)} className="text-slate-500 hover:text-white text-xs">
+                      <button onClick={() => setSelected(r)} className="text-dax-muted hover:text-dax-text text-xs">
                         <i className="fa-solid fa-eye" />
                       </button>
                     </td>
@@ -173,21 +173,21 @@ export function Returns() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setSelected(null)}>
           <div className="dax-card p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-black text-white">Detalle de Devolución</h3>
-              <button onClick={() => setSelected(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-dax-text">Detalle de Devolución</h3>
+              <button onClick={() => setSelected(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
 
             <div className="space-y-2 text-sm mb-4">
-              <div className="flex justify-between"><span className="text-slate-500">Ticket</span><span className="font-mono text-indigo-400">{returnLabel(selected)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Solicitó</span><span>{returnRequestedBy(selected)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Motivo</span><span className="text-right max-w-[60%]">{selected.reason}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Estado</span><Badge variant={statusVariant(selected.status)}>{selected.status}</Badge></div>
-              {selected.supervisor && <div className="flex justify-between"><span className="text-slate-500">Aprobó</span><span>{returnApprovedBy(selected)}</span></div>}
+              <div className="flex justify-between"><span className="text-dax-muted">Ticket</span><span className="font-mono text-indigo-400">{returnLabel(selected)}</span></div>
+              <div className="flex justify-between"><span className="text-dax-muted">Solicitó</span><span>{returnRequestedBy(selected)}</span></div>
+              <div className="flex justify-between"><span className="text-dax-muted">Motivo</span><span className="text-right max-w-[60%]">{selected.reason}</span></div>
+              <div className="flex justify-between"><span className="text-dax-muted">Estado</span><Badge variant={statusVariant(selected.status)}>{selected.status}</Badge></div>
+              {selected.supervisor && <div className="flex justify-between"><span className="text-dax-muted">Aprobó</span><span>{returnApprovedBy(selected)}</span></div>}
             </div>
 
             {selected.items?.length > 0 && (
-              <div className="border-t border-slate-700/50 pt-4 mb-4">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Artículos</p>
+              <div className="border-t border-dax-border pt-4 mb-4">
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-2">Artículos</p>
                 <table className="dax-table w-full text-xs">
                   <thead><tr><th>Producto</th><th className="text-right">Cant.</th><th className="text-right">Reembolso</th><th>Stock</th></tr></thead>
                   <tbody>
@@ -195,7 +195,7 @@ export function Returns() {
                       <tr key={i}>
                         <td>{item.variant?.product_name ?? item.variant?.sku ?? '—'}</td>
                         <td className="text-right">{item.quantity}</td>
-                        <td className="text-right text-red-400">{formatCurrency(Number(item.refund_amount))}</td>
+                        <td className="text-right text-sem-critical">{formatCurrency(Number(item.refund_amount))}</td>
                         <td><Badge variant={item.is_inventory_reentry ? 'green' : 'red'}>{item.is_inventory_reentry ? 'Regresa' : 'Merma'}</Badge></td>
                       </tr>
                     ))}
@@ -204,8 +204,8 @@ export function Returns() {
               </div>
             )}
 
-            <div className="flex justify-between font-black text-white border-t border-slate-700/50 pt-3">
-              <span>Total reembolso</span><span className="text-red-400">{formatCurrency(selected.total_refunded)}</span>
+            <div className="flex justify-between font-black text-dax-text border-t border-dax-border pt-3">
+              <span>Total reembolso</span><span className="text-sem-critical">{formatCurrency(selected.total_refunded)}</span>
             </div>
 
             {canApprove && selected.status === 'PENDING' && (
@@ -227,7 +227,7 @@ export function Returns() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setRejectingId(null)}>
           <div className="dax-card p-5 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-black mb-3" style={{ color: 'var(--dax-text)' }}>
-              <i className="fa-solid fa-circle-exclamation mr-2 text-red-500" />
+              <i className="fa-solid fa-circle-exclamation mr-2 text-sem-critical" />
               Rechazar devolución
             </h3>
             <label className="text-[10px] font-bold uppercase tracking-wider block mb-1" style={{ color: 'var(--dax-text-muted)' }}>
