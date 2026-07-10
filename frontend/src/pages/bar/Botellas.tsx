@@ -2,15 +2,16 @@ import { useEffect, useState, FormEvent } from 'react'
 import { barApi, BarBottle } from '../../api/bar'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
-import { Card, N, ATLAS_MONO, ATLAS_FONT } from '../../components/atlas-one'
+import { DaxCard } from '../../components/ui/DaxCard'
+import { Spinner } from '../../components/ui/Spinner'
 
 const ACCENT = '#7c3aed' // Bar (violeta)
 const LOW = 15 // % bajo → resaltar reposición
 
 function volColor(pct: number): string {
-  if (pct <= LOW) return '#dc2626'
-  if (pct <= 40) return '#f59e0b'
-  return ACCENT
+  if (pct <= LOW) return '#f87171'   // rojo
+  if (pct <= 40) return '#fbbf24'    // ámbar
+  return '#a78bfa'                   // violeta claro (legible en oscuro)
 }
 
 export function Botellas() {
@@ -61,92 +62,107 @@ export function Botellas() {
   const lowCount = active.filter((b) => b.pct_remaining <= LOW).length
 
   return (
-    <div style={{ background: N.page, minHeight: '100%', fontFamily: ATLAS_FONT }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '2rem 1.75rem 3rem' }}>
-        <header style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 20 }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 11, fontFamily: ATLAS_MONO, color: N.muted, letterSpacing: 0.8, textTransform: 'uppercase' }}>Bar · Inventario líquido</p>
-            <h1 style={{ margin: '6px 0 4px', fontSize: '1.7rem', fontWeight: 600, color: N.ink, letterSpacing: -0.6 }}>Botellas</h1>
-            <p style={{ margin: 0, color: N.muted, fontSize: 14 }}>
-              {active.length} abiertas{lowCount > 0 && <span style={{ color: '#dc2626', fontWeight: 600 }}> · {lowCount} por reponer</span>}
-            </p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.14em] text-slate-500 font-semibold">Bar · Inventario líquido</p>
+          <div className="flex items-center gap-3 mt-1">
+            <i className="fa-solid fa-wine-bottle text-violet-300 text-xl" />
+            <h1 className="text-2xl font-black text-white">Botellas</h1>
           </div>
-          <button onClick={() => setShowForm((s) => !s)}
-            style={{ border: 'none', cursor: 'pointer', padding: '10px 18px', borderRadius: 10, background: ACCENT, color: '#fff', fontWeight: 600, fontSize: 14, fontFamily: ATLAS_FONT }}>
-            {showForm ? 'Cancelar' : '+ Abrir botella'}
-          </button>
-        </header>
+          <p className="text-sm text-slate-400 mt-0.5">
+            {active.length} abiertas
+            {lowCount > 0 && <span className="text-rose-400 font-semibold"> · {lowCount} por reponer</span>}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowForm((s) => !s)}
+          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+          style={{ background: ACCENT }}
+        >
+          {showForm ? 'Cancelar' : '+ Abrir botella'}
+        </button>
+      </div>
 
-        {showForm && (
-          <Card pad={18} style={{ marginBottom: 18 }}>
-            <form onSubmit={openBottle} style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-              <label style={{ flex: '2 1 240px', fontSize: 12, color: N.muted }}>
-                Nombre
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Tequila Don Julio 70" required
-                  style={inp} />
-              </label>
-              <label style={{ flex: '1 1 120px', fontSize: 12, color: N.muted }}>
-                Volumen (ml)
-                <input type="number" value={form.full_volume_ml} min={50} onChange={(e) => setForm({ ...form, full_volume_ml: Number(e.target.value) })} style={inp} />
-              </label>
-              <label style={{ flex: '1 1 120px', fontSize: 12, color: N.muted }}>
-                Servida (ml)
-                <input type="number" value={form.pour_size_ml} min={5} onChange={(e) => setForm({ ...form, pour_size_ml: Number(e.target.value) })} style={inp} />
-              </label>
-              <button type="submit" style={{ border: 'none', cursor: 'pointer', padding: '9px 16px', borderRadius: 10, background: N.ink, color: '#fff', fontWeight: 600, fontSize: 13.5 }}>Abrir</button>
-            </form>
-          </Card>
-        )}
+      {/* Form abrir botella */}
+      {showForm && (
+        <DaxCard>
+          <form onSubmit={openBottle} className="flex flex-wrap items-end gap-3">
+            <label className="flex-[2_1_240px] text-xs text-slate-400">
+              Nombre
+              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="Tequila Don Julio 70" required className={inputCls} />
+            </label>
+            <label className="flex-[1_1_120px] text-xs text-slate-400">
+              Volumen (ml)
+              <input type="number" min={50} value={form.full_volume_ml}
+                onChange={(e) => setForm({ ...form, full_volume_ml: Number(e.target.value) })} className={inputCls} />
+            </label>
+            <label className="flex-[1_1_120px] text-xs text-slate-400">
+              Servida (ml)
+              <input type="number" min={5} value={form.pour_size_ml}
+                onChange={(e) => setForm({ ...form, pour_size_ml: Number(e.target.value) })} className={inputCls} />
+            </label>
+            <button type="submit" className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-slate-700 hover:bg-slate-600 transition-colors">
+              Abrir
+            </button>
+          </form>
+        </DaxCard>
+      )}
 
-        {loading ? (
-          <Card pad={40} style={{ textAlign: 'center', color: N.faint, fontFamily: ATLAS_MONO, fontSize: 13 }}>Cargando…</Card>
-        ) : active.length === 0 ? (
-          <Card pad={40} style={{ textAlign: 'center', color: N.faint, fontFamily: ATLAS_MONO, fontSize: 13 }}>No hay botellas abiertas. Abre una para empezar.</Card>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-            {active.map((b) => {
-              const pct = b.pct_remaining
-              const color = volColor(pct)
-              const empty = b.status === 'EMPTY'
-              return (
-                <Card key={b.id} pad={16} style={{ display: 'flex', flexDirection: 'column', gap: 12, opacity: empty ? 0.7 : 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-                    <strong style={{ fontSize: 14.5, color: N.ink, lineHeight: 1.25 }}>{b.name}</strong>
-                    <span style={{ fontSize: 12, fontFamily: ATLAS_MONO, fontWeight: 700, color }}>{Math.round(pct)}%</span>
+      {/* Lista */}
+      {loading ? (
+        <Spinner size="lg" text="Cargando botellas..." />
+      ) : active.length === 0 ? (
+        <DaxCard>
+          <p className="text-sm text-slate-400 text-center py-6">No hay botellas abiertas. Abre una para empezar. 🍾</p>
+        </DaxCard>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {active.map((b) => {
+            const pct = b.pct_remaining
+            const color = volColor(pct)
+            const empty = b.status === 'EMPTY'
+            return (
+              <DaxCard key={b.id} className={empty ? 'opacity-60' : ''}>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <strong className="text-sm text-white leading-tight">{b.name}</strong>
+                    <span className="text-xs font-black tabular-nums" style={{ color }}>{Math.round(pct)}%</span>
                   </div>
                   {/* barra de volumen */}
-                  <div style={{ height: 10, borderRadius: 999, background: N.chip, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: color, transition: 'width .3s' }} />
+                  <div className="h-2.5 rounded-full bg-slate-700/60 overflow-hidden">
+                    <div className="h-full transition-all" style={{ width: `${pct}%`, background: color }} />
                   </div>
-                  <div style={{ fontSize: 11.5, fontFamily: ATLAS_MONO, color: N.muted }}>
+                  <p className="text-[11px] text-slate-500 tabular-nums">
                     {Math.round(Number(b.remaining_ml))} / {Math.round(Number(b.full_volume_ml))} ml · servida {Math.round(Number(b.pour_size_ml))} ml
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                  </p>
+                  <div className="flex gap-2 mt-auto">
                     <button disabled={busy === b.id || empty} onClick={() => act(b.id, () => barApi.pour(b.id, {}))}
-                      style={{ ...btn, background: ACCENT, color: '#fff', opacity: empty ? 0.5 : 1 }}>Servir</button>
-                    <button disabled={busy === b.id} onClick={() => {
-                      const ml = Number(prompt('Merma (ml):', '30'))
-                      if (ml > 0) act(b.id, () => barApi.waste(b.id, { ml }))
-                    }} style={{ ...btn, background: N.chip, color: N.body }}>Merma</button>
-                    <button disabled={busy === b.id} onClick={() => {
-                      const ml = Number(prompt('Restante real (ml):', String(Math.round(Number(b.remaining_ml)))))
-                      if (ml >= 0) act(b.id, () => barApi.refill(b.id, ml))
-                    }} style={{ ...btn, background: N.chip, color: N.body }} title="Ajustar por conteo">Ajustar</button>
+                      className="flex-1 rounded-lg py-2 text-xs font-bold text-white disabled:opacity-40 transition-opacity hover:opacity-90"
+                      style={{ background: ACCENT }}>
+                      Servir
+                    </button>
+                    <button disabled={busy === b.id}
+                      onClick={() => { const ml = Number(prompt('Merma (ml):', '30')); if (ml > 0) act(b.id, () => barApi.waste(b.id, { ml })) }}
+                      className="flex-1 rounded-lg py-2 text-xs font-bold bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                      Merma
+                    </button>
+                    <button disabled={busy === b.id} title="Ajustar por conteo"
+                      onClick={() => { const ml = Number(prompt('Restante real (ml):', String(Math.round(Number(b.remaining_ml))))); if (ml >= 0) act(b.id, () => barApi.refill(b.id, ml)) }}
+                      className="flex-1 rounded-lg py-2 text-xs font-bold bg-slate-700 text-slate-200 hover:bg-slate-600 disabled:opacity-40 transition-colors">
+                      Ajustar
+                    </button>
                   </div>
-                </Card>
-              )
-            })}
-          </div>
-        )}
-      </div>
+                </div>
+              </DaxCard>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
 
-const inp: React.CSSProperties = {
-  display: 'block', width: '100%', marginTop: 5, padding: '9px 11px', fontSize: 14,
-  border: `1px solid ${N.line}`, borderRadius: 10, background: '#fff', color: N.ink, fontFamily: ATLAS_FONT,
-}
-const btn: React.CSSProperties = {
-  flex: 1, border: 'none', cursor: 'pointer', padding: '8px 0', borderRadius: 9, fontWeight: 600, fontSize: 13, fontFamily: ATLAS_FONT,
-}
+const inputCls = 'block w-full mt-1.5 rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500'
