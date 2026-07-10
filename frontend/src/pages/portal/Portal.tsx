@@ -20,10 +20,10 @@ const TX_LABELS: Record<string, string> = {
 }
 
 const QUOTE_STATUS_CLASS: Record<string, string> = {
-  OPEN: 'bg-amber-500/20 text-amber-400',
-  QUOTE: 'bg-blue-500/20 text-blue-400',
-  COMPLETED: 'bg-emerald-500/20 text-emerald-400',
-  CANCELLED: 'bg-red-500/20 text-red-400',
+  OPEN: 'bg-amber-500/20 text-sem-warning',
+  QUOTE: 'bg-blue-500/20 text-sem-info',
+  COMPLETED: 'bg-emerald-500/20 text-sem-success',
+  CANCELLED: 'bg-red-500/20 text-sem-critical',
 }
 
 const QUOTE_STATUS_LABEL: Record<string, string> = {
@@ -67,8 +67,8 @@ export function Portal() {
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-circle-user text-indigo-400 text-2xl" />
         <div>
-          <h1 className="text-2xl font-black text-white">Mi Portal</h1>
-          <p className="text-slate-500 text-sm">Estado de cuenta y cotizaciones</p>
+          <h1 className="text-2xl font-black text-dax-text">Mi Portal</h1>
+          <p className="text-dax-muted text-sm">Estado de cuenta y cotizaciones</p>
         </div>
       </div>
 
@@ -77,15 +77,15 @@ export function Portal() {
         <DaxCard>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Saldo actual</p>
-              <p className={`text-3xl font-black ${balance.current_balance < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+              <p className="text-dax-muted text-xs uppercase tracking-wider mb-1">Saldo actual</p>
+              <p className={`text-3xl font-black ${balance.current_balance < 0 ? 'text-sem-critical' : 'text-sem-success'}`}>
                 {formatCurrency(balance.current_balance)}
               </p>
-              <p className="text-slate-500 text-xs mt-1">Actualizado {fmtDate(balance.last_updated)}</p>
+              <p className="text-dax-muted text-xs mt-1">Actualizado {fmtDate(balance.last_updated)}</p>
             </div>
             <div className="text-right">
-              <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Cuentas vinculadas</p>
-              <p className="text-2xl font-bold text-white">{accounts.length}</p>
+              <p className="text-dax-muted text-xs uppercase tracking-wider mb-1">Cuentas vinculadas</p>
+              <p className="text-2xl font-bold text-dax-text">{accounts.length}</p>
             </div>
           </div>
         </DaxCard>
@@ -94,16 +94,16 @@ export function Portal() {
       {/* Linked accounts */}
       {accounts.length > 0 && (
         <DaxCard>
-          <p className="text-xs text-slate-400 uppercase tracking-wider mb-3">Mis cuentas</p>
+          <p className="text-xs text-dax-muted uppercase tracking-wider mb-3">Mis cuentas</p>
           <div className="space-y-2">
             {accounts.map((a) => (
               <div key={`${a.organization_id}-${a.customer_id}`}
-                className="flex items-center justify-between py-2 border-b border-slate-700/40 last:border-0">
+                className="flex items-center justify-between py-2 border-b border-dax-border last:border-0">
                 <div>
-                  <p className="text-white text-sm font-medium">{a.organization_name}</p>
-                  <p className="text-slate-500 text-xs">ID cliente #{a.customer_id}</p>
+                  <p className="text-dax-text text-sm font-medium">{a.organization_name}</p>
+                  <p className="text-dax-muted text-xs">ID cliente #{a.customer_id}</p>
                 </div>
-                <p className={`text-sm font-bold ${a.current_balance < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                <p className={`text-sm font-bold ${a.current_balance < 0 ? 'text-sem-critical' : 'text-sem-success'}`}>
                   {formatCurrency(a.current_balance, { currency: a.currency })}
                 </p>
               </div>
@@ -113,13 +113,13 @@ export function Portal() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-900/60 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-dax-bg p-1 rounded-xl w-fit">
         {([['balance', 'Resumen'], ['transactions', 'Movimientos'], ['quotes', 'Cotizaciones']] as [Tab, string][]).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-              tab === key ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+              tab === key ? 'bg-indigo-600 text-white' : 'text-dax-muted hover:text-white'
             }`}
           >
             {label}
@@ -131,7 +131,7 @@ export function Portal() {
       {tab === 'transactions' && (
         <DaxCard padding={false}>
           {transactions.length === 0 ? (
-            <div className="p-12 text-center text-slate-600">
+            <div className="p-12 text-center text-dax-faint">
               <i className="fa-solid fa-receipt text-4xl mb-3 block" />
               Sin movimientos registrados
             </div>
@@ -150,19 +150,19 @@ export function Portal() {
                 <tbody>
                   {transactions.map((t) => (
                     <tr key={t.id}>
-                      <td className="text-slate-400 text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
+                      <td className="text-dax-muted text-xs whitespace-nowrap">{fmtDate(t.created_at)}</td>
                       <td>
-                        <span className="text-xs font-semibold text-slate-300">
+                        <span className="text-xs font-semibold text-dax-muted">
                           {TX_LABELS[t.transaction_type] ?? t.transaction_type}
                         </span>
                       </td>
-                      <td className="text-slate-400 text-xs max-w-[200px] truncate">
+                      <td className="text-dax-muted text-xs max-w-[200px] truncate">
                         {t.description ?? t.reference ?? '—'}
                       </td>
-                      <td className={`text-right font-mono text-sm font-bold ${t.amount < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                      <td className={`text-right font-mono text-sm font-bold ${t.amount < 0 ? 'text-sem-critical' : 'text-sem-success'}`}>
                         {formatCurrency(t.amount)}
                       </td>
-                      <td className="text-right font-mono text-sm text-slate-300">
+                      <td className="text-right font-mono text-sm text-dax-muted">
                         {formatCurrency(t.balance_after)}
                       </td>
                     </tr>
@@ -178,7 +178,7 @@ export function Portal() {
       {tab === 'quotes' && (
         <DaxCard padding={false}>
           {quotes.length === 0 ? (
-            <div className="p-12 text-center text-slate-600">
+            <div className="p-12 text-center text-dax-faint">
               <i className="fa-solid fa-file-invoice text-4xl mb-3 block" />
               Sin cotizaciones
             </div>
@@ -198,16 +198,16 @@ export function Portal() {
                 <tbody>
                   {quotes.map((q) => (
                     <tr key={q.id}>
-                      <td className="font-mono text-slate-400 text-xs">{q.id.slice(0, 8)}</td>
-                      <td className="text-slate-400 text-xs whitespace-nowrap">{fmtDate(q.date)}</td>
-                      <td className="text-white text-sm font-medium">{q.organization_name}</td>
-                      <td className="text-slate-400 text-xs text-center">{q.items_count}</td>
+                      <td className="font-mono text-dax-muted text-xs">{q.id.slice(0, 8)}</td>
+                      <td className="text-dax-muted text-xs whitespace-nowrap">{fmtDate(q.date)}</td>
+                      <td className="text-dax-text text-sm font-medium">{q.organization_name}</td>
+                      <td className="text-dax-muted text-xs text-center">{q.items_count}</td>
                       <td>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${QUOTE_STATUS_CLASS[q.status] ?? 'bg-slate-700/50 text-slate-400'}`}>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${QUOTE_STATUS_CLASS[q.status] ?? 'bg-dax-surface text-dax-muted'}`}>
                           {QUOTE_STATUS_LABEL[q.status] ?? q.status}
                         </span>
                       </td>
-                      <td className="text-right font-mono text-sm font-bold text-white">{formatCurrency(q.total)}</td>
+                      <td className="text-right font-mono text-sm font-bold text-dax-text">{formatCurrency(q.total)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -220,25 +220,25 @@ export function Portal() {
       {/* Tab: Resumen (balance tab) */}
       {tab === 'balance' && (
         <DaxCard>
-          <p className="text-xs text-slate-400 uppercase tracking-wider mb-4">Últimos movimientos</p>
+          <p className="text-xs text-dax-muted uppercase tracking-wider mb-4">Últimos movimientos</p>
           {transactions.length === 0 ? (
-            <p className="text-slate-600 text-sm text-center py-6">Sin movimientos</p>
+            <p className="text-dax-faint text-sm text-center py-6">Sin movimientos</p>
           ) : (
             <div className="space-y-2">
               {transactions.slice(0, 5).map((t) => (
-                <div key={t.id} className="flex items-center justify-between py-2 border-b border-slate-700/40 last:border-0">
+                <div key={t.id} className="flex items-center justify-between py-2 border-b border-dax-border last:border-0">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${
-                      t.amount < 0 ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
+                      t.amount < 0 ? 'bg-red-500/20 text-sem-critical' : 'bg-emerald-500/20 text-sem-success'
                     }`}>
                       <i className={`fa-solid ${t.amount < 0 ? 'fa-arrow-up-right' : 'fa-arrow-down-left'}`} />
                     </div>
                     <div>
-                      <p className="text-white text-sm">{TX_LABELS[t.transaction_type] ?? t.transaction_type}</p>
-                      <p className="text-slate-500 text-xs">{fmtDate(t.created_at)}</p>
+                      <p className="text-dax-text text-sm">{TX_LABELS[t.transaction_type] ?? t.transaction_type}</p>
+                      <p className="text-dax-muted text-xs">{fmtDate(t.created_at)}</p>
                     </div>
                   </div>
-                  <p className={`font-mono font-bold text-sm ${t.amount < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  <p className={`font-mono font-bold text-sm ${t.amount < 0 ? 'text-sem-critical' : 'text-sem-success'}`}>
                     {formatCurrency(t.amount)}
                   </p>
                 </div>

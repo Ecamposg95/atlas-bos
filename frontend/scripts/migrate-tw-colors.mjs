@@ -59,6 +59,11 @@ const MAP = [
   ['text-sky-400', 'text-sem-info'], ['text-blue-400', 'text-sem-info'], ['text-blue-500', 'text-sem-info'],
 ]
 
+// Fondos de color saturado y SÓLIDO (o con opacidad ≥30%). En líneas con esto,
+// `text-white` es una etiqueta sobre botón/badge de color → NO migrar a token
+// (dax-text quedaría oscuro sobre color en modo claro). Excluye tints /0-/29.
+const SOLID_BG = /bg-(indigo|violet|purple|blue|emerald|green|rose|red|amber|sky|fuchsia|pink|cyan|teal|orange|slate)-(400|500|600|700|800|900)(?!\/(?:[0-9]|1[0-9]|2[0-9])\b)/
+
 const args = process.argv.slice(2)
 const APPLY = args.includes('--apply')
 const pathArg = (() => { const i = args.indexOf('--path'); return i >= 0 ? args[i + 1] : '' })()
@@ -86,7 +91,13 @@ for (const file of files) {
   for (const [cls, repl] of MAP) {
     // \b<cls>(/\d+)?\b  — captura opcional de opacidad; se descarta al reemplazar.
     const re = new RegExp(`\\b${cls.replace(/[-/]/g, '\\$&')}(\\/\\d+)?\\b`, 'g')
-    src = src.replace(re, (m) => { fileHits++; hitByRule[cls] = (hitByRule[cls] || 0) + 1; return repl })
+    const apply = (s) => s.replace(re, () => { fileHits++; hitByRule[cls] = (hitByRule[cls] || 0) + 1; return repl })
+    if (cls === 'text-white') {
+      // Line-aware: no migrar text-white en líneas con bg de color sólido (botones/badges).
+      src = src.split('\n').map((line) => (SOLID_BG.test(line) ? line : apply(line))).join('\n')
+    } else {
+      src = apply(src)
+    }
   }
   if (fileHits > 0) {
     totalHits += fileHits

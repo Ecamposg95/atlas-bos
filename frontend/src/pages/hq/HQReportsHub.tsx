@@ -321,7 +321,7 @@ export function HQReportsHub() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-chart-line text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Reportes HQ</h1>
+          <h1 className="text-2xl font-black text-dax-text">Reportes HQ</h1>
           <span className="text-[10px] font-bold uppercase tracking-widest text-violet-400/80 bg-violet-500/10 px-2 py-0.5 rounded-full border border-violet-500/20">
             Ultra
           </span>
@@ -338,7 +338,7 @@ export function HQReportsHub() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="flex items-center gap-1 bg-slate-800/40 rounded-lg p-1 border border-slate-700/50">
+        <div className="flex items-center gap-1 bg-dax-card rounded-lg p-1 border border-dax-border">
           {PRESETS.map((p) => (
             <button
               key={p.label}
@@ -346,7 +346,7 @@ export function HQReportsHub() {
               className={`px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-wider transition-colors ${
                 isPresetActive(p)
                   ? 'bg-violet-600 text-white shadow'
-                  : 'bg-transparent text-slate-400 hover:text-white'
+                  : 'bg-transparent text-dax-muted hover:text-dax-text'
               }`}
             >
               {p.label}
@@ -369,7 +369,7 @@ export function HQReportsHub() {
       </div>
 
       {loading ? <Spinner text="Cargando reportes..." /> : !data ? (
-        <DaxCard><div className="p-12 text-center text-slate-600">Sin datos</div></DaxCard>
+        <DaxCard><div className="p-12 text-center text-dax-faint">Sin datos</div></DaxCard>
       ) : (
         <>
           {/* ═══════════════════════════════════════════════════════════════
@@ -380,23 +380,23 @@ export function HQReportsHub() {
               <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/10 blur-3xl rounded-full pointer-events-none" />
               <div className="relative flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-1">
-                    <i className="fa-solid fa-gauge-high text-sky-400" /> Velocidad
+                  <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest flex items-center gap-2 mb-1">
+                    <i className="fa-solid fa-gauge-high text-sem-info" /> Velocidad
                     <span className={`inline-block w-1.5 h-1.5 rounded-full ${veloOpen ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`} />
                   </p>
                   {veloOpen ? (
                     <>
-                      <p className="text-4xl sm:text-5xl font-black text-sky-400 tabular-nums">
+                      <p className="text-4xl sm:text-5xl font-black text-sem-info tabular-nums">
                         {formatCurrency(velo?.current_hour_amount ?? 0)}
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">
+                      <p className="text-xs text-dax-muted mt-1">
                         Ventas de las {veloHour}:00 · {velo?.current_hour_tickets ?? 0} tickets
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-4xl sm:text-5xl font-black text-slate-600 tabular-nums">Cerrado</p>
-                      <p className="text-xs text-slate-500 mt-1">Fuera de horario laboral (8:00 — 22:00)</p>
+                      <p className="text-4xl sm:text-5xl font-black text-dax-faint tabular-nums">Cerrado</p>
+                      <p className="text-xs text-dax-muted mt-1">Fuera de horario laboral (8:00 — 22:00)</p>
                     </>
                   )}
                 </div>
@@ -412,8 +412,8 @@ export function HQReportsHub() {
 
             <DaxCard className="flex flex-col items-center justify-center relative overflow-hidden">
               <div className="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-2 self-start">
-                <i className="fa-solid fa-bullseye text-emerald-400" /> Cumplimiento
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest flex items-center gap-2 mb-2 self-start">
+                <i className="fa-solid fa-bullseye text-sem-success" /> Cumplimiento
               </p>
               <Gauge
                 current={currentTotal}
@@ -476,8 +476,8 @@ export function HQReportsHub() {
             {trendValues.length > 0 && (
               <DaxCard className="lg:col-span-2">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <i className="fa-solid fa-chart-area text-emerald-400" /> Tendencia vs. Período Anterior
+                  <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest flex items-center gap-2">
+                    <i className="fa-solid fa-chart-area text-sem-success" /> Tendencia vs. Período Anterior
                   </p>
                 </div>
                 <div style={{ height: 240 }}>
@@ -488,14 +488,14 @@ export function HQReportsHub() {
 
             {paymentMethods.length > 0 && (
               <DaxCard>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3 flex items-center gap-2">
                   <i className="fa-solid fa-credit-card text-indigo-400" /> Métodos de Pago
                 </p>
                 <div className="relative" style={{ height: 240 }}>
                   <Doughnut data={doughnutData} options={doughnutOpts as never} />
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ marginRight: '40%' }}>
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Total</p>
-                    <p className="text-base font-black text-white tabular-nums">{formatCurrency(totalPayments)}</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-dax-muted">Total</p>
+                    <p className="text-base font-black text-dax-text tabular-nums">{formatCurrency(totalPayments)}</p>
                   </div>
                 </div>
               </DaxCard>
@@ -507,11 +507,11 @@ export function HQReportsHub() {
           ════════════════════════════════════════════════════════════════ */}
           <DaxCard>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <i className="fa-solid fa-table-cells text-emerald-400" /> Heatmap — Día × Hora
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest flex items-center gap-2">
+                <i className="fa-solid fa-table-cells text-sem-success" /> Heatmap — Día × Hora
               </p>
               {heatmapIsApprox && (
-                <span className="text-[9px] text-amber-400/80 italic">
+                <span className="text-[9px] text-sem-warning italic">
                   Aproximación (distribución horaria sin desglose por día)
                 </span>
               )}
@@ -525,8 +525,8 @@ export function HQReportsHub() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {ccStats?.branches && ccStats.branches.length > 0 && (
               <DaxCard className="lg:col-span-2">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-4">
-                  <i className="fa-solid fa-ranking-star text-amber-300" /> Leaderboard — Sucursales
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <i className="fa-solid fa-ranking-star text-sem-warning" /> Leaderboard — Sucursales
                 </p>
                 <BranchLeaderboard
                   branches={ccStats.branches.map((b) => ({
@@ -539,29 +539,29 @@ export function HQReportsHub() {
             )}
 
             <DaxCard>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <i className="fa-solid fa-triangle-exclamation text-amber-400" /> Alertas de Stock Bajo
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3 flex items-center gap-2">
+                <i className="fa-solid fa-triangle-exclamation text-sem-warning" /> Alertas de Stock Bajo
               </p>
               {data.low_stock && data.low_stock.length > 0 ? (
                 <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
                   {data.low_stock.slice(0, 12).map((p, i) => (
                     <div
                       key={`${p.sku}-${i}`}
-                      className="flex justify-between items-center p-2 bg-slate-950/50 rounded border border-slate-800/50 hover:border-amber-500/30 transition-colors"
+                      className="flex justify-between items-center p-2 bg-dax-bg rounded border border-dax-border hover:border-amber-500/30 transition-colors"
                     >
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-slate-300 truncate">{p.name}</p>
-                        <p className="text-[10px] text-slate-500 font-mono truncate">{p.sku || '—'}</p>
+                        <p className="text-xs font-bold text-dax-muted truncate">{p.name}</p>
+                        <p className="text-[10px] text-dax-muted font-mono truncate">{p.sku || '—'}</p>
                       </div>
                       <div className="text-right pl-2">
-                        <span className="block text-sm font-black text-amber-400 tabular-nums">{p.stock}</span>
-                        <span className="text-[9px] text-slate-500 uppercase">Disp.</span>
+                        <span className="block text-sm font-black text-sem-warning tabular-nums">{p.stock}</span>
+                        <span className="text-[9px] text-dax-muted uppercase">Disp.</span>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-emerald-500 italic flex items-center gap-1">
+                <p className="text-xs text-sem-success italic flex items-center gap-1">
                   <i className="fa-solid fa-circle-check" /> Inventario saludable.
                 </p>
               )}
@@ -573,7 +573,7 @@ export function HQReportsHub() {
           ════════════════════════════════════════════════════════════════ */}
           {data.top_products && data.top_products.length > 0 && (
             <DaxCard>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-4 flex items-center gap-2">
                 <i className="fa-solid fa-fire text-orange-400" /> Top Productos — Tendencia por Producto
               </p>
               <div className="space-y-1.5">
@@ -584,20 +584,20 @@ export function HQReportsHub() {
                   return (
                     <div
                       key={i}
-                      className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-slate-800/30 transition-colors"
+                      className="flex items-center gap-3 px-2 py-2 rounded-md hover:bg-dax-card transition-colors"
                     >
-                      <span className="text-[10px] font-mono font-bold text-slate-500 w-6 text-right">#{i + 1}</span>
-                      <span className="text-xs font-bold text-slate-200 flex-1 truncate" title={p.name}>{p.name}</span>
+                      <span className="text-[10px] font-mono font-bold text-dax-muted w-6 text-right">#{i + 1}</span>
+                      <span className="text-xs font-bold text-dax-text flex-1 truncate" title={p.name}>{p.name}</span>
                       <div className="hidden sm:block">
                         <Sparkline data={trendArr} />
                       </div>
-                      <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden hidden md:block">
+                      <div className="w-20 h-1.5 bg-dax-card rounded-full overflow-hidden hidden md:block">
                         <div
                           className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
                           style={{ width: `${relPct}%` }}
                         />
                       </div>
-                      <span className="text-xs font-mono font-bold text-emerald-400 tabular-nums w-16 text-right">
+                      <span className="text-xs font-mono font-bold text-sem-success tabular-nums w-16 text-right">
                         {p.qty}u
                       </span>
                     </div>
@@ -605,7 +605,7 @@ export function HQReportsHub() {
                 })}
               </div>
               {data.top_products.some((p) => !p.trend || p.trend.length < 2) && (
-                <p className="mt-3 text-[9px] text-amber-400/70 italic">
+                <p className="mt-3 text-[9px] text-sem-warning italic">
                   Algunos productos muestran tendencia simulada — el backend completará los datos reales por producto.
                 </p>
               )}
@@ -624,17 +624,17 @@ export function HQReportsHub() {
 function MethodKPICard({ method }: { method: string }) {
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-slate-700/40 bg-gradient-to-br from-slate-500/10 via-slate-500/5 to-transparent p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-slate-400/40"
+      className="group relative overflow-hidden rounded-xl border border-dax-border bg-gradient-to-br from-slate-500/10 via-slate-500/5 to-transparent p-3 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:border-slate-400/40"
       style={{ backdropFilter: 'blur(6px)' }}
     >
       <div className="mb-1 flex items-center gap-1.5">
-        <i className="fa-solid fa-credit-card text-slate-200 text-[11px]" />
-        <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-slate-500">Método top</p>
+        <i className="fa-solid fa-credit-card text-dax-text text-[11px]" />
+        <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-dax-muted">Método top</p>
       </div>
-      <p className="text-xl font-black tabular-nums leading-tight text-slate-200 truncate">
+      <p className="text-xl font-black tabular-nums leading-tight text-dax-text truncate">
         {method}
       </p>
-      <p className="mt-1 text-[9px] text-slate-500">Más usado en el período</p>
+      <p className="mt-1 text-[9px] text-dax-muted">Más usado en el período</p>
     </div>
   )
 }

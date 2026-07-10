@@ -23,8 +23,8 @@ function firstVariantId(p: Product): string | null {
 
 const TIER_PALETTE = [
   { bg: 'bg-purple-500/10',  border: 'border-purple-500/30',  text: 'text-purple-700 dark:text-purple-300',   icon: 'fa-tag' },
-  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-700 dark:text-emerald-300', icon: 'fa-layer-group' },
-  { bg: 'bg-amber-500/10',   border: 'border-amber-500/30',   text: 'text-amber-700 dark:text-amber-300',     icon: 'fa-box' },
+  { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-700 dark:text-sem-success', icon: 'fa-layer-group' },
+  { bg: 'bg-amber-500/10',   border: 'border-amber-500/30',   text: 'text-amber-700 dark:text-sem-warning',     icon: 'fa-box' },
   { bg: 'bg-indigo-500/10',  border: 'border-indigo-500/30',  text: 'text-indigo-700 dark:text-indigo-300',   icon: 'fa-warehouse' },
   { bg: 'bg-rose-500/10',    border: 'border-rose-500/30',    text: 'text-rose-700 dark:text-rose-300',       icon: 'fa-percent' },
 ] as const
@@ -39,14 +39,14 @@ function SectionHeader({ icon, label, accentColor }: {
   accentColor: 'slate' | 'purple' | 'blue'
 }) {
   const colorClass = {
-    slate: 'text-slate-500',
+    slate: 'text-dax-muted',
     purple: 'text-purple-500',
-    blue: 'text-blue-500',
+    blue: 'text-sem-info',
   }[accentColor]
   return (
     <div className="flex items-center gap-2 mb-3">
       <i className={`fa-solid ${icon} ${colorClass}`} aria-hidden="true" />
-      <p className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-700 dark:text-dax-muted">
         {label}
       </p>
     </div>
@@ -176,16 +176,16 @@ export function ProductsBranchView() {
         {/* Hero */}
         <div className={`${ui.hero} px-6 py-6 flex flex-wrap items-center justify-between gap-4`}>
           <div>
-            <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-0.5">
+            <p className="text-dax-text text-xs font-semibold uppercase tracking-widest mb-0.5">
               Mi sucursal
             </p>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">Inventario</h1>
-            <p className="text-white/70 text-xs mt-1">{visible.length} productos</p>
+            <h1 className="text-2xl lg:text-3xl font-bold text-dax-text">Inventario</h1>
+            <p className="text-dax-text text-xs mt-1">{visible.length} productos</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={downloadTemplate}
-              className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2.5 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 text-dax-text text-xs font-semibold px-3 py-2.5 transition-colors"
               title="Descargar plantilla Excel"
             >
               <i className="fa-solid fa-file-arrow-down" />
@@ -193,7 +193,7 @@ export function ProductsBranchView() {
             </button>
             <button
               onClick={() => setShowImport(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3 py-2.5 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 text-dax-text text-xs font-semibold px-3 py-2.5 transition-colors"
               title="Importar productos desde Excel"
             >
               <i className="fa-solid fa-file-import" />
@@ -224,7 +224,7 @@ export function ProductsBranchView() {
             value={kpis ? String(kpis.active_pos) : '—'}
             iconBg="rgba(16,185,129,0.12)"
             iconColor="#10b981"
-            valueClass="text-emerald-600 dark:text-emerald-400"
+            valueClass="text-sem-success dark:text-sem-success"
           />
           <KpiCard
             icon="fa-triangle-exclamation"
@@ -232,7 +232,7 @@ export function ProductsBranchView() {
             value={kpis ? String(kpis.critical_stock) : '—'}
             iconBg="rgba(245,158,11,0.12)"
             iconColor="#f59e0b"
-            valueClass="text-amber-600 dark:text-amber-400"
+            valueClass="text-amber-600 dark:text-sem-warning"
           />
           <KpiCard
             icon="fa-circle-xmark"
@@ -240,14 +240,14 @@ export function ProductsBranchView() {
             value={kpis ? String(kpis.zero_stock) : '—'}
             iconBg="rgba(244,63,94,0.12)"
             iconColor="#f43f5e"
-            valueClass="text-rose-600 dark:text-rose-400"
+            valueClass="text-rose-600 dark:text-sem-critical"
           />
         </div>
 
         {/* Search + filters */}
         <div className={`${ui.card} p-4 flex flex-wrap items-center gap-3`}>
           <div className="relative flex-1 min-w-[220px]">
-            <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+            <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-dax-muted text-sm" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -255,7 +255,7 @@ export function ProductsBranchView() {
               className={`${ui.input} pl-11`}
             />
           </div>
-          <div className="flex gap-1 bg-stone-100 dark:bg-slate-800 rounded-xl p-1">
+          <div className="flex gap-1 bg-stone-100 dark:bg-dax-card rounded-xl p-1">
             {(['all', 'low'] as const).map((f) => (
               <button
                 key={f}
@@ -263,7 +263,7 @@ export function ProductsBranchView() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                   filter === f
                     ? 'bg-purple-600 text-white shadow'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    : 'text-dax-faint dark:text-dax-muted hover:text-slate-900 dark:hover:text-dax-text'
                 }`}
               >
                 {f === 'all' ? 'Todos' : 'Stock bajo'}
@@ -279,7 +279,7 @@ export function ProductsBranchView() {
           </div>
         ) : visible.length === 0 ? (
           <div className={`${ui.card} p-12 text-center`}>
-            <i className="fa-solid fa-box-open text-4xl text-slate-400 mb-3 block" />
+            <i className="fa-solid fa-box-open text-4xl text-dax-muted mb-3 block" />
             <p className={`text-sm ${ui.muted}`}>
               {search ? 'Sin resultados para tu búsqueda' : 'Todavía no hay productos en tu sucursal'}
             </p>
@@ -363,21 +363,21 @@ function ProductRow({ product: p, onView, onEdit, onStock }: RowProps) {
   return (
     <li
       onClick={onView}
-      className="p-4 flex items-center gap-4 hover:bg-stone-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+      className="p-4 flex items-center gap-4 hover:bg-stone-50 dark:hover:bg-dax-card transition-colors cursor-pointer"
     >
       {/* Image / placeholder */}
-      <div className="w-12 h-12 rounded-xl bg-stone-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <div className="w-12 h-12 rounded-xl bg-stone-100 dark:bg-dax-card flex items-center justify-center flex-shrink-0 overflow-hidden">
         {p.image_url ? (
           <img src={p.image_url} alt="" loading="lazy" className="w-full h-full object-cover" />
         ) : (
-          <i className="fa-solid fa-box text-slate-400" />
+          <i className="fa-solid fa-box text-dax-muted" />
         )}
       </div>
 
       {/* Name + meta */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-slate-900 dark:text-slate-100 truncate">{p.name}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-mono">
+        <p className="font-semibold text-slate-900 dark:text-dax-text truncate">{p.name}</p>
+        <p className="text-xs text-dax-muted dark:text-dax-muted truncate font-mono">
           {p.sku}{p.brand_name ? ` · ${p.brand_name}` : ''}
         </p>
       </div>
@@ -393,7 +393,7 @@ function ProductRow({ product: p, onView, onEdit, onStock }: RowProps) {
       {/* Stock */}
       <div className="text-right flex flex-col items-end min-w-[70px]">
         <span className={`text-xs ${ui.muted}`}>Stock</span>
-        <span className={`font-bold tabular-nums ${lowStock ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'}`}>
+        <span className={`font-bold tabular-nums ${lowStock ? 'text-rose-600 dark:text-sem-critical' : 'text-slate-900 dark:text-dax-text'}`}>
           {stock}
         </span>
       </div>
@@ -403,7 +403,7 @@ function ProductRow({ product: p, onView, onEdit, onStock }: RowProps) {
         <button
           onClick={onStock}
           title="Ajustar stock"
-          className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 flex items-center justify-center transition-colors"
+          className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-sem-success hover:bg-emerald-100 dark:hover:bg-emerald-900/30 flex items-center justify-center transition-colors"
         >
           <i className="fa-solid fa-plus-minus text-sm" />
         </button>
@@ -433,21 +433,21 @@ function ProductFichaModal({ product: p, onClose, onEdit, onAdjustStock }: Ficha
   return (
     <Modal title="Detalle del producto" onClose={onClose} size="xl">
       <div className="flex gap-4 mb-5">
-        <div className="w-48 h-48 rounded-2xl bg-stone-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="w-48 h-48 rounded-2xl bg-stone-100 dark:bg-dax-card flex items-center justify-center overflow-hidden flex-shrink-0">
           {p.image_url ? (
             <img src={p.image_url} alt="" className="w-full h-full object-cover" />
           ) : (
-            <i className="fa-solid fa-box text-slate-400 text-5xl" />
+            <i className="fa-solid fa-box text-dax-muted text-5xl" />
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">{p.name}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-dax-text mb-1">{p.name}</h2>
           <p className={`text-xs font-mono ${ui.muted} mb-3`}>{p.sku}{p.barcode ? ` · ${p.barcode}` : ''}</p>
           {p.description && <p className={`text-sm ${ui.muted} mb-3`}>{p.description}</p>}
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div><span className={ui.muted}>Departamento:</span> <span className="font-semibold">{p.department?.name ?? '—'}</span></div>
             <div><span className={ui.muted}>Marca:</span> <span className="font-semibold">{p.brand_name ?? '—'}</span></div>
-            <div><span className={ui.muted}>Stock:</span> <span className={`font-bold ${stock <= (p.min_stock ?? 0) ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-slate-100'}`}>{stock}</span></div>
+            <div><span className={ui.muted}>Stock:</span> <span className={`font-bold ${stock <= (p.min_stock ?? 0) ? 'text-rose-600 dark:text-sem-critical' : 'text-slate-900 dark:text-dax-text'}`}>{stock}</span></div>
             <div><span className={ui.muted}>Mínimo:</span> <span className="font-semibold">{p.min_stock ?? 0}</span></div>
           </div>
         </div>
@@ -676,7 +676,7 @@ function ProductFormModal({ mode, product, departments, brands, onClose, onSaved
           <div className="flex-shrink-0">
             <div
               onClick={() => mode === 'edit' && fileRef.current?.click()}
-              className={`w-24 h-24 rounded-2xl bg-stone-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-2 border-dashed border-stone-300 dark:border-slate-700 ${
+              className={`w-24 h-24 rounded-2xl bg-stone-100 dark:bg-dax-card flex items-center justify-center overflow-hidden border-2 border-dashed border-stone-300 dark:border-dax-border ${
                 mode === 'edit' ? 'cursor-pointer hover:border-purple-500' : 'opacity-60'
               }`}
               title={mode === 'edit' ? 'Cambiar foto' : 'Crea el producto primero'}
@@ -687,8 +687,8 @@ function ProductFormModal({ mode, product, departments, brands, onClose, onSaved
                 <img src={imageUrl} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="text-center">
-                  <i className="fa-solid fa-camera text-slate-400 text-xl block mb-1" />
-                  <span className="text-[9px] text-slate-500 font-semibold">Subir foto</span>
+                  <i className="fa-solid fa-camera text-dax-muted text-xl block mb-1" />
+                  <span className="text-[9px] text-dax-muted font-semibold">Subir foto</span>
                 </div>
               )}
             </div>
@@ -795,7 +795,7 @@ function ProductFormModal({ mode, product, departments, brands, onClose, onSaved
                     <button
                       type="button"
                       onClick={() => setTiers((arr) => arr.filter((_, idx) => idx !== i))}
-                      className="text-rose-500 hover:text-rose-600 p-1"
+                      className="text-sem-critical hover:text-rose-600 p-1"
                       aria-label="Eliminar"
                     >
                       <i className="fa-solid fa-trash text-xs" />
@@ -835,7 +835,7 @@ function ProductFormModal({ mode, product, departments, brands, onClose, onSaved
           <button
             type="button"
             onClick={() => setPacks((u) => [...u, { name: 'Caja', barcode: '', units_per_package: '', package_price: '' }])}
-            className="text-[10px] font-bold text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200"
+            className="text-[10px] font-bold text-blue-700 dark:text-sem-info hover:text-blue-900 dark:hover:text-blue-200"
           >
             <i className="fa-solid fa-plus mr-1" /> Agregar
           </button>
@@ -857,7 +857,7 @@ function ProductFormModal({ mode, product, departments, brands, onClose, onSaved
                   <button
                     type="button"
                     onClick={() => setPacks((arr) => arr.filter((_, idx) => idx !== i))}
-                    className="text-rose-500 hover:text-rose-600 p-1"
+                    className="text-sem-critical hover:text-rose-600 p-1"
                     aria-label="Eliminar"
                   >
                     <i className="fa-solid fa-trash text-xs" />
@@ -897,7 +897,7 @@ function ProductFormModal({ mode, product, departments, brands, onClose, onSaved
         )}
       </section>
 
-      <div className="flex gap-2 mt-6 sticky bottom-0 bg-white dark:bg-slate-900 pt-3">
+      <div className="flex gap-2 mt-6 sticky bottom-0 bg-white dark:bg-dax-bg pt-3">
         <button onClick={onClose} className={`${ui.btnSecondary} flex-1`} disabled={saving}>Cancelar</button>
         <button onClick={submit} disabled={saving} className={`${ui.btnPrimary} flex-1`}>
           {saving ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-check" /> Guardar</>}
@@ -974,8 +974,8 @@ function StockAdjustModal({ product, onClose, onSaved }: StockModalProps) {
   return (
     <Modal onClose={onClose} title="Ajustar stock">
       <div className="mb-4">
-        <p className="text-sm text-slate-700 dark:text-slate-200 font-semibold">{product.name}</p>
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{product.sku} · Stock actual: <b>{stock}</b></p>
+        <p className="text-sm text-slate-700 dark:text-dax-text font-semibold">{product.name}</p>
+        <p className="text-xs text-dax-muted dark:text-dax-muted font-mono">{product.sku} · Stock actual: <b>{stock}</b></p>
       </div>
 
       <div className="flex gap-2 mb-4">
@@ -988,7 +988,7 @@ function StockAdjustModal({ product, onClose, onSaved }: StockModalProps) {
                 ? d === 'IN'
                   ? 'bg-emerald-600 text-white'
                   : 'bg-rose-600 text-white'
-                : 'bg-stone-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                : 'bg-stone-100 dark:bg-dax-card text-dax-faint dark:text-dax-muted'
             }`}
           >
             <i className={`fa-solid ${d === 'IN' ? 'fa-arrow-down' : 'fa-arrow-up'} mr-2`} />
@@ -1031,9 +1031,9 @@ function Modal({ title, onClose, children, size = 'md' }: { title: string; onClo
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className={`${ui.card} w-full ${widthClass} p-6 max-h-[90vh] overflow-y-auto`}>
-        <div className="flex items-center justify-between mb-4 sticky top-0 bg-white dark:bg-slate-900 z-10 pb-2">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1" aria-label="Cerrar">
+        <div className="flex items-center justify-between mb-4 sticky top-0 bg-white dark:bg-dax-bg z-10 pb-2">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-dax-text">{title}</h3>
+          <button onClick={onClose} className="text-dax-muted hover:text-slate-700 dark:hover:text-dax-text p-1" aria-label="Cerrar">
             <i className="fa-solid fa-xmark text-lg" />
           </button>
         </div>
@@ -1121,7 +1121,7 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
               className={ui.input}
             />
           </Field>
-          <label className="flex items-center gap-2 mt-3 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
+          <label className="flex items-center gap-2 mt-3 text-xs text-dax-faint dark:text-dax-muted cursor-pointer">
             <input
               type="checkbox"
               checked={dryRun}
@@ -1130,7 +1130,7 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
             />
             Solo simular (no aplicar cambios)
           </label>
-          {error && <p className="text-sm text-rose-600 dark:text-rose-400 mt-3">{error}</p>}
+          {error && <p className="text-sm text-rose-600 dark:text-sem-critical mt-3">{error}</p>}
           <div className="flex gap-2 mt-6">
             <button onClick={onClose} className={`${ui.btnSecondary} flex-1`} disabled={loading}>Cancelar</button>
             <button onClick={fetchPreview} disabled={loading || !file} className={`${ui.btnPrimary} flex-1`}>
@@ -1149,7 +1149,7 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
             </div>
             <div className={`${ui.card} p-3`}>
               <p className={ui.kpiLabel}>Nuevos</p>
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">{preview.to_create}</p>
+              <p className="text-xl font-bold text-sem-success dark:text-sem-success tabular-nums">{preview.to_create}</p>
             </div>
             <div className={`${ui.card} p-3`}>
               <p className={ui.kpiLabel}>Actualizar</p>
@@ -1157,14 +1157,14 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
             </div>
             <div className={`${ui.card} p-3`}>
               <p className={ui.kpiLabel}>Errores</p>
-              <p className="text-xl font-bold text-rose-600 dark:text-rose-400 tabular-nums">{preview.errors}</p>
+              <p className="text-xl font-bold text-rose-600 dark:text-sem-critical tabular-nums">{preview.errors}</p>
             </div>
           </div>
 
           {preview.preview.length > 0 && (
             <div className={`${ui.card} p-3 max-h-64 overflow-y-auto mb-4`}>
               <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-white dark:bg-slate-900">
+                <thead className="sticky top-0 bg-white dark:bg-dax-bg">
                   <tr>
                     <th className="text-left">Acción</th>
                     <th className="text-left">SKU</th>
@@ -1174,12 +1174,12 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
                 </thead>
                 <tbody>
                   {preview.preview.map((r, i) => (
-                    <tr key={i} className="border-t border-stone-100 dark:border-slate-800">
+                    <tr key={i} className="border-t border-stone-100 dark:border-dax-border">
                       <td>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          r.action === 'NEW' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' :
+                          r.action === 'NEW' ? 'bg-emerald-500/15 text-emerald-700 dark:text-sem-success' :
                           r.action === 'UPDATE' ? 'bg-purple-500/15 text-purple-700 dark:text-purple-400' :
-                          'bg-rose-500/15 text-rose-700 dark:text-rose-400'
+                          'bg-rose-500/15 text-rose-700 dark:text-sem-critical'
                         }`}>
                           {r.action === 'NEW' ? 'NUEVO' : r.action === 'UPDATE' ? 'ACTUALIZA' : 'ERROR'}
                         </span>
@@ -1199,7 +1199,7 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
             </div>
           )}
 
-          {error && <p className="text-sm text-rose-600 dark:text-rose-400 mb-3">{error}</p>}
+          {error && <p className="text-sm text-rose-600 dark:text-sem-critical mb-3">{error}</p>}
 
           <div className="flex gap-2 mt-4">
             <button onClick={() => setStep('upload')} className={`${ui.btnSecondary} flex-1`} disabled={loading}>
@@ -1222,9 +1222,9 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
       {step === 'result' && result && (
         <>
           <div className="space-y-2 text-sm mb-4">
-            <div className="flex justify-between"><span className={ui.muted}>Creados</span><span className="font-bold text-emerald-600 dark:text-emerald-400">{result.created}</span></div>
+            <div className="flex justify-between"><span className={ui.muted}>Creados</span><span className="font-bold text-sem-success dark:text-sem-success">{result.created}</span></div>
             <div className="flex justify-between"><span className={ui.muted}>Actualizados</span><span className="font-bold text-purple-600 dark:text-purple-400">{result.updated}</span></div>
-            <div className="flex justify-between"><span className={ui.muted}>Fallidos</span><span className="font-bold text-rose-600 dark:text-rose-400">{result.failed}</span></div>
+            <div className="flex justify-between"><span className={ui.muted}>Fallidos</span><span className="font-bold text-rose-600 dark:text-sem-critical">{result.failed}</span></div>
           </div>
           {result.errors.length > 0 && (
             <div className="mb-4">
@@ -1234,7 +1234,7 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
                   <i className="fa-solid fa-file-csv mr-1" /> Descargar CSV
                 </button>
               </div>
-              <ul className="text-xs text-rose-600 dark:text-rose-400 max-h-32 overflow-y-auto space-y-1">
+              <ul className="text-xs text-rose-600 dark:text-sem-critical max-h-32 overflow-y-auto space-y-1">
                 {result.errors.slice(0, 20).map((err, i) => <li key={i}>{err}</li>)}
               </ul>
             </div>
