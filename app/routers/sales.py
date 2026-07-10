@@ -28,6 +28,29 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_sale_items(doc) -> "List[Dict[str, Any]]":
+    """Build the SalesDocumentCreated payload without ever raising.
+
+    Previously this was an inline comprehension using ``l.variant.sku``; a single
+    line whose variant relationship was null threw AttributeError, the publish was
+    swallowed by ``except: pass``, and NEITHER ingredient consumption NOR the
+    table-free ran — silently. Defensive access removes that landmine.
+    """
+    items: "List[Dict[str, Any]]" = []
+    for l in (getattr(doc, "lines", None) or []):
+        variant = getattr(l, "variant", None)
+        vid = getattr(l, "variant_id", None)
+        qty = getattr(l, "quantity", None)
+        items.append({
+            "variant_id": str(vid) if vid else None,
+            "quantity": float(qty) if qty is not None else 0.0,
+            "sku": getattr(variant, "sku", None),
+        })
+    return items
+
+
 from app.models.returns import SaleReturn, SaleReturnItem
 from app.schemas.sales import SaleCreate, SaleRead
 from app.core.security import get_current_user
@@ -766,7 +789,19 @@ def create_sale(
             # Si las columnas aún no existen, fallback a soft-delete.
             pt.deleted_at = datetime.now(timezone.utc)
 
-    # ATS-4: commit atómico — si falla, revertir todo (stock, pagos, documento)
+    # Outbox transaccional: encolamos el evento DENTRO de la misma transacción que
+    # la venta, así los efectos (consumo de insumos, liberar mesa, reorden de abasto)
+    # nunca se pierden en silencio. Si el enqueue falla, la venta NO se bloquea.
+    outbox_id = None
+    try:
+        outbox_id = EventBus.enqueue(db, SalesDocumentCreated(
+            sales_document_id=str(sales_doc.id),
+            items=_safe_sale_items(sales_doc),
+        ))
+    except Exception:
+        logger.exception("OUTBOX_ENQUEUE_FAILED sale=%s", getattr(sales_doc, "id", None))
+
+    # ATS-4: commit atómico — si falla, revertir todo (stock, pagos, documento, evento)
     try:
         db.commit()
         db.refresh(sales_doc)
@@ -782,13 +817,14 @@ def create_sale(
         )
 
     # --- 4. Eventos y Respuesta ---
-    try:
-        EventBus.publish(SalesDocumentCreated(
-            sales_document_id=str(sales_doc.id),
-            items=[{"variant_id": str(l.variant_id), "quantity": float(l.quantity), "sku": l.variant.sku} for l in sales_doc.lines]
-        ))
-    except Exception:
-        pass
+    # Entrega inmediata (baja latencia) del evento recién commiteado; el worker del
+    # outbox reintenta cualquier cosa que quede pendiente. No lanza al request.
+    if outbox_id:
+        try:
+            from app.core.outbox import drain_now
+            drain_now([outbox_id])
+        except Exception:
+            logger.exception("OUTBOX_DRAIN_FAILED sale=%s", sales_doc.id)
 
     # Fase 1.4: redondeo explícito a 2 decimales antes de serializar a float.
     # Antes `float(max(0, total_paid - total_sale))` podía devolver 0.009999...

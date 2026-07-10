@@ -78,6 +78,9 @@ from .logistics import (
 # 11. Abasto
 from .abasto import PurchaseRecommendation, RecommendationStatus
 
+# 12. Outbox de eventos (entrega transaccional; create_all crea event_outbox)
+from .event_outbox import EventOutbox, OutboxStatus
+
 # 12. Plataforma (SaaS)
 from .platform import (
     PlatformAuditLog,

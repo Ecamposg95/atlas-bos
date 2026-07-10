@@ -59,6 +59,16 @@ async def startup_event():
         seed_global_modules(db)
     finally:
         db.close()
+    # Worker del outbox transaccional: reintenta la entrega de eventos que la
+    # entrega inmediata no cerró (fallo de handler, caída del proceso). No-op en SQLite.
+    from app.core.outbox import start_outbox_worker
+    start_outbox_worker()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    from app.core.outbox import stop_outbox_worker
+    await stop_outbox_worker()
 
 
 # ── Middleware ────────────────────────────────────────────────────────────────
