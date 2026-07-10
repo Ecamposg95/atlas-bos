@@ -107,12 +107,16 @@ def consume_for_variant(
         if qty_needed == _ZERO:
             continue
 
+        # FOR UPDATE serializa el read-modify-write del stock: ventas
+        # concurrentes de platillos que comparten insumo ya no pierden
+        # actualizaciones (lost-update). No-op en SQLite.
         stock = (
             db.query(StockOnHand)
             .filter(
                 StockOnHand.branch_id == branch_id,
                 StockOnHand.variant_id == ing.ingredient_variant_id,
             )
+            .with_for_update()
             .first()
         )
         qty_before = Decimal(stock.qty_on_hand) if stock else _ZERO

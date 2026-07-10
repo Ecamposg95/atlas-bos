@@ -151,10 +151,17 @@ def _recompute_ticket_status(ticket: KitchenTicket) -> None:
         ticket.status = KdsStatus.NEW
 
 
+def _lock_ticket(db: Session, ticket_id: int) -> None:
+    """Bloquea la fila de la comanda para serializar bumps/voids concurrentes
+    sobre la misma comanda. No-op en SQLite."""
+    db.query(KitchenTicket).filter(KitchenTicket.id == ticket_id).with_for_update().first()
+
+
 def bump_item(db: Session, item: KitchenTicketItem) -> KitchenTicket:
     """Advance one item to the next lifecycle status."""
     if item.status == ItemStatus.VOIDED:
         raise HTTPException(status_code=409, detail="El item está anulado")
+    _lock_ticket(db, item.ticket_id)
     idx = _ITEM_FLOW.index(item.status)
     if idx < len(_ITEM_FLOW) - 1:
         item.status = _ITEM_FLOW[idx + 1]
@@ -166,6 +173,7 @@ def bump_item(db: Session, item: KitchenTicketItem) -> KitchenTicket:
 
 
 def void_item(db: Session, item: KitchenTicketItem) -> KitchenTicket:
+    _lock_ticket(db, item.ticket_id)
     item.status = ItemStatus.VOIDED
     item.bumped_at = _now()
     _recompute_ticket_status(item.ticket)
@@ -181,6 +189,7 @@ def bump_ticket(
     move — una estación NO debe avanzar el trabajo de otra (antes bumpear "la
     comanda" adelantaba los items de todas las estaciones). Sin `station_id`
     avanza todos (acción "avanzar comanda completa")."""
+    _lock_ticket(db, ticket.id)
     for item in ticket.items:
         if item.status == ItemStatus.VOIDED:
             continue

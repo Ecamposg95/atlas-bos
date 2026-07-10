@@ -55,6 +55,19 @@ def set_status(db: Session, table: DiningTable, new_status: TableStatus) -> Dini
     return table
 
 
+def _lock_table(db: Session, table_id: int) -> Optional[DiningTable]:
+    """Bloquea la fila de la mesa (SELECT … FOR UPDATE) y refresca la instancia
+    a la verdad de la DB. En Postgres serializa acciones concurrentes sobre la
+    misma mesa (doble-apertura, liberar+cobrar); en SQLite es no-op."""
+    return (
+        db.query(DiningTable)
+        .filter(DiningTable.id == table_id)
+        .populate_existing()
+        .with_for_update()
+        .first()
+    )
+
+
 def open_table(
     db: Session,
     table: DiningTable,
@@ -63,6 +76,9 @@ def open_table(
     customer_id: Optional[int] = None,
 ) -> DiningTable:
     """Open a check on a table by creating a fresh ParkedTicket and linking it."""
+    # Bloquear + releer bajo lock cierra la ventana de doble-apertura: dos
+    # /open concurrentes ya no pasan ambos el chequeo de current_ticket_id.
+    table = _lock_table(db, table.id) or table
     if table.current_ticket_id:
         raise HTTPException(status_code=409, detail="La mesa ya tiene una cuenta abierta")
 
@@ -164,6 +180,7 @@ def _abandon_open_check(db: Session, table: DiningTable) -> None:
 def free_table(db: Session, table: DiningTable) -> DiningTable:
     """Liberación MANUAL: abandona la cuenta abierta (sin pago) y cancela sus
     comandas de cocina vivas, luego regresa la mesa a AVAILABLE."""
+    table = _lock_table(db, table.id) or table  # serializa liberar vs cobrar
     if table.current_ticket_id:
         _abandon_open_check(db, table)
     _detach_table(table)
@@ -174,6 +191,9 @@ def free_table(db: Session, table: DiningTable) -> DiningTable:
 
 def transfer_table(db: Session, source: DiningTable, target: DiningTable) -> DiningTable:
     """Move the open check from `source` to `target` (e.g. guests changed table)."""
+    # Bloquear ambas filas en orden de id (evita deadlocks) antes de mover.
+    for tid in sorted({source.id, target.id}):
+        _lock_table(db, tid)
     if not source.current_ticket_id:
         raise HTTPException(status_code=409, detail="La mesa origen no tiene cuenta abierta")
     if target.current_ticket_id:
