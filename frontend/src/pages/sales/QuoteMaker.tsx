@@ -94,7 +94,7 @@ export function QuoteMaker() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-file-invoice-dollar text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Nueva Cotización</h1>
+          <h1 className="text-2xl font-black text-dax-text">Nueva Cotización</h1>
         </div>
         <button onClick={() => navigate('/quotes')} className="dax-btn-secondary text-xs">
           <i className="fa-solid fa-arrow-left" /> Volver
@@ -105,7 +105,7 @@ export function QuoteMaker() {
         {/* Búsqueda de productos */}
         <div className="lg:col-span-2 space-y-3">
           <DaxCard>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Buscar Producto</p>
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Buscar Producto</p>
             <div className="relative">
               <input
                 type="text" placeholder="Nombre, SKU o código..."
@@ -118,17 +118,17 @@ export function QuoteMaker() {
                 className="dax-input w-full"
                 autoFocus />
               {searchResults.length > 0 && (
-                <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden">
+                <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-dax-card border border-dax-border rounded-lg shadow-xl overflow-hidden">
                   {searchResults.map((p) => (
                     <button key={p.id} onClick={() => addToCart(p)}
-                      className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-700/60 transition-colors text-left">
+                      className="w-full flex items-center justify-between px-3 py-2 hover:bg-dax-surface transition-colors text-left">
                       <div>
-                        <p className="text-sm font-semibold text-white">{p.name}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">{p.sku}</p>
+                        <p className="text-sm font-semibold text-dax-text">{p.name}</p>
+                        <p className="text-[10px] text-dax-muted font-mono">{p.sku}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-emerald-400 font-bold text-sm">{formatCurrency(p.price ?? 0)}</p>
-                        <p className="text-xs text-slate-500">Stock: {p.stock_total ?? 0}</p>
+                        <p className="text-sem-success font-bold text-sm">{formatCurrency(p.price ?? 0)}</p>
+                        <p className="text-xs text-dax-muted">Stock: {p.stock_total ?? 0}</p>
                       </div>
                     </button>
                   ))}
@@ -140,7 +140,7 @@ export function QuoteMaker() {
           {/* Carrito */}
           <DaxCard padding={false}>
             {cart.length === 0 ? (
-              <div className="p-12 text-center text-slate-600">
+              <div className="p-12 text-center text-dax-faint">
                 <i className="fa-solid fa-cart-shopping text-3xl mb-3 block" />
                 Sin artículos agregados
               </div>
@@ -161,15 +161,15 @@ export function QuoteMaker() {
                     {cart.map((item) => (
                       <tr key={item.product_id}>
                         <td>
-                          <p className="text-white font-semibold text-sm">{item.name}</p>
-                          <p className="text-[10px] font-mono text-slate-500">{item.sku}</p>
+                          <p className="text-dax-text font-semibold text-sm">{item.name}</p>
+                          <p className="text-[10px] font-mono text-dax-muted">{item.sku}</p>
                         </td>
-                        <td className="text-right text-slate-300 tabular-nums">{formatCurrency(item.price)}</td>
+                        <td className="text-right text-dax-muted tabular-nums">{formatCurrency(item.price)}</td>
                         <td className="text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => updateQty(item.product_id, item.quantity - 1)} className="w-6 h-6 bg-slate-700 rounded text-xs hover:bg-slate-600">-</button>
+                            <button onClick={() => updateQty(item.product_id, item.quantity - 1)} className="w-6 h-6 bg-dax-surface rounded text-xs hover:bg-slate-600">-</button>
                             <span className="w-8 text-center font-bold">{item.quantity}</span>
-                            <button onClick={() => updateQty(item.product_id, item.quantity + 1)} className="w-6 h-6 bg-slate-700 rounded text-xs hover:bg-slate-600">+</button>
+                            <button onClick={() => updateQty(item.product_id, item.quantity + 1)} className="w-6 h-6 bg-dax-surface rounded text-xs hover:bg-slate-600">+</button>
                           </div>
                         </td>
                         <td className="text-center">
@@ -177,9 +177,9 @@ export function QuoteMaker() {
                             onChange={(e) => updateDiscount(item.product_id, Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
                             className="w-16 dax-input text-center text-xs" />
                         </td>
-                        <td className="text-right font-bold text-emerald-400 tabular-nums">{formatCurrency(item.subtotal)}</td>
+                        <td className="text-right font-bold text-sem-success tabular-nums">{formatCurrency(item.subtotal)}</td>
                         <td>
-                          <button onClick={() => removeItem(item.product_id)} className="text-slate-600 hover:text-red-400 text-xs">
+                          <button onClick={() => removeItem(item.product_id)} className="text-dax-faint hover:text-sem-critical text-xs">
                             <i className="fa-solid fa-xmark" />
                           </button>
                         </td>
@@ -196,14 +196,14 @@ export function QuoteMaker() {
         <div className="space-y-3">
           {/* Cliente */}
           <DaxCard>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Cliente</p>
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Cliente</p>
             {customer ? (
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-white">{customer.name}</p>
-                  <p className="text-xs text-slate-500">{customer.phone ?? '—'}</p>
+                  <p className="font-semibold text-dax-text">{customer.name}</p>
+                  <p className="text-xs text-dax-muted">{customer.phone ?? '—'}</p>
                 </div>
-                <button onClick={() => { setCustomer(null); setCustomerSearch('') }} className="text-slate-500 hover:text-red-400 text-xs">
+                <button onClick={() => { setCustomer(null); setCustomerSearch('') }} className="text-dax-muted hover:text-sem-critical text-xs">
                   <i className="fa-solid fa-xmark" />
                 </button>
               </div>
@@ -218,12 +218,12 @@ export function QuoteMaker() {
                   }}
                   className="dax-input w-full text-sm" />
                 {showCustomerDrop && customerResults.length > 0 && (
-                  <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden">
+                  <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-dax-card border border-dax-border rounded-lg shadow-xl overflow-hidden">
                     {customerResults.map((c) => (
                       <button key={c.id} onClick={() => { setCustomer(c); setCustomerSearch(''); setCustomerResults([]); setShowCustomerDrop(false) }}
-                        className="w-full px-3 py-2 hover:bg-slate-700/60 text-left text-sm">
-                        <p className="text-white font-semibold">{c.name}</p>
-                        <p className="text-slate-500 text-xs">{c.phone ?? '—'}</p>
+                        className="w-full px-3 py-2 hover:bg-dax-surface text-left text-sm">
+                        <p className="text-dax-text font-semibold">{c.name}</p>
+                        <p className="text-dax-muted text-xs">{c.phone ?? '—'}</p>
                       </button>
                     ))}
                   </div>
@@ -234,7 +234,7 @@ export function QuoteMaker() {
 
           {/* Notas */}
           <DaxCard>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Notas</p>
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-2">Notas</p>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
               rows={3} className="dax-input w-full text-sm resize-none" placeholder="Condiciones, validez, observaciones..." />
           </DaxCard>
@@ -242,13 +242,13 @@ export function QuoteMaker() {
           {/* Resumen */}
           <DaxCard>
             <div className="space-y-2 text-sm mb-4">
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-dax-muted">
                 <span>Subtotal</span>
                 <span className="tabular-nums">{formatCurrency(subtotal)}</span>
               </div>
-              <div className="flex justify-between font-black text-white text-lg border-t border-slate-700/50 pt-2">
+              <div className="flex justify-between font-black text-dax-text text-lg border-t border-dax-border pt-2">
                 <span>Total</span>
-                <span className="tabular-nums text-emerald-400">{formatCurrency(total)}</span>
+                <span className="tabular-nums text-sem-success">{formatCurrency(total)}</span>
               </div>
             </div>
             <button

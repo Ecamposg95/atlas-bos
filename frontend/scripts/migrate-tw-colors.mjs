@@ -92,9 +92,15 @@ for (const file of files) {
     // \b<cls>(/\d+)?\b  — captura opcional de opacidad; se descarta al reemplazar.
     const re = new RegExp(`\\b${cls.replace(/[-/]/g, '\\$&')}(\\/\\d+)?\\b`, 'g')
     const apply = (s) => s.replace(re, () => { fileHits++; hitByRule[cls] = (hitByRule[cls] || 0) + 1; return repl })
-    if (cls === 'text-white') {
-      // Line-aware: no migrar text-white en líneas con bg de color sólido (botones/badges).
-      src = src.split('\n').map((line) => (SOLID_BG.test(line) ? line : apply(line))).join('\n')
+    // Reglas de fondo/borde: no tocar superficies glass (backdrop-blur) — su
+    // translucidez es intencional; solidificarlas rompe el efecto.
+    const glassSensitive = cls.startsWith('bg-') || cls.startsWith('border-')
+    if (cls === 'text-white' || glassSensitive) {
+      src = src.split('\n').map((line) => {
+        if (cls === 'text-white' && SOLID_BG.test(line)) return line     // botón de color sólido
+        if (glassSensitive && /backdrop-blur/.test(line)) return line     // superficie glass
+        return apply(line)
+      }).join('\n')
     } else {
       src = apply(src)
     }

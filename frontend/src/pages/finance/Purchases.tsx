@@ -88,7 +88,7 @@ export function Purchases() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-shopping-cart text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Órdenes de Compra</h1>
+          <h1 className="text-2xl font-black text-dax-text">Órdenes de Compra</h1>
         </div>
         <button onClick={() => setModal(true)} className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Nueva OC
@@ -100,14 +100,14 @@ export function Purchases() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { label: 'Este mes', value: formatCurrency(stats.total_month), icon: 'fa-calendar', color: 'text-indigo-400' },
-            { label: 'OC activas', value: String(stats.active_orders), icon: 'fa-clock', color: 'text-amber-400' },
-            { label: 'Total histórico', value: formatCurrency(stats.total_historic), icon: 'fa-coins', color: 'text-white' },
-            { label: 'Proveedor top', value: stats.top_supplier ?? '—', icon: 'fa-truck', color: 'text-slate-300' },
+            { label: 'OC activas', value: String(stats.active_orders), icon: 'fa-clock', color: 'text-sem-warning' },
+            { label: 'Total histórico', value: formatCurrency(stats.total_historic), icon: 'fa-coins', color: 'text-dax-text' },
+            { label: 'Proveedor top', value: stats.top_supplier ?? '—', icon: 'fa-truck', color: 'text-dax-muted' },
           ].map((k) => (
             <DaxCard key={k.label}>
               <div className="flex items-center gap-2 mb-1">
-                <i className={`fa-solid ${k.icon} text-slate-500 text-xs`} />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{k.label}</p>
+                <i className={`fa-solid ${k.icon} text-dax-muted text-xs`} />
+                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider">{k.label}</p>
               </div>
               <p className={`text-xl font-black tabular-nums truncate ${k.color}`}>{k.value}</p>
             </DaxCard>
@@ -119,7 +119,7 @@ export function Purchases() {
       <div className="flex flex-wrap gap-2">
         {(['', 'DRAFT', 'ORDERED', 'PARTIAL', 'RECEIVED', 'CANCELLED'] as (POStatus | '')[]).map((s) => (
           <button key={s} onClick={() => { setFilterStatus(s); load(s) }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-indigo-600 text-white' : 'bg-slate-700/50 text-slate-400 hover:text-white'}`}>
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterStatus === s ? 'bg-indigo-600 text-white' : 'bg-dax-surface text-dax-muted hover:text-white'}`}>
             {s ? STATUS_LABELS[s] : 'Todas'}
           </button>
         ))}
@@ -128,7 +128,7 @@ export function Purchases() {
       {/* Tabla */}
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando órdenes..." /> : orders.length === 0 ? (
-          <div className="p-12 text-center text-slate-600">Sin órdenes de compra</div>
+          <div className="p-12 text-center text-dax-faint">Sin órdenes de compra</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -147,15 +147,15 @@ export function Purchases() {
                 {orders.map((o) => (
                   <tr key={o.id}>
                     <td className="font-mono text-indigo-400 text-xs">{o.folio ?? `OC-${o.id}`}</td>
-                    <td className="font-semibold text-white">{o.supplier_name}</td>
-                    <td className="text-slate-400 text-xs">{o.branch_name ?? '—'}</td>
-                    <td className="text-slate-400 text-xs">
+                    <td className="font-semibold text-dax-text">{o.supplier_name}</td>
+                    <td className="text-dax-muted text-xs">{o.branch_name ?? '—'}</td>
+                    <td className="text-dax-muted text-xs">
                       {new Date(o.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
                     </td>
                     <td className="text-right font-semibold text-indigo-400 tabular-nums">{formatCurrency(o.total)}</td>
                     <td><Badge variant={statusVariant(o.status)}>{STATUS_LABELS[o.status]}</Badge></td>
                     <td>
-                      <button onClick={() => setSelected(o)} className="text-slate-500 hover:text-white text-xs">
+                      <button onClick={() => setSelected(o)} className="text-dax-muted hover:text-dax-text text-xs">
                         <i className="fa-solid fa-eye" />
                       </button>
                     </td>
@@ -173,16 +173,16 @@ export function Purchases() {
           <div className="dax-card p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest">Orden de Compra</p>
+                <p className="text-[10px] text-dax-muted uppercase tracking-widest">Orden de Compra</p>
                 <p className="text-xl font-black text-indigo-400 font-mono">{selected.folio ?? `OC-${selected.id}`}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <button onClick={() => setSelected(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
 
             <div className="space-y-2 text-sm mb-4">
-              <div className="flex justify-between"><span className="text-slate-500">Proveedor</span><span className="font-semibold">{selected.supplier_name}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Estado</span><Badge variant={statusVariant(selected.status)}>{STATUS_LABELS[selected.status]}</Badge></div>
-              {selected.notes && <div className="flex justify-between"><span className="text-slate-500">Notas</span><span className="text-right max-w-[60%] text-slate-400">{selected.notes}</span></div>}
+              <div className="flex justify-between"><span className="text-dax-muted">Proveedor</span><span className="font-semibold">{selected.supplier_name}</span></div>
+              <div className="flex justify-between"><span className="text-dax-muted">Estado</span><Badge variant={statusVariant(selected.status)}>{STATUS_LABELS[selected.status]}</Badge></div>
+              {selected.notes && <div className="flex justify-between"><span className="text-dax-muted">Notas</span><span className="text-right max-w-[60%] text-dax-muted">{selected.notes}</span></div>}
             </div>
 
             <table className="dax-table w-full text-xs mb-4">
@@ -191,16 +191,16 @@ export function Purchases() {
                 {(selected.lines ?? []).map((line) => (
                   <tr key={line.id}>
                     <td>{line.product_name}</td>
-                    <td className="font-mono text-slate-500">{line.sku ?? '—'}</td>
+                    <td className="font-mono text-dax-muted">{line.sku ?? '—'}</td>
                     <td className="text-right">{line.qty_ordered}</td>
-                    <td className={`text-right ${line.qty_received >= line.qty_ordered ? 'text-emerald-400' : 'text-amber-400'}`}>{line.qty_received}</td>
+                    <td className={`text-right ${line.qty_received >= line.qty_ordered ? 'text-sem-success' : 'text-sem-warning'}`}>{line.qty_received}</td>
                     <td className="text-right">{formatCurrency(line.unit_cost)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div className="flex justify-between font-black text-white border-t border-slate-700/50 pt-3 mb-4">
+            <div className="flex justify-between font-black text-dax-text border-t border-dax-border pt-3 mb-4">
               <span>Total</span><span className="text-indigo-400">{formatCurrency(selected.total)}</span>
             </div>
 
@@ -230,8 +230,8 @@ export function Purchases() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(false)}>
           <div className="dax-card p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-white">Nueva Orden de Compra</h3>
-              <button onClick={() => setModal(false)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-dax-text">Nueva Orden de Compra</h3>
+              <button onClick={() => setModal(false)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
 
             <div className="space-y-3 mb-4">
@@ -245,7 +245,7 @@ export function Purchases() {
               </div>
             </div>
 
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Artículos</p>
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-2">Artículos</p>
             <div className="space-y-2 mb-3">
               {poItems.map((item, i) => (
                 <div key={i} className="grid grid-cols-12 gap-1 items-center">
@@ -257,7 +257,7 @@ export function Purchases() {
                     placeholder="Cant." className="dax-input col-span-2 text-xs" />
                   <input type="number" step="0.01" value={item.unit_cost} onChange={(e) => updateItem(i, 'unit_cost', e.target.value)}
                     placeholder="Costo" className="dax-input col-span-3 text-xs" />
-                  <button onClick={() => removeItem(i)} className="text-slate-600 hover:text-red-400 col-span-1 text-center">
+                  <button onClick={() => removeItem(i)} className="text-dax-faint hover:text-sem-critical col-span-1 text-center">
                     <i className="fa-solid fa-xmark text-xs" />
                   </button>
                 </div>
