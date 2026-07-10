@@ -189,11 +189,14 @@ def get_ticket(
 @router.post("/tickets/{ticket_id}/bump", response_model=TicketRead)
 def bump_ticket(
     ticket_id: int,
+    station_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Avanza la comanda. `station_id` opcional: solo avanza los items de esa
+    estación (cada display de estación pasa el suyo). Sin él, avanza todos."""
     ticket = get_tenant_scoped(db, KitchenTicket, ticket_id, current_user)
-    return _to_ticket_read(services.bump_ticket(db, ticket))
+    return _to_ticket_read(services.bump_ticket(db, ticket, station_id=station_id))
 
 
 @router.post("/tickets/{ticket_id}/recall", response_model=TicketRead)

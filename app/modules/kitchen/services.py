@@ -132,6 +132,10 @@ def _recompute_ticket_status(ticket: KitchenTicket) -> None:
     """Derive the ticket status from its items' statuses."""
     live = [i for i in ticket.items if i.status != ItemStatus.VOIDED]
     if not live:
+        # Todos los items anulados: la comanda ya no existe operativamente →
+        # CANCELED (antes se quedaba clavada en el tablero para siempre).
+        if ticket.items and ticket.status != KdsStatus.CANCELED:
+            ticket.status = KdsStatus.CANCELED
         return
     if all(i.status == ItemStatus.SERVED for i in live):
         ticket.status = KdsStatus.SERVED
@@ -170,10 +174,17 @@ def void_item(db: Session, item: KitchenTicketItem) -> KitchenTicket:
     return item.ticket
 
 
-def bump_ticket(db: Session, ticket: KitchenTicket) -> KitchenTicket:
-    """Advance the whole ticket: all live items move one step forward."""
+def bump_ticket(
+    db: Session, ticket: KitchenTicket, station_id: Optional[int] = None
+) -> KitchenTicket:
+    """Advance the ticket one step. With `station_id`, only that station's items
+    move — una estación NO debe avanzar el trabajo de otra (antes bumpear "la
+    comanda" adelantaba los items de todas las estaciones). Sin `station_id`
+    avanza todos (acción "avanzar comanda completa")."""
     for item in ticket.items:
         if item.status == ItemStatus.VOIDED:
+            continue
+        if station_id is not None and item.station_id != station_id:
             continue
         idx = _ITEM_FLOW.index(item.status)
         if idx < len(_ITEM_FLOW) - 1:

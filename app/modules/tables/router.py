@@ -201,7 +201,4 @@ def set_status(
     current_user: User = Depends(get_current_user),
 ):
     table = get_tenant_scoped(db, DiningTable, table_id, current_user)
-    table.status = payload.status
-    db.commit()
-    db.refresh(table)
-    return table
+    return services.set_status(db, table, payload.status)
