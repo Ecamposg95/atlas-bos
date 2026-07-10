@@ -22,7 +22,7 @@ interface AuditEntry {
 
 const ACTION_CONFIG: Record<string, { icon: string; color: string; label: string }> = {
   PBS_UPDATE:       { icon: 'fa-pen-to-square', color: 'text-indigo-300',  label: 'Editado' },
-  PBS_BULK_TOGGLE:  { icon: 'fa-toggle-on',     color: 'text-sem-success', label: 'Toggle bulk' },
+  PBS_BULK_TOGGLE:  { icon: 'fa-toggle-on',     color: 'text-emerald-300', label: 'Toggle bulk' },
   PBS_BULK_CREATE:  { icon: 'fa-plus',          color: 'text-cyan-300',    label: 'Creado' },
 }
 
@@ -63,15 +63,15 @@ export function ProductAuditDrawer({ product, onClose }: Props) {
             <div>
               <div className="flex items-center gap-2">
                 <i className="fa-solid fa-clock-rotate-left text-indigo-400" />
-                <h2 className="text-lg font-bold text-dax-text">Historial de cambios</h2>
+                <h2 className="text-lg font-bold text-white">Historial de cambios</h2>
               </div>
-              <p className="text-xs text-dax-muted mt-1 truncate max-w-[420px]">
+              <p className="text-xs text-slate-500 mt-1 truncate max-w-[420px]">
                 {product.name}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-dax-muted hover:text-dax-text hover:bg-dax-card"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
               title="Cerrar"
             >
               <i className="fa-solid fa-xmark text-xl" />
@@ -83,7 +83,7 @@ export function ProductAuditDrawer({ product, onClose }: Props) {
           {loading ? (
             <Spinner text="Cargando historial..." />
           ) : items.length === 0 ? (
-            <div className="py-16 text-center text-dax-muted">
+            <div className="py-16 text-center text-slate-500">
               <i className="fa-solid fa-clock-rotate-left text-3xl mb-3 text-slate-700" />
               <p>Sin movimientos registrados.</p>
               <p className="text-[11px] mt-1">El audit log captura cambios PBS desde PR #44.</p>
@@ -98,7 +98,7 @@ export function ProductAuditDrawer({ product, onClose }: Props) {
 }
 
 function AuditRow({ entry }: { entry: AuditEntry }) {
-  const cfg = ACTION_CONFIG[entry.action] || { icon: 'fa-circle-info', color: 'text-dax-muted', label: entry.action }
+  const cfg = ACTION_CONFIG[entry.action] || { icon: 'fa-circle-info', color: 'text-slate-300', label: entry.action }
   const ts = entry.created_at ? new Date(entry.created_at) : null
 
   const payload = entry.payload as {
@@ -118,31 +118,31 @@ function AuditRow({ entry }: { entry: AuditEntry }) {
   }
 
   return (
-    <div className="rounded-lg border border-dax-border bg-dax-bg p-3">
+    <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-3">
       <div className="flex items-start gap-3">
         <i className={`fa-solid ${cfg.icon} ${cfg.color} text-sm mt-0.5`} />
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <span className={`text-sm font-bold ${cfg.color}`}>{cfg.label}</span>
-              <span className="text-[10px] font-mono text-dax-faint">
+              <span className="text-[10px] font-mono text-slate-600">
                 {entry.action}
               </span>
             </div>
-            <span className="text-[11px] text-dax-muted tabular-nums">
+            <span className="text-[11px] text-slate-500 tabular-nums">
               {ts ? ts.toLocaleString('es-MX') : '—'}
             </span>
           </div>
-          <p className="text-[11px] text-dax-muted mt-1">
-            Por <span className="text-dax-muted font-semibold">{entry.actor_username || `user#${entry.actor_user_id}`}</span>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Por <span className="text-slate-300 font-semibold">{entry.actor_username || `user#${entry.actor_user_id}`}</span>
             {payload.branch_id != null && (
-              <> · Sucursal <span className="text-dax-muted">#{payload.branch_id}</span></>
+              <> · Sucursal <span className="text-slate-300">#{payload.branch_id}</span></>
             )}
           </p>
           {diffFields.length > 0 && (
             <div className="mt-2 space-y-0.5">
               {diffFields.map((f, i) => (
-                <p key={i} className="text-[11px] font-mono text-dax-muted">{f}</p>
+                <p key={i} className="text-[11px] font-mono text-slate-400">{f}</p>
               ))}
             </div>
           )}

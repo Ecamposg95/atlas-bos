@@ -95,28 +95,28 @@ export function HQSalesLog() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-receipt text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-dax-text">Ventas HQ</h1>
+        <h1 className="text-2xl font-black text-white">Ventas HQ</h1>
       </div>
 
       {/* KPI Strip */}
       {salesStats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <DaxCard>
-            <p className="text-[10px] font-black text-dax-muted uppercase tracking-widest">Total Ventas</p>
-            <p className="text-2xl font-black text-sem-success tabular-nums">{formatCurrency(salesStats.total_sales)}</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Total Ventas</p>
+            <p className="text-2xl font-black text-emerald-400 tabular-nums">{formatCurrency(salesStats.total_sales)}</p>
           </DaxCard>
           <DaxCard>
-            <p className="text-[10px] font-black text-dax-muted uppercase tracking-widest">Transacciones</p>
-            <p className="text-2xl font-black text-dax-text tabular-nums">{salesStats.total_transactions}</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Transacciones</p>
+            <p className="text-2xl font-black text-white tabular-nums">{salesStats.total_transactions}</p>
           </DaxCard>
           <DaxCard>
-            <p className="text-[10px] font-black text-dax-muted uppercase tracking-widest">Ticket Promedio</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Ticket Promedio</p>
             <p className="text-2xl font-black text-indigo-400 tabular-nums">{formatCurrency(salesStats.average_ticket)}</p>
           </DaxCard>
           <DaxCard>
-            <p className="text-[10px] font-black text-dax-muted uppercase tracking-widest">Método Principal</p>
-            <p className="text-2xl font-black text-sem-warning tabular-nums">{topMethod?.[0] ?? '—'}</p>
-            {topMethod && <p className="text-[10px] text-dax-faint mt-0.5">{formatCurrency(topMethod[1])} recaudado</p>}
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Método Principal</p>
+            <p className="text-2xl font-black text-amber-400 tabular-nums">{topMethod?.[0] ?? '—'}</p>
+            {topMethod && <p className="text-[10px] text-slate-600 mt-0.5">{formatCurrency(topMethod[1])} recaudado</p>}
           </DaxCard>
         </div>
       )}
@@ -128,7 +128,7 @@ export function HQSalesLog() {
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               startDate === p.start() && endDate === p.end()
                 ? 'bg-indigo-600 text-white'
-                : 'bg-dax-surface text-dax-muted hover:text-dax-text'
+                : 'bg-slate-700/50 text-slate-400 hover:text-white'
             }`}>
             {p.label}
           </button>
@@ -157,7 +157,7 @@ export function HQSalesLog() {
       {/* Tabla */}
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando ventas..." /> : filteredSales.length === 0 ? (
-          <div className="p-12 text-center text-dax-faint">Sin ventas en este período</div>
+          <div className="p-12 text-center text-slate-600">Sin ventas en este período</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -177,12 +177,12 @@ export function HQSalesLog() {
                 {filteredSales.map((s) => (
                   <tr key={s.id}>
                     <td className="font-mono text-indigo-400 text-xs">{saleLabel(s)}</td>
-                    <td className="text-xs text-dax-muted">{s.branch_name ?? '—'}</td>
-                    <td className="text-xs text-dax-muted">
+                    <td className="text-xs text-slate-400">{s.branch_name ?? '—'}</td>
+                    <td className="text-xs text-slate-400">
                       {new Date(s.created_at).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </td>
-                    <td className="text-sm">{s.customer_name ?? <span className="text-dax-faint italic">Público general</span>}</td>
-                    <td className="text-right font-semibold text-sem-success">{formatCurrency(s.total_amount)}</td>
+                    <td className="text-sm">{s.customer_name ?? <span className="text-slate-600 italic">Público general</span>}</td>
+                    <td className="text-right font-semibold text-emerald-400">{formatCurrency(s.total_amount)}</td>
                     <td>
                       {s.payments?.map((p, i) => (
                         <span key={i} className="dax-badge dax-badge-blue mr-1">{p.method}</span>
@@ -190,7 +190,7 @@ export function HQSalesLog() {
                     </td>
                     <td><Badge variant={statusVariant(s.status) as 'green' | 'red' | 'blue' | 'yellow'}>{s.status}</Badge></td>
                     <td>
-                      <button onClick={() => setSel(s)} className="text-dax-muted hover:text-dax-text transition-colors text-xs">
+                      <button onClick={() => setSel(s)} className="text-slate-500 hover:text-white transition-colors text-xs">
                         <i className="fa-solid fa-eye" />
                       </button>
                     </td>
@@ -202,9 +202,9 @@ export function HQSalesLog() {
         )}
 
         {pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-dax-border">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-700/50">
             <button onClick={() => { const np = page - 1; setPage(np); load(startDate, endDate, np, branchId) }} disabled={page === 0} className="dax-btn-secondary text-xs disabled:opacity-40">← Anterior</button>
-            <span className="text-dax-muted text-xs">Pág. {page + 1} / {pages} · {total} registros</span>
+            <span className="text-slate-500 text-xs">Pág. {page + 1} / {pages} · {total} registros</span>
             <button onClick={() => { const np = page + 1; setPage(np); load(startDate, endDate, np, branchId) }} disabled={page >= pages - 1} className="dax-btn-secondary text-xs disabled:opacity-40">Siguiente →</button>
           </div>
         )}
@@ -216,21 +216,21 @@ export function HQSalesLog() {
           <div className="dax-card p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-[10px] text-dax-muted uppercase tracking-widest">Folio</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest">Folio</p>
                 <p className="text-xl font-black text-indigo-400 font-mono">{saleLabel(selected)}</p>
               </div>
-              <button onClick={() => setSel(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
+              <button onClick={() => setSel(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
 
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between"><span className="text-dax-muted">Sucursal</span><span>{selected.branch_name ?? '—'}</span></div>
-              <div className="flex justify-between"><span className="text-dax-muted">Cliente</span><span>{selected.customer_name ?? 'Público general'}</span></div>
-              <div className="flex justify-between"><span className="text-dax-muted">Fecha</span><span>{new Date(selected.created_at).toLocaleString('es-MX')}</span></div>
-              <div className="flex justify-between"><span className="text-dax-muted">Estado</span><Badge variant={statusVariant(selected.status) as 'green' | 'red' | 'blue' | 'yellow'}>{selected.status}</Badge></div>
+              <div className="flex justify-between"><span className="text-slate-500">Sucursal</span><span>{selected.branch_name ?? '—'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Cliente</span><span>{selected.customer_name ?? 'Público general'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Fecha</span><span>{new Date(selected.created_at).toLocaleString('es-MX')}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Estado</span><Badge variant={statusVariant(selected.status) as 'green' | 'red' | 'blue' | 'yellow'}>{selected.status}</Badge></div>
             </div>
 
-            <div className="mt-4 border-t border-dax-border pt-4">
-              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-2">Artículos</p>
+            <div className="mt-4 border-t border-slate-700/50 pt-4">
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Artículos</p>
               <table className="dax-table w-full text-xs">
                 <thead><tr><th>Producto</th><th className="text-right">Cant.</th><th className="text-right">Precio</th><th className="text-right">Total</th></tr></thead>
                 <tbody>
@@ -246,10 +246,10 @@ export function HQSalesLog() {
               </table>
             </div>
 
-            <div className="mt-4 border-t border-dax-border pt-4 space-y-1 text-sm">
-              <div className="flex justify-between text-dax-muted"><span>Subtotal</span><span>{formatCurrency(Number(selected.subtotal))}</span></div>
-              {Number(selected.tax_amount) > 0 && <div className="flex justify-between text-dax-muted"><span>IVA</span><span>{formatCurrency(Number(selected.tax_amount))}</span></div>}
-              <div className="flex justify-between font-black text-dax-text text-base pt-1"><span>Total</span><span>{formatCurrency(selected.total_amount)}</span></div>
+            <div className="mt-4 border-t border-slate-700/50 pt-4 space-y-1 text-sm">
+              <div className="flex justify-between text-slate-400"><span>Subtotal</span><span>{formatCurrency(Number(selected.subtotal))}</span></div>
+              {Number(selected.tax_amount) > 0 && <div className="flex justify-between text-slate-400"><span>IVA</span><span>{formatCurrency(Number(selected.tax_amount))}</span></div>}
+              <div className="flex justify-between font-black text-white text-base pt-1"><span>Total</span><span>{formatCurrency(selected.total_amount)}</span></div>
             </div>
           </div>
         </div>

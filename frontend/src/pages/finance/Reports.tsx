@@ -80,7 +80,7 @@ export function Reports() {
   }
 
   const methodColor = (m: string) =>
-    m === 'CASH' ? 'text-sem-success' : m === 'CARD' ? 'text-indigo-400' : 'text-sem-info'
+    m === 'CASH' ? 'text-emerald-400' : m === 'CARD' ? 'text-indigo-400' : 'text-blue-400'
 
   const paymentMethods = data?.charts?.payments
     ? Object.entries(data.charts.payments).map(([method, v]) => ({ method, ...v }))
@@ -95,7 +95,7 @@ export function Reports() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-chart-pie text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Reportes</h1>
+          <h1 className="text-2xl font-black text-white">Reportes</h1>
         </div>
       </div>
 
@@ -108,7 +108,7 @@ export function Reports() {
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
               startDate === p.start() && endDate === p.end()
                 ? 'bg-indigo-600 text-white'
-                : 'bg-dax-surface text-dax-muted hover:text-dax-text'
+                : 'bg-slate-700/50 text-slate-400 hover:text-white'
             }`}
           >
             {p.label}
@@ -123,22 +123,22 @@ export function Reports() {
 
       {loading ? <Spinner text="Cargando reportes..." /> : !data ? (
         <DaxCard>
-          <div className="p-12 text-center text-dax-faint">Sin datos para el período seleccionado</div>
+          <div className="p-12 text-center text-slate-600">Sin datos para el período seleccionado</div>
         </DaxCard>
       ) : (
         <>
           {/* KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: 'Total ventas', value: formatCurrency(data.kpis.sales), icon: 'fa-coins', color: 'text-sem-success' },
-              { label: 'Transacciones', value: String(data.kpis.orders), icon: 'fa-receipt', color: 'text-dax-text' },
+              { label: 'Total ventas', value: formatCurrency(data.kpis.sales), icon: 'fa-coins', color: 'text-emerald-400' },
+              { label: 'Transacciones', value: String(data.kpis.orders), icon: 'fa-receipt', color: 'text-white' },
               { label: 'Ticket promedio', value: formatCurrency(data.kpis.avg_ticket), icon: 'fa-chart-bar', color: 'text-indigo-400' },
-              { label: 'Método top', value: topMethod, icon: 'fa-credit-card', color: 'text-dax-muted' },
+              { label: 'Método top', value: topMethod, icon: 'fa-credit-card', color: 'text-slate-300' },
             ].map((k) => (
               <DaxCard key={k.label}>
                 <div className="flex items-center gap-2 mb-1">
-                  <i className={`fa-solid ${k.icon} text-dax-muted text-xs`} />
-                  <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider">{k.label}</p>
+                  <i className={`fa-solid ${k.icon} text-slate-500 text-xs`} />
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{k.label}</p>
                 </div>
                 <p className={`text-xl font-black tabular-nums ${k.color}`}>{k.value}</p>
               </DaxCard>
@@ -148,7 +148,7 @@ export function Reports() {
           {/* Gráfica por hora */}
           {hourlyValues.length > 0 && (
             <DaxCard>
-              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Ventas por Hora</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Ventas por Hora</p>
               <div style={{ height: 200 }}>
                 <Bar data={chartData} options={chartOptions as never} />
               </div>
@@ -159,14 +159,14 @@ export function Reports() {
             {/* Por método de pago */}
             {paymentMethods.length > 0 && (
               <DaxCard>
-                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Por Método de Pago</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Por Método de Pago</p>
                 <div className="space-y-2">
                   {paymentMethods.map((m) => (
                     <div key={m.method} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <i className={`fa-solid ${m.method === 'CASH' ? 'fa-money-bill' : m.method === 'CARD' ? 'fa-credit-card' : 'fa-mobile-screen'} text-xs ${methodColor(m.method)}`} />
-                        <span className="text-dax-muted">{m.method}</span>
-                        <span className="text-dax-faint text-xs">({m.count} tx)</span>
+                        <span className="text-slate-400">{m.method}</span>
+                        <span className="text-slate-600 text-xs">({m.count} tx)</span>
                       </div>
                       <span className={`font-semibold tabular-nums ${methodColor(m.method)}`}>{formatCurrency(m.total)}</span>
                     </div>
@@ -178,13 +178,13 @@ export function Reports() {
             {/* Top productos */}
             {data.top_products && data.top_products.length > 0 && (
               <DaxCard>
-                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Top Productos</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Top Productos</p>
                 <div className="space-y-2">
                   {data.top_products.slice(0, 5).map((p, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm">
-                      <span className="text-dax-faint font-bold w-4 text-right">{i + 1}</span>
-                      <span className="text-dax-muted flex-1 truncate">{p.name}</span>
-                      <span className="text-sem-success font-semibold tabular-nums">{p.qty} u.</span>
+                      <span className="text-slate-600 font-bold w-4 text-right">{i + 1}</span>
+                      <span className="text-slate-300 flex-1 truncate">{p.name}</span>
+                      <span className="text-emerald-400 font-semibold tabular-nums">{p.qty} u.</span>
                     </div>
                   ))}
                 </div>
@@ -195,17 +195,17 @@ export function Reports() {
           {/* Ventas recientes */}
           {data.recent_sales && data.recent_sales.length > 0 && (
             <DaxCard>
-              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Ventas Recientes</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Ventas Recientes</p>
               <div className="space-y-1">
                 {data.recent_sales.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-dax-border">
+                  <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-slate-700/30">
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-indigo-400">{s.folio}</span>
-                      <span className="text-dax-muted">{s.customer}</span>
+                      <span className="text-slate-400">{s.customer}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-dax-muted">{s.time}</span>
-                      <span className="text-sem-success font-semibold tabular-nums">{formatCurrency(s.total)}</span>
+                      <span className="text-slate-500">{s.time}</span>
+                      <span className="text-emerald-400 font-semibold tabular-nums">{formatCurrency(s.total)}</span>
                     </div>
                   </div>
                 ))}

@@ -13,7 +13,7 @@ const variantMap: Record<Variant, string> = {
   primary: 'dax-btn-primary',
   secondary: 'dax-btn-secondary',
   danger: 'dax-btn-danger',
-  ghost: 'text-dax-muted hover:text-dax-text hover:bg-dax-surface px-3 py-2 rounded-lg transition-colors',
+  ghost: 'text-slate-400 hover:text-white hover:bg-slate-700/40 px-3 py-2 rounded-lg transition-colors',
 }
 
 const sizeMap = {

@@ -33,7 +33,7 @@ export function CockpitQuickAccess() {
               className={`${t.icon} text-xl ${brand.purpleText} group-hover:scale-110 transition-transform duration-150`}
               aria-hidden="true"
             />
-            <span className="text-xs font-medium text-dax-faint dark:text-dax-muted group-hover:text-slate-900 dark:group-hover:text-dax-text transition-colors leading-tight">
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-100 transition-colors leading-tight">
               {t.label}
             </span>
           </Link>

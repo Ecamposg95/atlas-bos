@@ -55,7 +55,7 @@ export function Quotes() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-file-invoice text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Cotizaciones</h1>
+          <h1 className="text-2xl font-black text-white">Cotizaciones</h1>
         </div>
         <Link to="/quotes/new" className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Nueva Cotización
@@ -66,15 +66,15 @@ export function Quotes() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: 'Total cotizaciones', value: String(stats.total_count), icon: 'fa-file-invoice', color: 'text-dax-text' },
+            { label: 'Total cotizaciones', value: String(stats.total_count), icon: 'fa-file-invoice', color: 'text-white' },
             { label: 'Monto total', value: formatCurrency(stats.total_amount), icon: 'fa-coins', color: 'text-indigo-400' },
-            { label: 'Pendientes', value: String(stats.pending_count), icon: 'fa-clock', color: 'text-sem-warning' },
-            { label: 'Monto pendiente', value: formatCurrency(stats.pending_amount), icon: 'fa-chart-bar', color: 'text-sem-warning' },
+            { label: 'Pendientes', value: String(stats.pending_count), icon: 'fa-clock', color: 'text-amber-400' },
+            { label: 'Monto pendiente', value: formatCurrency(stats.pending_amount), icon: 'fa-chart-bar', color: 'text-amber-400' },
           ].map((k) => (
             <DaxCard key={k.label}>
               <div className="flex items-center gap-2 mb-1">
-                <i className={`fa-solid ${k.icon} text-dax-muted text-xs`} />
-                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider">{k.label}</p>
+                <i className={`fa-solid ${k.icon} text-slate-500 text-xs`} />
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{k.label}</p>
               </div>
               <p className={`text-xl font-black tabular-nums ${k.color}`}>{k.value}</p>
             </DaxCard>
@@ -85,7 +85,7 @@ export function Quotes() {
       {/* Tabla */}
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando cotizaciones..." /> : quotes.length === 0 ? (
-          <div className="p-12 text-center text-dax-faint">Sin cotizaciones</div>
+          <div className="p-12 text-center text-slate-600">Sin cotizaciones</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -103,14 +103,14 @@ export function Quotes() {
                 {quotes.map((q) => (
                   <tr key={q.id}>
                     <td className="font-mono text-indigo-400 text-xs">{quoteLabel(q)}</td>
-                    <td className="text-xs text-dax-muted">
+                    <td className="text-xs text-slate-400">
                       {new Date(q.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
                     </td>
-                    <td className="text-sm text-dax-muted">{q.customer_name ?? <span className="text-dax-faint italic">Sin cliente</span>}</td>
+                    <td className="text-sm text-slate-300">{q.customer_name ?? <span className="text-slate-600 italic">Sin cliente</span>}</td>
                     <td className="text-right font-semibold text-indigo-400 tabular-nums">{formatCurrency(q.total_amount)}</td>
                     <td><Badge variant={statusVariant(q.status) as 'green' | 'red' | 'blue' | 'yellow'}>{q.status}</Badge></td>
                     <td>
-                      <button onClick={() => setSelected(q)} className="text-dax-muted hover:text-dax-text text-xs">
+                      <button onClick={() => setSelected(q)} className="text-slate-500 hover:text-white text-xs">
                         <i className="fa-solid fa-eye" />
                       </button>
                     </td>
@@ -128,16 +128,16 @@ export function Quotes() {
           <div className="dax-card p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="text-[10px] text-dax-muted uppercase tracking-widest">Cotización</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-widest">Cotización</p>
                 <p className="text-xl font-black text-indigo-400 font-mono">{quoteLabel(selected)}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
+              <button onClick={() => setSelected(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
 
             <div className="space-y-2 text-sm mb-4">
-              <div className="flex justify-between"><span className="text-dax-muted">Cliente</span><span>{selected.customer_name ?? 'Sin cliente'}</span></div>
-              <div className="flex justify-between"><span className="text-dax-muted">Fecha</span><span>{new Date(selected.created_at).toLocaleString('es-MX')}</span></div>
-              <div className="flex justify-between"><span className="text-dax-muted">Estado</span><Badge variant={statusVariant(selected.status) as 'green' | 'red' | 'blue' | 'yellow'}>{selected.status}</Badge></div>
+              <div className="flex justify-between"><span className="text-slate-500">Cliente</span><span>{selected.customer_name ?? 'Sin cliente'}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Fecha</span><span>{new Date(selected.created_at).toLocaleString('es-MX')}</span></div>
+              <div className="flex justify-between"><span className="text-slate-500">Estado</span><Badge variant={statusVariant(selected.status) as 'green' | 'red' | 'blue' | 'yellow'}>{selected.status}</Badge></div>
             </div>
 
             <table className="dax-table w-full text-xs mb-4">
@@ -154,10 +154,10 @@ export function Quotes() {
               </tbody>
             </table>
 
-            <div className="space-y-1 text-sm border-t border-dax-border pt-3 mb-4">
-              <div className="flex justify-between text-dax-muted"><span>Subtotal</span><span>{formatCurrency(selected.subtotal)}</span></div>
-              {selected.tax_amount > 0 && <div className="flex justify-between text-dax-muted"><span>IVA</span><span>{formatCurrency(selected.tax_amount)}</span></div>}
-              <div className="flex justify-between font-black text-dax-text text-base"><span>Total</span><span>{formatCurrency(selected.total_amount)}</span></div>
+            <div className="space-y-1 text-sm border-t border-slate-700/50 pt-3 mb-4">
+              <div className="flex justify-between text-slate-400"><span>Subtotal</span><span>{formatCurrency(selected.subtotal)}</span></div>
+              {selected.tax_amount > 0 && <div className="flex justify-between text-slate-400"><span>IVA</span><span>{formatCurrency(selected.tax_amount)}</span></div>}
+              <div className="flex justify-between font-black text-white text-base"><span>Total</span><span>{formatCurrency(selected.total_amount)}</span></div>
             </div>
 
             {selected.status === 'PENDING' && (

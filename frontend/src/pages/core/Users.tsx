@@ -83,7 +83,7 @@ export function Users() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-users-cog text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Usuarios</h1>
+          <h1 className="text-2xl font-black text-white">Usuarios</h1>
         </div>
         <button onClick={openCreate} className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Nuevo Usuario
@@ -92,7 +92,7 @@ export function Users() {
 
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando usuarios..." /> : users.length === 0 ? (
-          <div className="p-12 text-center text-dax-faint">Sin usuarios</div>
+          <div className="p-12 text-center text-slate-600">Sin usuarios</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -110,18 +110,18 @@ export function Users() {
                 {users.map((u) => (
                   <tr key={u.id}>
                     <td className="font-mono text-indigo-400 text-sm">{u.username}</td>
-                    <td className="text-dax-muted">{u.full_name ?? '—'}</td>
+                    <td className="text-slate-300">{u.full_name ?? '—'}</td>
                     <td><Badge variant={roleVariant(u.role) as 'red' | 'yellow' | 'blue' | 'green' | 'slate'}>{u.role}</Badge></td>
-                    <td className="text-dax-muted text-sm">{u.branch_name ?? 'HQ'}</td>
+                    <td className="text-slate-400 text-sm">{u.branch_name ?? 'HQ'}</td>
                     <td>
                       <button onClick={() => handleToggle(u)}
-                        className={`text-xs font-semibold ${u.is_active ? 'text-sem-success' : 'text-dax-faint'}`}>
+                        className={`text-xs font-semibold ${u.is_active ? 'text-emerald-400' : 'text-slate-600'}`}>
                         <i className={`fa-solid ${u.is_active ? 'fa-circle-check' : 'fa-circle-xmark'} mr-1`} />
                         {u.is_active ? 'Activo' : 'Inactivo'}
                       </button>
                     </td>
                     <td>
-                      <button onClick={() => openEdit(u)} className="text-dax-muted hover:text-dax-text text-xs">
+                      <button onClick={() => openEdit(u)} className="text-slate-500 hover:text-white text-xs">
                         <i className="fa-solid fa-pen" />
                       </button>
                     </td>
@@ -138,8 +138,8 @@ export function Users() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(null)}>
           <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-dax-text">{modal === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}</h3>
-              <button onClick={() => setModal(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-white">{modal === 'create' ? 'Nuevo Usuario' : 'Editar Usuario'}</h3>
+              <button onClick={() => setModal(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
 
             <div className="space-y-3">
@@ -174,7 +174,7 @@ export function Users() {
               {modal === 'edit' && (
                 <div className="flex items-center gap-2">
                   <input type="checkbox" id="active-chk" checked={form.is_active} onChange={(e) => f('is_active', e.target.checked)} className="w-4 h-4" />
-                  <label htmlFor="active-chk" className="text-sm text-dax-muted">Usuario activo</label>
+                  <label htmlFor="active-chk" className="text-sm text-slate-400">Usuario activo</label>
                 </div>
               )}
             </div>

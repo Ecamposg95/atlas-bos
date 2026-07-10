@@ -54,17 +54,17 @@ export function useConfirm(): OpenFn {
 
 const VARIANT_STYLES: Record<ConfirmVariant, { icon: string; accent: string; btn: string }> = {
   danger: {
-    icon: 'fa-circle-exclamation text-sem-critical',
+    icon: 'fa-circle-exclamation text-red-400',
     accent: 'border-red-500/30',
     btn: 'bg-red-600 hover:bg-red-500 text-white',
   },
   warning: {
-    icon: 'fa-triangle-exclamation text-sem-warning',
+    icon: 'fa-triangle-exclamation text-amber-400',
     accent: 'border-amber-500/30',
     btn: 'bg-amber-600 hover:bg-amber-500 text-white',
   },
   info: {
-    icon: 'fa-circle-info text-sem-info',
+    icon: 'fa-circle-info text-blue-400',
     accent: 'border-blue-500/30',
     btn: 'bg-blue-600 hover:bg-blue-500 text-white',
   },
@@ -152,7 +152,7 @@ function DialogView({ options, onConfirm, onCancel }: DialogViewProps) {
             ref={cancelBtnRef}
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-semibold hover:bg-dax-card transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-semibold hover:bg-slate-800/50 transition-colors"
             style={{ color: 'rgba(255,255,255,0.85)' }}
           >
             {options.cancelText ?? 'Cancelar'}

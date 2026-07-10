@@ -88,14 +88,14 @@ export function KDS() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-fire-burner text-orange-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Cocina (KDS)</h1>
+          <h1 className="text-2xl font-black text-white">Cocina (KDS)</h1>
         </div>
         <Button variant="secondary" icon="fa-plus" onClick={ensureStation}>Estación</Button>
       </div>
 
       {stations.length === 0 && (
         <DaxCard>
-          <p className="text-dax-muted">
+          <p className="text-slate-400">
             Crea al menos una estación de cocina para enrutar las comandas. Luego envía
             platillos desde el punto de venta.
           </p>
@@ -104,7 +104,7 @@ export function KDS() {
 
       {tickets.length === 0 ? (
         <DaxCard>
-          <p className="text-dax-muted">No hay comandas activas. 🍳</p>
+          <p className="text-slate-400">No hay comandas activas. 🍳</p>
         </DaxCard>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -112,29 +112,29 @@ export function KDS() {
             <div key={t.id} className="dax-card p-4 border-2"
               style={{ borderColor: toneBorder(KDS_STATUS[t.status].tone) }}>
               <div className="flex items-center justify-between mb-2 gap-2">
-                <span className="font-black text-dax-text">
+                <span className="font-black text-white">
                   {t.table_id ? `Mesa ${t.table_id}` : `Comanda #${t.id}`}
                 </span>
                 <div className="flex items-center gap-2">
                   <StatusChip tone={KDS_STATUS[t.status].tone} label={KDS_STATUS[t.status].label} size="sm" onDark />
-                  <span className="text-[11px] text-dax-muted">{ageLabel(t.age_seconds)}</span>
+                  <span className="text-[11px] text-slate-400">{ageLabel(t.age_seconds)}</span>
                 </div>
               </div>
               <ul className="space-y-1.5">
                 {t.items.map((it) => (
                   <li key={it.id} className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm text-dax-text truncate">
+                      <p className="text-sm text-white truncate">
                         <span className="font-bold">{Number(it.qty)}×</span> {it.description}
                       </p>
                       {it.modifiers && it.modifiers.length > 0 && (
-                        <p className="text-[11px] text-sem-warning truncate">{it.modifiers.join(', ')}</p>
+                        <p className="text-[11px] text-amber-300/80 truncate">{it.modifiers.join(', ')}</p>
                       )}
                     </div>
                     <button
                       onClick={() => bumpItem(it.id)}
                       disabled={it.status === 'SERVED' || it.status === 'VOIDED'}
-                      className="text-[10px] font-bold px-2 py-1 rounded bg-dax-surface text-dax-text hover:bg-slate-600 disabled:opacity-40"
+                      className="text-[10px] font-bold px-2 py-1 rounded bg-slate-700/60 text-slate-200 hover:bg-slate-600 disabled:opacity-40"
                       title="Avanzar item"
                     >
                       {ITEM_STATUS[it.status].label}

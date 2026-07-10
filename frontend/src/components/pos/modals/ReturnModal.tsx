@@ -149,8 +149,8 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
     >
       <div className="dax-card p-6 w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-dax-text">Nueva Devolución</h3>
-          <button onClick={onClose} className="text-dax-muted hover:text-dax-text">
+          <h3 className="text-lg font-black text-white">Nueva Devolución</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-white">
             <i className="fa-solid fa-xmark text-lg" />
           </button>
         </div>
@@ -164,7 +164,7 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
                 className={`px-3 py-1.5 rounded-lg transition-colors ${
                   pickerMode === 'recent'
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-dax-surface text-dax-muted hover:text-dax-text'
+                    : 'bg-slate-700/50 text-slate-400 hover:text-white'
                 }`}
               >
                 <i className="fa-solid fa-clock-rotate-left mr-1.5" /> Recientes
@@ -174,7 +174,7 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
                 className={`px-3 py-1.5 rounded-lg transition-colors ${
                   pickerMode === 'folio'
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-dax-surface text-dax-muted hover:text-dax-text'
+                    : 'bg-slate-700/50 text-slate-400 hover:text-white'
                 }`}
               >
                 <i className="fa-solid fa-magnifying-glass mr-1.5" /> Por folio
@@ -184,11 +184,11 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
             {pickerMode === 'recent' ? (
               <div>
                 {recentLoading ? (
-                  <div className="text-center py-6 text-dax-muted text-xs">
+                  <div className="text-center py-6 text-slate-500 text-xs">
                     <i className="fa-solid fa-spinner fa-spin mr-2" /> Cargando ventas del día...
                   </div>
                 ) : recent.length === 0 ? (
-                  <div className="text-center py-6 text-dax-muted text-xs">
+                  <div className="text-center py-6 text-slate-500 text-xs">
                     No hay ventas del día disponibles para devolver. Usa "Por folio" si necesitas un ticket viejo.
                   </div>
                 ) : (
@@ -204,15 +204,15 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
                           <div className="font-mono text-xs text-indigo-400 font-bold">
                             {saleLabel(s)}
                           </div>
-                          <div className="text-[10px] text-dax-muted truncate">
+                          <div className="text-[10px] text-slate-500 truncate">
                             {s.customer_name ?? 'Público general'} · {new Date(s.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                           </div>
                         </div>
-                        <span className="text-xs font-bold text-sem-success tabular-nums flex-shrink-0">
+                        <span className="text-xs font-bold text-emerald-400 tabular-nums flex-shrink-0">
                           {formatCurrency(s.total_amount)}
                         </span>
                         {s.status === 'REFUNDED_PARTIAL' && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-sem-warning">
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
                             Parcial
                           </span>
                         )}
@@ -240,28 +240,28 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
           </div>
         )}
 
-        {error && <p className="text-sem-critical text-sm mb-3">{error}</p>}
+        {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
 
         {sale && (
           <>
             {/* Info del ticket */}
             <div className="rounded-xl p-3 mb-4 text-sm" style={{ background: 'var(--dax-elevated)', border: '1px solid var(--dax-border-dim)' }}>
-              <div className="flex justify-between text-dax-muted mb-1">
+              <div className="flex justify-between text-slate-400 mb-1">
                 <span>Folio</span><span className="font-mono text-indigo-400">{saleLabel(sale)}</span>
               </div>
-              <div className="flex justify-between text-dax-muted">
-                <span>Total original</span><span className="text-sem-success font-semibold">{formatCurrency(sale.total_amount)}</span>
+              <div className="flex justify-between text-slate-400">
+                <span>Total original</span><span className="text-emerald-400 font-semibold">{formatCurrency(sale.total_amount)}</span>
               </div>
             </div>
 
             {/* Items */}
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest">Artículos a devolver</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Artículos a devolver</p>
               <div className="flex gap-1.5">
                 <button
                   onClick={returnAll}
                   type="button"
-                  className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-500/15 text-sem-warning hover:bg-amber-500/25 transition-colors"
+                  className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 transition-colors"
                   title="Devolver todas las piezas del ticket"
                 >
                   <i className="fa-solid fa-check-double mr-1" /> Devolver todo
@@ -269,7 +269,7 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
                 <button
                   onClick={clearAll}
                   type="button"
-                  className="text-[10px] font-semibold px-2 py-1 rounded-md bg-slate-600/30 text-dax-muted hover:bg-slate-600/50 transition-colors"
+                  className="text-[10px] font-semibold px-2 py-1 rounded-md bg-slate-600/30 text-slate-300 hover:bg-slate-600/50 transition-colors"
                 >
                   Limpiar
                 </button>
@@ -279,11 +279,11 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
               {lines.map((line, i) => (
                 <div key={i} className="rounded-lg p-3" style={{ background: 'var(--dax-elevated)' }}>
                   <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-sm text-dax-text flex-1">{line.product_name}</span>
+                    <span className="text-sm text-white flex-1">{line.product_name}</span>
                     <button
                       onClick={() => updateLine(i, { quantity: line.max_qty })}
                       type="button"
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded text-sem-warning hover:bg-amber-500/15 transition-colors"
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded text-amber-400 hover:bg-amber-500/15 transition-colors"
                       title="Devolver todas las piezas de este renglón"
                     >
                       Todas ({line.max_qty})
@@ -293,7 +293,7 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => updateLine(i, { quantity: Math.max(0, line.quantity - 1) })}
-                        className="w-8 h-8 rounded-lg bg-dax-surface hover:bg-slate-600 text-white text-sm flex items-center justify-center"
+                        className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm flex items-center justify-center"
                       >−</button>
                       <input
                         type="number"
@@ -302,25 +302,25 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
                         value={line.quantity}
                         onChange={(e) => setLineQty(i, e.target.value)}
                         onFocus={(e) => e.currentTarget.select()}
-                        className="w-14 h-8 text-center font-bold text-dax-text text-sm rounded-lg bg-dax-card border border-dax-border focus:border-indigo-500 focus:outline-none tabular-nums"
+                        className="w-14 h-8 text-center font-bold text-white text-sm rounded-lg bg-slate-800 border border-slate-700 focus:border-indigo-500 focus:outline-none tabular-nums"
                       />
                       <button
                         onClick={() => updateLine(i, { quantity: Math.min(line.max_qty, line.quantity + 1) })}
-                        className="w-8 h-8 rounded-lg bg-dax-surface hover:bg-slate-600 text-white text-sm flex items-center justify-center"
+                        className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white text-sm flex items-center justify-center"
                       >+</button>
                     </div>
                     <button
                       onClick={() => updateLine(i, { restock: !line.restock })}
                       className={`text-xs font-semibold px-2 py-1 rounded-lg border transition-colors ${
                         line.restock
-                          ? 'border-emerald-600/50 bg-emerald-600/10 text-sem-success'
-                          : 'border-red-600/50 bg-red-600/10 text-sem-critical'
+                          ? 'border-emerald-600/50 bg-emerald-600/10 text-emerald-400'
+                          : 'border-red-600/50 bg-red-600/10 text-red-400'
                       }`}
                     >
                       {line.restock ? 'Regresa stock' : 'Merma'}
                     </button>
                     {line.quantity > 0 && (
-                      <span className="ml-auto text-xs text-dax-muted">
+                      <span className="ml-auto text-xs text-slate-400">
                         {formatCurrency(line.quantity * line.unit_price)}
                       </span>
                     )}
@@ -331,8 +331,8 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
 
             {/* Motivo */}
             <div className="mb-4">
-              <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
-                Motivo <span className="text-sem-critical">*</span>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                Motivo <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -346,7 +346,7 @@ export function ReturnModal({ onClose, onSuccess, activeSessionId, initialSale }
             {selectedLines.length > 0 && (
               <div className="flex justify-between text-sm font-bold pt-3 mb-4" style={{ color: 'var(--dax-text)', borderTop: '1px solid var(--dax-border-dim)' }}>
                 <span>Total a reembolsar</span>
-                <span className="text-sem-critical">{formatCurrency(totalRefund)}</span>
+                <span className="text-red-400">{formatCurrency(totalRefund)}</span>
               </div>
             )}
 

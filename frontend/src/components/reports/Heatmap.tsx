@@ -33,7 +33,7 @@ const WEEK_LONG = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábad
 
 // Pre-baked Tailwind classes (no runtime interpolation — JIT-safe).
 const INTENSITY_CLASSES = [
-  'bg-dax-card',
+  'bg-slate-800/30',
   'bg-emerald-500/20',
   'bg-emerald-500/40',
   'bg-emerald-500/60',
@@ -68,7 +68,7 @@ export function SalesHeatmap({ data, hourStart = 8, hourEnd = 21 }: Props) {
             <tr>
               <th className="w-6" />
               {hours.map((h) => (
-                <th key={h} className="text-[9px] font-mono font-bold text-dax-faint text-center">
+                <th key={h} className="text-[9px] font-mono font-bold text-slate-600 text-center">
                   {h}
                 </th>
               ))}
@@ -77,7 +77,7 @@ export function SalesHeatmap({ data, hourStart = 8, hourEnd = 21 }: Props) {
           <tbody>
             {WEEK_ORDER_PG.map((pgDay, rowIdx) => (
               <tr key={pgDay}>
-                <td className="text-[10px] font-bold text-dax-muted pr-1 w-6 text-right align-middle">
+                <td className="text-[10px] font-bold text-slate-500 pr-1 w-6 text-right align-middle">
                   {WEEK_LABELS[rowIdx]}
                 </td>
                 {hours.map((h) => {
@@ -107,20 +107,20 @@ export function SalesHeatmap({ data, hourStart = 8, hourEnd = 21 }: Props) {
       </div>
 
       <div className="mt-3 flex items-center justify-end gap-1.5">
-        <span className="text-[9px] font-bold uppercase tracking-wider text-dax-faint">Menos</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Menos</span>
         {INTENSITY_CLASSES.map((cls, i) => (
           <div key={i} className={`h-2 w-4 rounded-sm ${cls}`} />
         ))}
-        <span className="text-[9px] font-bold uppercase tracking-wider text-dax-faint">Más</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-600">Más</span>
       </div>
 
       {hover && (
-        <div className="pointer-events-none absolute top-0 right-0 bg-dax-bg border border-emerald-500/40 rounded-lg px-3 py-2 shadow-lg shadow-emerald-500/10 z-10">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-sem-success">
+        <div className="pointer-events-none absolute top-0 right-0 bg-slate-950/95 border border-emerald-500/40 rounded-lg px-3 py-2 shadow-lg shadow-emerald-500/10 z-10">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
             {WEEK_LONG[hover.dayIdx]} · {hover.hour}:00
           </p>
-          <p className="text-sm font-black tabular-nums text-dax-text">{formatCurrency(hover.amount)}</p>
-          <p className="text-[10px] text-dax-muted">{hover.tickets} {hover.tickets === 1 ? 'ticket' : 'tickets'}</p>
+          <p className="text-sm font-black tabular-nums text-white">{formatCurrency(hover.amount)}</p>
+          <p className="text-[10px] text-slate-400">{hover.tickets} {hover.tickets === 1 ? 'ticket' : 'tickets'}</p>
         </div>
       )}
     </div>

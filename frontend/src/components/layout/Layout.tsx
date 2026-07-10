@@ -169,7 +169,7 @@ export function Layout() {
                   </span>
                 </div>
                 <div
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black text-dax-text flex-shrink-0"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black text-white flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
                 >
                   {userInitial}

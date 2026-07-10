@@ -45,19 +45,19 @@ function ImportModal({ onClose, onDone, isHQ }: { onClose: () => void; onDone: (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-black text-dax-text">Importar productos</h3>
-          <button onClick={onClose} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
+          <h3 className="text-lg font-black text-white">Importar productos</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
         </div>
 
         {!result ? (
           <div className="space-y-4">
-            <p className="text-dax-muted text-xs leading-relaxed">
+            <p className="text-slate-400 text-xs leading-relaxed">
               Sube un archivo Excel (.xlsx) o CSV con tus productos. Los productos nuevos se activarán automáticamente en tu sucursal.
             </p>
 
             {isHQ && (
               <div>
-                <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">
                   Alcance de importación
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -66,8 +66,8 @@ function ImportModal({ onClose, onDone, isHQ }: { onClose: () => void; onDone: (
                     onClick={() => setScope('all')}
                     className={`py-2 rounded-xl text-xs font-semibold border transition-colors ${
                       scope === 'all'
-                        ? 'border-indigo-500 bg-indigo-600/20 text-dax-text'
-                        : 'border-dax-border text-dax-muted hover:border-dax-border hover:text-dax-text'
+                        ? 'border-indigo-500 bg-indigo-600/20 text-white'
+                        : 'border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-white'
                     }`}
                   >
                     <i className="fa-solid fa-globe mr-1.5" />
@@ -78,8 +78,8 @@ function ImportModal({ onClose, onDone, isHQ }: { onClose: () => void; onDone: (
                     onClick={() => setScope('branch')}
                     className={`py-2 rounded-xl text-xs font-semibold border transition-colors ${
                       scope === 'branch'
-                        ? 'border-indigo-500 bg-indigo-600/20 text-dax-text'
-                        : 'border-dax-border text-dax-muted hover:border-dax-border hover:text-dax-text'
+                        ? 'border-indigo-500 bg-indigo-600/20 text-white'
+                        : 'border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-white'
                     }`}
                   >
                     <i className="fa-solid fa-building mr-1.5" />
@@ -97,14 +97,14 @@ function ImportModal({ onClose, onDone, isHQ }: { onClose: () => void; onDone: (
                   toast.error('No se pudo descargar la plantilla. Reintenta en unos segundos.')
                 }
               }}
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-dax-border text-dax-muted hover:text-dax-text hover:border-slate-500 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-colors"
             >
-              <i className="fa-solid fa-file-excel text-sem-success" /> Descargar plantilla con productos actuales
+              <i className="fa-solid fa-file-excel text-emerald-400" /> Descargar plantilla con productos actuales
             </button>
 
             <div
               onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${file ? 'border-indigo-500/50 bg-indigo-600/5' : 'border-dax-border hover:border-slate-500'}`}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${file ? 'border-indigo-500/50 bg-indigo-600/5' : 'border-slate-700 hover:border-slate-500'}`}
             >
               <input
                 ref={fileRef}
@@ -116,19 +116,19 @@ function ImportModal({ onClose, onDone, isHQ }: { onClose: () => void; onDone: (
               {file ? (
                 <>
                   <i className="fa-solid fa-file-check text-indigo-400 text-2xl mb-2 block" />
-                  <p className="text-dax-text text-sm font-semibold">{file.name}</p>
-                  <p className="text-dax-muted text-xs mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
+                  <p className="text-white text-sm font-semibold">{file.name}</p>
+                  <p className="text-slate-500 text-xs mt-0.5">{(file.size / 1024).toFixed(1)} KB</p>
                 </>
               ) : (
                 <>
-                  <i className="fa-solid fa-cloud-arrow-up text-dax-muted text-2xl mb-2 block" />
-                  <p className="text-dax-muted text-sm">Clic para seleccionar archivo</p>
-                  <p className="text-dax-faint text-xs mt-0.5">.xlsx, .xls, .csv</p>
+                  <i className="fa-solid fa-cloud-arrow-up text-slate-500 text-2xl mb-2 block" />
+                  <p className="text-slate-400 text-sm">Clic para seleccionar archivo</p>
+                  <p className="text-slate-600 text-xs mt-0.5">.xlsx, .xls, .csv</p>
                 </>
               )}
             </div>
 
-            {error && <p className="text-sem-critical text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
+            {error && <p className="text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">{error}</p>}
 
             <div className="flex gap-2">
               <button onClick={onClose} className="dax-btn-secondary flex-1">Cancelar</button>
@@ -145,22 +145,22 @@ function ImportModal({ onClose, onDone, isHQ }: { onClose: () => void; onDone: (
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-3 text-center">
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-                <p className="text-2xl font-black text-sem-success">{result.created}</p>
-                <p className="text-[10px] text-dax-muted uppercase tracking-wider mt-0.5">Nuevos</p>
+                <p className="text-2xl font-black text-emerald-400">{result.created}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Nuevos</p>
               </div>
               <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3">
                 <p className="text-2xl font-black text-indigo-400">{result.updated}</p>
-                <p className="text-[10px] text-dax-muted uppercase tracking-wider mt-0.5">Actualizados</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Actualizados</p>
               </div>
-              <div className={`${result.failed > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-dax-card border-dax-border'} border rounded-xl p-3`}>
-                <p className={`text-2xl font-black ${result.failed > 0 ? 'text-sem-critical' : 'text-dax-muted'}`}>{result.failed}</p>
-                <p className="text-[10px] text-dax-muted uppercase tracking-wider mt-0.5">Fallidos</p>
+              <div className={`${result.failed > 0 ? 'bg-red-500/10 border-red-500/20' : 'bg-slate-800 border-slate-700/50'} border rounded-xl p-3`}>
+                <p className={`text-2xl font-black ${result.failed > 0 ? 'text-red-400' : 'text-slate-500'}`}>{result.failed}</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">Fallidos</p>
               </div>
             </div>
 
             {result.errors.length > 0 && (
               <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-3 max-h-32 overflow-y-auto">
-                <p className="text-[10px] font-bold text-sem-critical uppercase tracking-wider mb-1.5">Errores</p>
+                <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1.5">Errores</p>
                 {result.errors.map((e, i) => (
                   <p key={i} className="text-red-300 text-xs">{e}</p>
                 ))}
@@ -295,19 +295,19 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
   const clearOverride = () => setPriceOverride('')
 
   return (
-    <div className="bg-dax-card border border-indigo-500/20 rounded-xl p-4 space-y-3">
+    <div className="bg-slate-800/60 border border-indigo-500/20 rounded-xl p-4 space-y-3">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">
             <i className="fa-solid fa-store mr-1.5" />
             Configuración por sucursal
           </p>
-          <p className="text-dax-muted text-xs mt-0.5">
-            Los cambios aquí afectan únicamente a <span className="text-dax-text font-semibold">tu sucursal</span>.
+          <p className="text-slate-400 text-xs mt-0.5">
+            Los cambios aquí afectan únicamente a <span className="text-white font-semibold">tu sucursal</span>.
             El precio base del producto no se modifica.
           </p>
         </div>
-        <span className="text-[10px] text-dax-muted font-mono">
+        <span className="text-[10px] text-slate-500 font-mono">
           Base: {formatCurrency(product.price ?? 0)}
         </span>
       </div>
@@ -315,7 +315,7 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {/* Precio override */}
         <div className="sm:col-span-1">
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
             Precio de venta en sucursal
           </label>
           <div className="flex items-center gap-1.5">
@@ -330,18 +330,18 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
               type="button"
               onClick={clearOverride}
               disabled={priceOverride === ''}
-              className="px-2 py-1.5 rounded-lg border border-dax-border text-[10px] font-semibold text-dax-muted hover:text-dax-text hover:border-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+              className="px-2 py-1.5 rounded-lg border border-slate-700/50 text-[10px] font-semibold text-slate-400 hover:text-white hover:border-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               title="Vaciar override (volver a usar el precio base)"
             >
               Limpiar
             </button>
           </div>
-          <p className="text-[10px] text-dax-faint mt-1">Vacío = usa el precio base del producto.</p>
+          <p className="text-[10px] text-slate-600 mt-1">Vacío = usa el precio base del producto.</p>
         </div>
 
         {/* Stock min */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
             Stock mínimo (alerta)
           </label>
           <input
@@ -355,7 +355,7 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
 
         {/* Stock max */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
             Stock máximo
           </label>
           <input
@@ -370,7 +370,7 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
 
       {/* Flags */}
       <div className="flex flex-wrap gap-4 pt-1">
-        <label className="flex items-center gap-2 text-xs text-dax-muted cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
           <input
             type="checkbox"
             checked={isActivePos}
@@ -379,7 +379,7 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
           />
           Activo en POS
         </label>
-        <label className="flex items-center gap-2 text-xs text-dax-muted cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
           <input
             type="checkbox"
             checked={isActiveHq}
@@ -388,7 +388,7 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
           />
           Activo en HQ
         </label>
-        <label className="flex items-center gap-2 text-xs text-dax-muted cursor-pointer">
+        <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
           <input
             type="checkbox"
             checked={isVisible}
@@ -400,7 +400,7 @@ function BranchStatusEditor({ product, branchId, onSaved, onCancel }: BranchStat
       </div>
 
       {error && (
-        <p className="text-xs text-sem-critical bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
           <i className="fa-solid fa-circle-exclamation mr-1.5" />{error}
         </p>
       )}
@@ -501,15 +501,15 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
       >
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-black text-dax-text">Nuevo producto</h3>
-            <p className="text-dax-muted text-[11px] mt-0.5">
+            <h3 className="text-base font-black text-white">Nuevo producto</h3>
+            <p className="text-slate-500 text-[11px] mt-0.5">
               Se creará activo en <span className="text-indigo-400 font-semibold">tu sucursal</span>.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-dax-muted hover:text-dax-text"
+            className="text-slate-500 hover:text-white"
             aria-label="Cerrar"
           >
             <i className="fa-solid fa-xmark text-lg" />
@@ -518,7 +518,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
 
         <div className="grid grid-cols-1 gap-3">
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
               Nombre *
             </label>
             <input
@@ -532,7 +532,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                 SKU *
               </label>
               <input
@@ -543,7 +543,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                 Código de barras
               </label>
               <input
@@ -557,7 +557,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                 Precio *
               </label>
               <input
@@ -569,7 +569,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
                 Costo *
               </label>
               <input
@@ -583,7 +583,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
               Departamento *
             </label>
             <select
@@ -597,7 +597,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-dax-muted mb-1">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
               Marca *
             </label>
             <select
@@ -612,7 +612,7 @@ function CreateProductMiniModal({ brands, departments, onClose, onCreated }: Cre
         </div>
 
         {error && (
-          <p className="text-xs text-sem-critical bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
             <i className="fa-solid fa-circle-exclamation mr-1.5" />{error}
           </p>
         )}
@@ -785,7 +785,7 @@ function ProductModal({ product, onClose, onSaved, brands, departments, isCajero
           <h2 className="font-bold text-base" style={{ color: 'var(--dax-text)' }}>
             {isEdit ? 'Editar Producto' : 'Nuevo Producto'}
           </h2>
-          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-dax-muted hover:text-dax-text hover:bg-dax-surface transition-colors">
+          <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
             <i className="fa-solid fa-xmark text-xs" />
           </button>
         </div>
@@ -794,8 +794,8 @@ function ProductModal({ product, onClose, onSaved, brands, departments, isCajero
           {/* Banner informativo para CAJERO en modo edición */}
           {isCajero && isEdit && (
             <div className="flex items-start gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
-              <i className="fa-solid fa-circle-info text-sem-warning text-xs mt-0.5 flex-shrink-0" />
-              <p className="text-sem-warning text-xs leading-relaxed">
+              <i className="fa-solid fa-circle-info text-amber-400 text-xs mt-0.5 flex-shrink-0" />
+              <p className="text-amber-300 text-xs leading-relaxed">
                 Puedes editar el nombre, descripción e imagen. El precio, costo, SKU y código de barras son de solo lectura para tu rol.
               </p>
             </div>
@@ -944,7 +944,7 @@ function ProductModal({ product, onClose, onSaved, brands, departments, isCajero
                     </div>
                     <button
                       onClick={() => removePrice(i)}
-                      className="h-8 w-7 flex items-center justify-center text-dax-muted hover:text-sem-critical transition-colors rounded"
+                      className="h-8 w-7 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors rounded"
                     >
                       <i className="fa-solid fa-xmark text-xs" />
                     </button>
@@ -1011,7 +1011,7 @@ function ProductModal({ product, onClose, onSaved, brands, departments, isCajero
                     </div>
                     <button
                       onClick={() => removePackaging(i)}
-                      className="h-8 w-7 flex items-center justify-center text-dax-muted hover:text-sem-critical transition-colors rounded"
+                      className="h-8 w-7 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors rounded"
                     >
                       <i className="fa-solid fa-xmark text-xs" />
                     </button>
@@ -1022,7 +1022,7 @@ function ProductModal({ product, onClose, onSaved, brands, departments, isCajero
           </section>
 
           {error && (
-            <p className="text-xs text-sem-critical bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
               <i className="fa-solid fa-circle-exclamation mr-1.5" />{error}
             </p>
           )}
@@ -1193,7 +1193,7 @@ export function Products() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-barcode text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">
+          <h1 className="text-2xl font-black text-white">
             {isHQ ? 'Catálogo de Productos' : 'Consulta Productos'}
           </h1>
           {isHQ && (
@@ -1203,7 +1203,7 @@ export function Products() {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-dax-muted text-sm">{total.toLocaleString()} productos</span>
+          <span className="text-slate-500 text-sm">{total.toLocaleString()} productos</span>
           {canEdit && (
             <>
               <button
@@ -1220,17 +1220,17 @@ export function Products() {
               </button>
             </>
           )}
-          <div className="flex items-center bg-dax-card rounded-lg border border-dax-border p-0.5">
+          <div className="flex items-center bg-slate-800 rounded-lg border border-slate-700/50 p-0.5">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-dax-surface text-dax-text' : 'text-dax-muted hover:text-dax-text'}`}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
               title="Vista lista"
             >
               <i className="fa-solid fa-list w-4 text-xs" />
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-dax-surface text-dax-text' : 'text-dax-muted hover:text-dax-text'}`}
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}
               title="Vista cuadrícula"
             >
               <i className="fa-solid fa-grip w-4 text-xs" />
@@ -1265,25 +1265,25 @@ export function Products() {
         {loading ? (
           <Spinner text="Cargando productos..." />
         ) : products.length === 0 ? (
-          <div className="p-12 text-center text-dax-faint">Sin resultados</div>
+          <div className="p-12 text-center text-slate-600">Sin resultados</div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
             {products.map((p) => (
-              <div key={p.id} className="bg-dax-card rounded-xl p-3 flex flex-col gap-2 border border-dax-border hover:border-indigo-500/30 transition-colors group relative">
+              <div key={p.id} className="bg-slate-800 rounded-xl p-3 flex flex-col gap-2 border border-slate-700/30 hover:border-indigo-500/30 transition-colors group relative">
                 {p.image_url ? (
-                  <img src={p.image_url} alt={p.name} className="w-full aspect-square object-contain rounded-lg bg-dax-surface p-1" />
+                  <img src={p.image_url} alt={p.name} className="w-full aspect-square object-contain rounded-lg bg-slate-700 p-1" />
                 ) : (
-                  <div className="w-full aspect-square bg-dax-surface rounded-lg flex items-center justify-center">
-                    <i className="fa-solid fa-box text-dax-muted text-2xl" />
+                  <div className="w-full aspect-square bg-slate-700/50 rounded-lg flex items-center justify-center">
+                    <i className="fa-solid fa-box text-slate-500 text-2xl" />
                   </div>
                 )}
                 <div className="flex-1">
-                  <p className="text-dax-text text-xs font-semibold line-clamp-2 leading-tight">{p.name}</p>
-                  <p className="text-dax-muted text-[10px] font-mono mt-0.5">{p.sku}</p>
-                  {p.department_name && <p className="text-dax-faint text-[10px] mt-0.5 truncate">{p.department_name}</p>}
+                  <p className="text-white text-xs font-semibold line-clamp-2 leading-tight">{p.name}</p>
+                  <p className="text-slate-500 text-[10px] font-mono mt-0.5">{p.sku}</p>
+                  {p.department_name && <p className="text-slate-600 text-[10px] mt-0.5 truncate">{p.department_name}</p>}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sem-success text-xs font-bold">{formatCurrency(p.price ?? 0)}</span>
+                  <span className="text-emerald-400 text-xs font-bold">{formatCurrency(p.price ?? 0)}</span>
                   {(() => {
                     const qty = (!isHQ && user?.branch_id && p.stock_levels?.length)
                       ? (p.stock_levels.find(s => s.branch_id === user.branch_id)?.qty_on_hand ?? p.stock ?? 0)
@@ -1300,18 +1300,18 @@ export function Products() {
                     {isBranchEditor && (
                       <button
                         onClick={() => openBranchSettings(p)}
-                        className="w-6 h-6 rounded-full flex items-center justify-center bg-dax-surface border border-dax-border hover:bg-indigo-600 hover:border-indigo-500"
+                        className="w-6 h-6 rounded-full flex items-center justify-center bg-slate-700 border border-slate-600 hover:bg-indigo-600 hover:border-indigo-500"
                         title="Ajustes en mi sucursal"
                       >
-                        <i className="fa-solid fa-sliders text-[9px] text-dax-text" />
+                        <i className="fa-solid fa-sliders text-[9px] text-white" />
                       </button>
                     )}
                     <button
                       onClick={() => openEdit(p)}
-                      className="w-6 h-6 rounded-full flex items-center justify-center bg-dax-surface border border-dax-border hover:bg-indigo-600 hover:border-indigo-500"
+                      className="w-6 h-6 rounded-full flex items-center justify-center bg-slate-700 border border-slate-600 hover:bg-indigo-600 hover:border-indigo-500"
                       title="Editar producto"
                     >
-                      <i className="fa-solid fa-pencil text-[9px] text-dax-text" />
+                      <i className="fa-solid fa-pencil text-[9px] text-white" />
                     </button>
                   </div>
                 )}
@@ -1339,21 +1339,21 @@ export function Products() {
                   return (
                     <Fragment key={p.id}>
                       <tr>
-                        <td className="font-mono text-dax-muted text-xs">{p.sku}</td>
+                        <td className="font-mono text-slate-400 text-xs">{p.sku}</td>
                         <td>
                           <div className="flex items-center gap-2">
                             {p.image_url ? (
                               <img src={p.image_url} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                             ) : (
-                              <div className="w-8 h-8 rounded bg-dax-surface flex items-center justify-center flex-shrink-0">
-                                <i className="fa-solid fa-box text-dax-muted text-xs" />
+                              <div className="w-8 h-8 rounded bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                <i className="fa-solid fa-box text-slate-500 text-xs" />
                               </div>
                             )}
-                            <span className="font-medium text-dax-text">{p.name}</span>
+                            <span className="font-medium text-white">{p.name}</span>
                           </div>
                         </td>
-                        <td className="text-dax-muted text-xs">{p.department_name ?? '—'}</td>
-                        <td className="text-right font-semibold text-sem-success">
+                        <td className="text-slate-400 text-xs">{p.department_name ?? '—'}</td>
+                        <td className="text-right font-semibold text-emerald-400">
                           {(() => {
                             const override = user?.branch_id
                               ? p.branch_statuses?.find(s => s.branch_id === user.branch_id)?.price_override
@@ -1385,14 +1385,14 @@ export function Products() {
                         </td>
                         <td>
                           {isHQ ? (
-                            <span className="text-xs text-dax-muted">
+                            <span className="text-xs text-slate-400">
                               {p.branch_statuses?.filter(s => s.is_active_pos).length ?? 0}
-                              <span className="text-dax-faint ml-0.5">sucursales</span>
+                              <span className="text-slate-600 ml-0.5">sucursales</span>
                             </span>
                           ) : user?.branch_id ? (
                             (() => {
                               const status = p.branch_statuses?.find(s => s.branch_id === user.branch_id)
-                              if (!status) return <span className="text-[10px] text-dax-faint italic">Global</span>
+                              if (!status) return <span className="text-[10px] text-slate-600 italic">Global</span>
                               return status.is_active_pos
                                 ? <Badge variant="green">POS activo</Badge>
                                 : <Badge variant="red">POS inactivo</Badge>
@@ -1405,7 +1405,7 @@ export function Products() {
                               {isBranchEditor && (
                                 <button
                                   onClick={() => openBranchSettings(p)}
-                                  className={`transition-colors p-1 ${isExpanded ? 'text-indigo-400' : 'text-dax-muted hover:text-indigo-400'}`}
+                                  className={`transition-colors p-1 ${isExpanded ? 'text-indigo-400' : 'text-slate-500 hover:text-indigo-400'}`}
                                   title={isExpanded ? 'Cerrar ajustes de sucursal' : 'Ajustes en mi sucursal'}
                                 >
                                   <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-sliders'} text-xs`} />
@@ -1413,7 +1413,7 @@ export function Products() {
                               )}
                               <button
                                 onClick={() => openEdit(p)}
-                                className="transition-colors p-1 text-dax-muted hover:text-indigo-400"
+                                className="transition-colors p-1 text-slate-500 hover:text-indigo-400"
                                 title="Editar producto"
                               >
                                 <i className="fa-solid fa-pencil text-xs" />
@@ -1423,7 +1423,7 @@ export function Products() {
                         )}
                       </tr>
                       {isExpanded && user?.branch_id != null && (
-                        <tr className="bg-dax-bg">
+                        <tr className="bg-slate-900/40">
                           <td colSpan={colCount} className="px-4 py-3">
                             <BranchStatusEditor
                               product={p}
@@ -1447,7 +1447,7 @@ export function Products() {
 
         {/* Paginación */}
         {pages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-dax-border">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-700/50">
             <button
               onClick={() => { const np = page - 1; setPage(np); load(search, deptId, np) }}
               disabled={page === 0}
@@ -1455,7 +1455,7 @@ export function Products() {
             >
               ← Anterior
             </button>
-            <span className="text-dax-muted text-xs">Página {page + 1} de {pages}</span>
+            <span className="text-slate-500 text-xs">Página {page + 1} de {pages}</span>
             <button
               onClick={() => { const np = page + 1; setPage(np); load(search, deptId, np) }}
               disabled={page >= pages - 1}

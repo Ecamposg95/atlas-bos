@@ -54,15 +54,15 @@ export function PendingOrders({ onLoadOrder }: Props) {
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--dax-border-dim)' }}>
         <div className="flex items-center gap-2">
-          <i className="fa-solid fa-pause text-sem-warning text-sm" />
-          <span className="text-sm font-bold text-dax-text">Tickets Pausados</span>
+          <i className="fa-solid fa-pause text-amber-400 text-sm" />
+          <span className="text-sm font-bold text-white">Tickets Pausados</span>
           {parkedTickets.length > 0 && (
             <span className="bg-amber-500 text-black text-[10px] font-black px-1.5 py-0.5 rounded-full">
               {parkedTickets.length}
             </span>
           )}
         </div>
-        <button onClick={fetchParked} className="text-dax-muted hover:text-dax-text text-xs">
+        <button onClick={fetchParked} className="text-slate-500 hover:text-white text-xs">
           <i className="fa-solid fa-rotate-right" />
         </button>
       </div>
@@ -71,7 +71,7 @@ export function PendingOrders({ onLoadOrder }: Props) {
         {parkedTickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <i className="fa-solid fa-pause text-slate-700 text-3xl mb-3" />
-            <p className="text-dax-faint text-sm">Sin tickets pausados</p>
+            <p className="text-slate-600 text-sm">Sin tickets pausados</p>
             <p className="text-slate-700 text-xs mt-1">Se actualiza cada 10 seg.</p>
           </div>
         ) : (
@@ -85,12 +85,12 @@ export function PendingOrders({ onLoadOrder }: Props) {
                 <div key={ticket.id} className="dax-card p-3 flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-mono text-indigo-400 truncate">{ticket.id.slice(-8).toUpperCase()}</p>
-                    <p className="text-sm text-dax-text font-semibold">{formatCurrency(total)}</p>
-                    <p className="text-[10px] text-dax-muted truncate">
+                    <p className="text-sm text-white font-semibold">{formatCurrency(total)}</p>
+                    <p className="text-[10px] text-slate-500 truncate">
                       {itemCount} {itemCount === 1 ? 'artículo' : 'artículos'}
                       {ticket.notes ? ` · ${ticket.notes}` : ''}
                     </p>
-                    <p className="text-[10px] text-dax-faint">{ts}</p>
+                    <p className="text-[10px] text-slate-600">{ts}</p>
                   </div>
                   {deletingId === ticket.id ? (
                     <div className="flex gap-1 flex-shrink-0">
@@ -103,7 +103,7 @@ export function PendingOrders({ onLoadOrder }: Props) {
                       </button>
                       <button
                         onClick={() => setDeletingId(null)}
-                        className="text-dax-muted hover:text-dax-text text-xs px-2 transition-colors"
+                        className="text-slate-500 hover:text-white text-xs px-2 transition-colors"
                         title="Cancelar"
                       >
                         <i className="fa-solid fa-xmark" />
@@ -113,7 +113,7 @@ export function PendingOrders({ onLoadOrder }: Props) {
                     <>
                       <button
                         onClick={() => setDeletingId(ticket.id)}
-                        className="text-dax-faint hover:text-sem-critical text-xs flex-shrink-0 transition-colors"
+                        className="text-slate-600 hover:text-red-400 text-xs flex-shrink-0 transition-colors"
                         title="Descartar ticket"
                       >
                         <i className="fa-solid fa-trash" />

@@ -56,16 +56,16 @@ export function HQControl() {
 
   const SHORTCUTS = [
     { label: 'Gestión de Usuarios', icon: 'fa-users', url: '/users', color: 'text-indigo-400' },
-    { label: 'Organización', icon: 'fa-building', url: '/organization', color: 'text-sem-info' },
-    { label: 'Catálogo', icon: 'fa-barcode', url: '/admin/catalog', color: 'text-sem-success' },
-    { label: 'Departamentos', icon: 'fa-tags', url: '/departments', color: 'text-sem-warning' },
+    { label: 'Organización', icon: 'fa-building', url: '/organization', color: 'text-blue-400' },
+    { label: 'Catálogo', icon: 'fa-barcode', url: '/admin/catalog', color: 'text-emerald-400' },
+    { label: 'Departamentos', icon: 'fa-tags', url: '/departments', color: 'text-amber-400' },
     { label: 'Marcas', icon: 'fa-star', url: '/brands', color: 'text-pink-400' },
     { label: 'RR.HH.', icon: 'fa-id-card', url: '/hr', color: 'text-purple-400' },
   ]
 
   const ACTION_COLORS: Record<string, string> = {
-    CREATE: 'text-sem-success', UPDATE: 'text-sem-info', DELETE: 'text-sem-critical',
-    UPDATE_ORG_INDUSTRY: 'text-sem-warning', TOGGLE_MODULE: 'text-violet-400',
+    CREATE: 'text-emerald-400', UPDATE: 'text-sky-400', DELETE: 'text-rose-400',
+    UPDATE_ORG_INDUSTRY: 'text-amber-400', TOGGLE_MODULE: 'text-violet-400',
   }
 
   return (
@@ -73,7 +73,7 @@ export function HQControl() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-sliders text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Control HQ</h1>
+          <h1 className="text-2xl font-black text-white">Control HQ</h1>
         </div>
         <button onClick={() => { load(); loadAuditLog() }} className="dax-btn-secondary text-xs">
           <i className="fa-solid fa-rotate-right" /> Actualizar
@@ -83,38 +83,38 @@ export function HQControl() {
       {/* KPI Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <DaxCard>
-          <p className="text-[10px] text-dax-muted uppercase font-bold tracking-wider">Sucursales</p>
-          <p className="text-3xl font-black text-dax-text mt-2 tabular-nums">{branchCount ?? '—'}</p>
+          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Sucursales</p>
+          <p className="text-3xl font-black text-white mt-2 tabular-nums">{branchCount ?? '—'}</p>
           <p className="text-[10px] text-indigo-400 mt-1">Nodos activos</p>
         </DaxCard>
         <DaxCard>
-          <p className="text-[10px] text-dax-muted uppercase font-bold tracking-wider">Revenue Hoy</p>
-          <p className="text-3xl font-black text-sem-success mt-2 tabular-nums">{revenue !== null ? formatCurrency(revenue) : '—'}</p>
-          <p className="text-[10px] text-dax-muted mt-1">Acumulado del día</p>
+          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Revenue Hoy</p>
+          <p className="text-3xl font-black text-emerald-400 mt-2 tabular-nums">{revenue !== null ? formatCurrency(revenue) : '—'}</p>
+          <p className="text-[10px] text-slate-500 mt-1">Acumulado del día</p>
         </DaxCard>
         <DaxCard>
-          <p className="text-[10px] text-dax-muted uppercase font-bold tracking-wider">Tickets Hoy</p>
-          <p className="text-3xl font-black text-sem-info mt-2 tabular-nums">{tickets ?? '—'}</p>
-          <p className="text-[10px] text-dax-muted mt-1">Transacciones</p>
+          <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Tickets Hoy</p>
+          <p className="text-3xl font-black text-sky-400 mt-2 tabular-nums">{tickets ?? '—'}</p>
+          <p className="text-[10px] text-slate-500 mt-1">Transacciones</p>
         </DaxCard>
         <Link to="/hq/operations">
           <DaxCard className="hover:border-rose-500/30 cursor-pointer">
-            <p className="text-[10px] text-dax-muted uppercase font-bold tracking-wider">Alertas</p>
-            <p className="text-3xl font-black text-sem-critical mt-2 tabular-nums">{alertCount ?? '—'}</p>
-            <p className="text-[10px] text-dax-muted mt-1">Ver operaciones →</p>
+            <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Alertas</p>
+            <p className="text-3xl font-black text-rose-400 mt-2 tabular-nums">{alertCount ?? '—'}</p>
+            <p className="text-[10px] text-slate-500 mt-1">Ver operaciones →</p>
           </DaxCard>
         </Link>
       </div>
 
       {/* Accesos rápidos de configuración */}
       <div>
-        <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Configuración rápida</p>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Configuración rápida</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {SHORTCUTS.map((s) => (
             <Link key={s.url} to={s.url}
               className="dax-card p-4 flex flex-col items-center gap-2 hover:border-indigo-500/40 transition-colors text-center">
               <i className={`fa-solid ${s.icon} ${s.color} text-xl`} />
-              <span className="text-xs font-semibold text-dax-muted">{s.label}</span>
+              <span className="text-xs font-semibold text-slate-300">{s.label}</span>
             </Link>
           ))}
         </div>
@@ -122,13 +122,13 @@ export function HQControl() {
 
       {/* Auditoría de diferencias de caja */}
       <div>
-        <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
           Diferencias de Caja Recientes
         </p>
         <DaxCard padding={false}>
           {loading ? <Spinner text="Cargando auditoría..." /> : discrepancies.length === 0 ? (
-            <div className="p-12 text-center text-dax-faint">
-              <i className="fa-solid fa-check-circle text-sem-success text-3xl mb-3 block" />
+            <div className="p-12 text-center text-slate-600">
+              <i className="fa-solid fa-check-circle text-emerald-600 text-3xl mb-3 block" />
               Sin diferencias de caja registradas
             </div>
           ) : (
@@ -147,14 +147,14 @@ export function HQControl() {
                 <tbody>
                   {discrepancies.map((d) => (
                     <tr key={d.session_id}>
-                      <td className="text-sm font-semibold text-dax-text">{d.branch_name}</td>
-                      <td className="text-sm text-dax-muted">{d.opened_by}</td>
+                      <td className="text-sm font-semibold text-white">{d.branch_name}</td>
+                      <td className="text-sm text-slate-400">{d.opened_by}</td>
                       <td className="text-right tabular-nums">{formatCurrency(d.expected_cash)}</td>
                       <td className="text-right tabular-nums">{formatCurrency(d.closing_amount)}</td>
-                      <td className={`text-right font-bold tabular-nums ${d.difference > 0 ? 'text-sem-success' : 'text-sem-critical'}`}>
+                      <td className={`text-right font-bold tabular-nums ${d.difference > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {d.difference > 0 ? '+' : ''}{formatCurrency(d.difference)}
                       </td>
-                      <td className="text-xs text-dax-muted">
+                      <td className="text-xs text-slate-500">
                         {new Date(d.closed_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}
                       </td>
                     </tr>
@@ -168,27 +168,27 @@ export function HQControl() {
 
       {/* Actividad Reciente */}
       <div>
-        <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
           Actividad Reciente
         </p>
         <DaxCard padding={false}>
           {auditLog.length === 0 ? (
-            <div className="p-8 text-center text-dax-faint text-sm italic">Sin actividad reciente registrada.</div>
+            <div className="p-8 text-center text-slate-600 text-sm italic">Sin actividad reciente registrada.</div>
           ) : (
             <div className="divide-y divide-slate-700/30">
               {auditLog.map((e) => {
-                const color = ACTION_COLORS[e.action] ?? 'text-dax-muted'
+                const color = ACTION_COLORS[e.action] ?? 'text-slate-400'
                 const ts = e.created_at
                   ? new Date(e.created_at).toLocaleString('es-MX', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' })
                   : ''
                 return (
-                  <div key={e.id} className="flex items-start gap-3 p-3 hover:bg-dax-card transition">
-                    <div className="w-5 h-5 rounded bg-dax-card flex items-center justify-center shrink-0 mt-0.5">
+                  <div key={e.id} className="flex items-start gap-3 p-3 hover:bg-slate-800/20 transition">
+                    <div className="w-5 h-5 rounded bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
                       <i className={`fa-solid fa-circle-dot text-[8px] ${color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-dax-muted truncate font-medium">{e.entity_type ?? 'Sistema'}{e.entity_id ? ` #${e.entity_id}` : ''}</p>
-                      <p className="text-[10px] text-dax-faint mt-0.5">
+                      <p className="text-xs text-slate-300 truncate font-medium">{e.entity_type ?? 'Sistema'}{e.entity_id ? ` #${e.entity_id}` : ''}</p>
+                      <p className="text-[10px] text-slate-600 mt-0.5">
                         <span className={`${color} font-bold`}>{e.action}</span>
                         {ts ? ` · ${ts}` : ''}
                       </p>

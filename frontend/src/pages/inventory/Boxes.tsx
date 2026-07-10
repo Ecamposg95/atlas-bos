@@ -114,7 +114,7 @@ export function Boxes() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-box-open text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Cajas y Contenedores</h1>
+          <h1 className="text-2xl font-black text-white">Cajas y Contenedores</h1>
         </div>
         <button
           onClick={() => tab === 'containers' ? (setContainerForm(emptyContainerForm()), setShowContainerModal(true)) : (setBoxForm(emptyBoxForm()), setShowBoxModal(true))}
@@ -125,13 +125,13 @@ export function Boxes() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-dax-bg p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-slate-900/60 p-1 rounded-xl w-fit">
         {([['containers', 'Contenedores', 'fa-truck-ramp-box'], ['boxes', 'Tipos de Caja', 'fa-box']] as [Tab, string, string][]).map(([key, label, icon]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-              tab === key ? 'bg-indigo-600 text-white' : 'text-dax-muted hover:text-white'
+              tab === key ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
             }`}
           >
             <i className={`fa-solid ${icon} text-xs`} />
@@ -148,7 +148,7 @@ export function Boxes() {
           {tab === 'containers' && (
             <DaxCard padding={false}>
               {containers.length === 0 ? (
-                <div className="p-12 text-center text-dax-faint">
+                <div className="p-12 text-center text-slate-600">
                   <i className="fa-solid fa-truck-ramp-box text-4xl mb-3 block" />
                   Sin tipos de contenedor registrados
                 </div>
@@ -165,9 +165,9 @@ export function Boxes() {
                     <tbody>
                       {containers.map((c) => (
                         <tr key={c.id}>
-                          <td className="text-dax-muted font-mono text-xs">{c.id}</td>
-                          <td className="font-semibold text-dax-text">{c.name}</td>
-                          <td className="text-dax-muted text-sm font-mono">{dims(c.inner_length, c.inner_width, c.inner_height)}</td>
+                          <td className="text-slate-500 font-mono text-xs">{c.id}</td>
+                          <td className="font-semibold text-white">{c.name}</td>
+                          <td className="text-slate-400 text-sm font-mono">{dims(c.inner_length, c.inner_width, c.inner_height)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -181,7 +181,7 @@ export function Boxes() {
           {tab === 'boxes' && (
             <DaxCard padding={false}>
               {boxes.length === 0 ? (
-                <div className="p-12 text-center text-dax-faint">
+                <div className="p-12 text-center text-slate-600">
                   <i className="fa-solid fa-box text-4xl mb-3 block" />
                   Sin tipos de caja registrados
                 </div>
@@ -198,9 +198,9 @@ export function Boxes() {
                     <tbody>
                       {boxes.map((b) => (
                         <tr key={b.id}>
-                          <td className="text-dax-muted font-mono text-xs">{b.id}</td>
-                          <td className="font-semibold text-dax-text">{b.name}</td>
-                          <td className="text-dax-muted text-sm font-mono">{dims(b.outer_length, b.outer_width, b.outer_height)}</td>
+                          <td className="text-slate-500 font-mono text-xs">{b.id}</td>
+                          <td className="font-semibold text-white">{b.name}</td>
+                          <td className="text-slate-400 text-sm font-mono">{dims(b.outer_length, b.outer_width, b.outer_height)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -218,8 +218,8 @@ export function Boxes() {
           onClick={() => setShowContainerModal(false)}>
           <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-dax-text">Nuevo Contenedor</h3>
-              <button onClick={() => setShowContainerModal(false)} className="text-dax-muted hover:text-dax-text">
+              <h3 className="text-lg font-black text-white">Nuevo Contenedor</h3>
+              <button onClick={() => setShowContainerModal(false)} className="text-slate-500 hover:text-white">
                 <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>
@@ -260,8 +260,8 @@ export function Boxes() {
           onClick={() => setShowBoxModal(false)}>
           <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-dax-text">Nuevo Tipo de Caja</h3>
-              <button onClick={() => setShowBoxModal(false)} className="text-dax-muted hover:text-dax-text">
+              <h3 className="text-lg font-black text-white">Nuevo Tipo de Caja</h3>
+              <button onClick={() => setShowBoxModal(false)} className="text-slate-500 hover:text-white">
                 <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>

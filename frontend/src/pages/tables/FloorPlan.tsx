@@ -124,8 +124,8 @@ export function FloorPlan() {
       {/* Header + KPIs */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <i className="fa-solid fa-chair text-sem-warning text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Mesas</h1>
+          <i className="fa-solid fa-chair text-amber-400 text-xl" />
+          <h1 className="text-2xl font-black text-white">Mesas</h1>
         </div>
         <Button variant="secondary" icon="fa-plus" onClick={() => setModal({ mode: 'area', areaId: null })}>
           Nueva área
@@ -134,8 +134,8 @@ export function FloorPlan() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Ocupadas', value: occupied, icon: 'fa-users', tint: 'text-sem-warning' },
-          { label: 'Libres', value: free, icon: 'fa-circle-check', tint: 'text-sem-success' },
+          { label: 'Ocupadas', value: occupied, icon: 'fa-users', tint: 'text-amber-300' },
+          { label: 'Libres', value: free, icon: 'fa-circle-check', tint: 'text-emerald-300' },
           { label: 'Cuentas abiertas', value: formatCurrency(openSales), icon: 'fa-receipt', tint: 'text-sky-300' },
           { label: 'Tiempo prom.', value: `${avgMin} min`, icon: 'fa-clock', tint: 'text-violet-300' },
         ].map((k) => (
@@ -143,8 +143,8 @@ export function FloorPlan() {
             <div className="flex items-center gap-3">
               <i className={`fa-solid ${k.icon} ${k.tint} text-lg`} />
               <div>
-                <p className="text-[11px] uppercase tracking-wide text-dax-muted">{k.label}</p>
-                <p className="text-lg font-black text-dax-text">{k.value}</p>
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">{k.label}</p>
+                <p className="text-lg font-black text-white">{k.value}</p>
               </div>
             </div>
           </DaxCard>
@@ -153,7 +153,7 @@ export function FloorPlan() {
 
       {areas.length === 0 && tables.length === 0 && (
         <DaxCard>
-          <p className="text-dax-muted">Aún no hay mesas. Crea un área (Salón, Terraza…) y agrega mesas para empezar.</p>
+          <p className="text-slate-400">Aún no hay mesas. Crea un área (Salón, Terraza…) y agrega mesas para empezar.</p>
         </DaxCard>
       )}
 
@@ -161,7 +161,7 @@ export function FloorPlan() {
         ...(unassigned.length ? [{ id: null, name: 'Sin área' }] : [])].map((area) => (
         <DaxCard key={area.id ?? 'none'}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-dax-text">{area.name}</h2>
+            <h2 className="font-bold text-white">{area.name}</h2>
             <Button variant="ghost" size="sm" icon="fa-plus"
               onClick={() => setModal({ mode: 'table', areaId: area.id })}>
               Mesa
@@ -176,16 +176,16 @@ export function FloorPlan() {
                 <div key={t.id} className="rounded-xl border p-3 transition-colors"
                   style={{ borderColor: toneBorder(meta_t.tone), background: toneBg(meta_t.tone) }}>
                   <div className="flex items-center justify-between">
-                    <span className="font-black text-dax-text text-lg">{t.code}</span>
+                    <span className="font-black text-white text-lg">{t.code}</span>
                     <StatusChip tone={meta_t.tone} label={meta_t.label} size="sm" onDark />
                   </div>
-                  <div className="mt-1 flex items-center gap-3 text-[11px] text-dax-muted">
+                  <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-400">
                     <span><i className="fa-solid fa-user" /> {t.seats}</span>
                     {t.opened_at && <span><i className="fa-solid fa-clock" /> {mins}m</span>}
                   </div>
                   {m && (
                     <div className="mt-2 space-y-1">
-                      <p className="text-sm font-black text-dax-text">{formatCurrency(m?.total ?? 0)}</p>
+                      <p className="text-sm font-black text-white">{formatCurrency(m?.total ?? 0)}</p>
                       {m?.kitchenCount ? (
                         <p className="text-[11px] text-orange-300"><i className="fa-solid fa-fire-burner" /> {m.kitchenCount} en cocina</p>
                       ) : null}
@@ -204,7 +204,7 @@ export function FloorPlan() {
               )
             })}
             {tablesByArea(area.id).length === 0 && (
-              <p className="text-xs text-dax-muted col-span-full">Sin mesas en esta área.</p>
+              <p className="text-xs text-slate-500 col-span-full">Sin mesas en esta área.</p>
             )}
           </div>
         </DaxCard>

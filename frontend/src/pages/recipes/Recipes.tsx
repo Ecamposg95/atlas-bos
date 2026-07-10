@@ -55,7 +55,7 @@ export function Recipes() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-book text-orange-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Recetas</h1>
+          <h1 className="text-2xl font-black text-white">Recetas</h1>
         </div>
         <Button variant="primary" icon="fa-plus" onClick={() => navigate('/recipes/new')}>
           Nueva receta
@@ -64,7 +64,7 @@ export function Recipes() {
 
       {recipes.length === 0 ? (
         <DaxCard>
-          <p className="text-dax-muted">
+          <p className="text-slate-400">
             Aún no hay recetas. Crea una para costear tus platillos y descontar insumos
             automáticamente en cada venta.
           </p>
@@ -75,8 +75,8 @@ export function Recipes() {
             <DaxCard key={r.id}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-dax-text">{r.name}</p>
-                  <p className="text-sm text-dax-muted">
+                  <p className="font-bold text-white">{r.name}</p>
+                  <p className="text-sm text-slate-400">
                     Rinde {Number(r.yield_qty)} · {r.ingredients.length} insumo(s)
                   </p>
                 </div>

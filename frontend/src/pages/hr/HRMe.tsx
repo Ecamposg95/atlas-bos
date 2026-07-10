@@ -7,8 +7,8 @@ import { Spinner } from '../../components/ui/Spinner'
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div>
-      <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-0.5">{label}</p>
-      <p className="text-sm text-dax-text">{value || <span className="text-dax-faint italic">No registrado</span>}</p>
+      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">{label}</p>
+      <p className="text-sm text-slate-200">{value || <span className="text-slate-600 italic">No registrado</span>}</p>
     </div>
   )
 }
@@ -18,7 +18,7 @@ function EditableField({
 }: { label: string; name: string; value: string; onChange: (n: string, v: string) => void; type?: string }) {
   return (
     <div>
-      <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">{label}</label>
+      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{label}</label>
       <input
         type={type}
         value={value}
@@ -66,8 +66,8 @@ export function HRMe() {
   if (loading) return <Spinner text="Cargando expediente..." />
   if (error && !employee) return (
     <div className="dax-card p-8 text-center">
-      <i className="fa-solid fa-circle-exclamation text-sem-critical text-3xl mb-3" />
-      <p className="text-sem-critical">{error}</p>
+      <i className="fa-solid fa-circle-exclamation text-red-400 text-3xl mb-3" />
+      <p className="text-red-400">{error}</p>
     </div>
   )
 
@@ -78,11 +78,11 @@ export function HRMe() {
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-id-card text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-dax-text">Mi Expediente</h1>
+        <h1 className="text-2xl font-black text-white">Mi Expediente</h1>
       </div>
 
       {success && (
-        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-4 py-3 text-sem-success text-sm">
+        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-4 py-3 text-emerald-400 text-sm">
           <i className="fa-solid fa-check-circle" /> Datos guardados correctamente.
         </div>
       )}
@@ -93,15 +93,15 @@ export function HRMe() {
             {initials}
           </div>
           <div>
-            <p className="text-xl font-black text-dax-text">{fullName || '—'}</p>
-            <p className="text-dax-muted text-sm">{employee?.employee_type?.replace('_', ' ')}</p>
-            <p className="text-dax-muted text-xs mt-0.5">
+            <p className="text-xl font-black text-white">{fullName || '—'}</p>
+            <p className="text-slate-400 text-sm">{employee?.employee_type?.replace('_', ' ')}</p>
+            <p className="text-slate-500 text-xs mt-0.5">
               <i className="fa-solid fa-store mr-1" />Sin sucursal asignada
             </p>
           </div>
         </div>
         {employee?.hire_date && (
-          <p className="text-dax-muted text-xs mt-3">
+          <p className="text-slate-500 text-xs mt-3">
             <i className="fa-solid fa-calendar mr-1" />
             Ingreso: {new Date(employee.hire_date).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
@@ -109,7 +109,7 @@ export function HRMe() {
       </DaxCard>
 
       <DaxCard>
-        <p className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-4">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
           <i className="fa-solid fa-fingerprint mr-2" />Identificación Oficial
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -120,7 +120,7 @@ export function HRMe() {
       </DaxCard>
 
       <DaxCard>
-        <p className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-4">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
           <i className="fa-solid fa-user mr-2" />Información Personal
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -128,7 +128,7 @@ export function HRMe() {
           <EditableField label="Correo personal" name="email_personal" value={form.email_personal ?? ''} onChange={handleChange} type="email" />
           <EditableField label="Fecha de nacimiento" name="birth_date" value={form.birth_date ?? ''} onChange={handleChange} type="date" />
           <div>
-            <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">Estado civil</label>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Estado civil</label>
             <select value={form.civil_status ?? ''} onChange={(e) => handleChange('civil_status', e.target.value)} className="dax-input">
               <option value="">Selecciona...</option>
               <option value="SOLTERO">Soltero/a</option>
@@ -142,7 +142,7 @@ export function HRMe() {
       </DaxCard>
 
       <DaxCard>
-        <p className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-4">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
           <i className="fa-solid fa-house mr-2" />Domicilio Actual
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -154,7 +154,7 @@ export function HRMe() {
       </DaxCard>
 
       <DaxCard>
-        <p className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-4">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
           <i className="fa-solid fa-phone-volume mr-2" />Contacto de Emergencia
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -164,7 +164,7 @@ export function HRMe() {
       </DaxCard>
 
       <DaxCard>
-        <p className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-4">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
           <i className="fa-solid fa-building-columns mr-2" />Datos Bancarios — Nómina
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

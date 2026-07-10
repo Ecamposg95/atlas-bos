@@ -358,14 +358,14 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
           {!isEmpty && (
             <button
               onClick={onPark}
-              className="text-sem-warning hover:text-sem-warning text-xs flex items-center gap-1 transition-colors font-semibold"
+              className="text-amber-400 hover:text-amber-300 text-xs flex items-center gap-1 transition-colors font-semibold"
               title="Guardar como pedido pendiente"
             >
               <i className="fa-solid fa-pause text-[10px]" /> Pausar
             </button>
           )}
           {!isEmpty && (
-            <button onClick={clearCart} className="text-dax-muted hover:text-sem-critical text-xs transition-colors">
+            <button onClick={clearCart} className="text-slate-500 hover:text-red-400 text-xs transition-colors">
               <i className="fa-solid fa-trash" /> Limpiar
             </button>
           )}
@@ -375,9 +375,9 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
       {/* Cliente — solo visible cuando hay uno seleccionado */}
       {customerName && (
         <div className="px-4 py-2.5 flex items-center gap-2" style={{ borderBottom: '1px solid var(--dax-row-border)' }}>
-          <i className="fa-solid fa-user text-dax-muted text-sm" />
+          <i className="fa-solid fa-user text-slate-500 text-sm" />
           <span className="text-sm flex-1 truncate font-medium" style={{ color: 'var(--dax-text)' }}>{customerName}</span>
-          <button onClick={onClearCustomer} className="text-dax-muted hover:text-sem-critical text-sm">
+          <button onClick={onClearCustomer} className="text-slate-500 hover:text-red-400 text-sm">
             <i className="fa-solid fa-xmark" />
           </button>
         </div>
@@ -388,8 +388,8 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-8">
             <i className="fa-solid fa-shopping-cart text-slate-700 text-4xl mb-3" />
-            <p className="text-dax-muted text-sm">Carrito vacío</p>
-            <p className="text-dax-faint text-xs mt-1">Busca y agrega productos</p>
+            <p className="text-slate-500 text-sm">Carrito vacío</p>
+            <p className="text-slate-600 text-xs mt-1">Busca y agrega productos</p>
           </div>
         ) : (
           <div>
@@ -430,14 +430,14 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
                     >
                       {displayItem.name}
                     </button>
-                    <button onClick={() => removeGroup(group)} className="text-dax-faint hover:text-sem-critical text-sm flex-shrink-0 mt-0.5">
+                    <button onClick={() => removeGroup(group)} className="text-slate-600 hover:text-red-400 text-sm flex-shrink-0 mt-0.5">
                       <i className="fa-solid fa-xmark" />
                     </button>
                   </div>
 
                   {/* Línea 2: SKU + total piezas + tier badge + precio total */}
                   <div className="flex items-center gap-2 mb-2.5">
-                    <p className="text-xs font-mono text-dax-muted">{displayItem.sku}</p>
+                    <p className="text-xs font-mono text-slate-500">{displayItem.sku}</p>
                     {/* Total piezas: siempre visible */}
                     <span className="flex items-center gap-1 text-xs font-semibold tabular-nums" style={{ color: 'var(--dax-text-muted)' }}>
                       <i className="fa-solid fa-cube text-[9px] opacity-60" />
@@ -457,7 +457,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
                       </span>
                     )}
                     <span className="flex-1" />
-                    <span className="font-black text-lg text-sem-success tabular-nums">{formatCurrency(groupSubtotal)}</span>
+                    <span className="font-black text-lg text-emerald-600 tabular-nums">{formatCurrency(groupSubtotal)}</span>
                   </div>
 
                   {/* Price-picker popover (portaled — replaces inline panel). */}
@@ -500,8 +500,8 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
                         min="0" max="100" step="1"
                         autoFocus
                       />
-                      <span className="text-xs text-dax-muted">%</span>
-                      <button onClick={() => setEditing(null)} className="text-[9px] text-dax-muted hover:text-dax-muted">✕</button>
+                      <span className="text-xs text-slate-500">%</span>
+                      <button onClick={() => setEditing(null)} className="text-[9px] text-slate-500 hover:text-slate-300">✕</button>
                     </div>
                   )}
 
@@ -733,7 +733,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
                             setForcedTier(cajaKey, null)
                             removeItem(cajaKey)
                           }}
-                          className="text-dax-faint hover:text-sem-critical text-xs flex-shrink-0 mt-1"
+                          className="text-slate-600 hover:text-red-400 text-xs flex-shrink-0 mt-1"
                           title="Quitar cajas"
                         >
                           <i className="fa-solid fa-xmark" />
@@ -810,7 +810,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
               className="rounded-lg px-2.5 py-2 bg-amber-500 border border-amber-400 text-white hover:bg-amber-600 transition-colors text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
               title={`Descuento global -${globalDiscount}% (${formatCurrency(globalDiscountAmount)})`}
             >
-              <i className="fa-solid fa-tag text-[10px] text-dax-text" aria-hidden="true" />
+              <i className="fa-solid fa-tag text-[10px] text-white" aria-hidden="true" />
               <span className="truncate">Desc. -{globalDiscount}%</span>
             </button>
           ) : (
@@ -823,7 +823,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
               className="rounded-lg px-2.5 py-2 bg-amber-500/70 border border-amber-400 text-white hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
               title="Aplicar descuento global al ticket"
             >
-              <i className="fa-solid fa-tag text-[10px] text-dax-text" aria-hidden="true" />
+              <i className="fa-solid fa-tag text-[10px] text-white" aria-hidden="true" />
               <span className="truncate">Descuento global</span>
             </button>
           )}
@@ -856,7 +856,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
                 className="rounded-lg px-2.5 py-2 bg-indigo-500/70 border border-indigo-400 text-white hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
                 title="Aplica precio caja a todos los productos del carrito que tengan tier caja configurado y cantidad suficiente. Sobreescribe precios manuales."
               >
-                <i className="fa-solid fa-box text-[10px] text-dax-text" aria-hidden="true" />
+                <i className="fa-solid fa-box text-[10px] text-white" aria-hidden="true" />
                 <span className="truncate">Aplicar caja</span>
               </button>
             ) : (
@@ -865,7 +865,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
                 className="rounded-lg px-2.5 py-2 bg-emerald-500 border border-emerald-400 text-white hover:bg-emerald-600 transition-colors text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm"
                 title={`Caja aplicada en ${appliedCount}/${totalCount} — clic para restaurar`}
               >
-                <i className="fa-solid fa-box text-[10px] text-dax-text" aria-hidden="true" />
+                <i className="fa-solid fa-box text-[10px] text-white" aria-hidden="true" />
                 <span className="truncate">Caja {appliedCount}/{totalCount}</span>
               </button>
             )
@@ -873,7 +873,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
         </div>
 
         {requiresInvoice && (
-          <div className="flex justify-between text-sem-warning font-semibold">
+          <div className="flex justify-between text-amber-400 font-semibold">
             <span>IVA 16%</span><span className="tabular-nums">{formatCurrency(tax)}</span>
           </div>
         )}
@@ -904,15 +904,15 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
         </div>
         <div className="flex justify-between items-baseline font-black pt-2" style={{ borderTop: '1px solid var(--dax-row-border)', color: 'var(--dax-text)' }}>
           <span className="text-base uppercase tracking-wide">Total</span>
-          <span className="tabular-nums text-sem-success text-3xl">{formatCurrency(total)}</span>
+          <span className="tabular-nums text-emerald-600 text-3xl">{formatCurrency(total)}</span>
         </div>
         <div className="flex items-center gap-2 pt-0.5">
           <button
             onClick={() => setRequiresInvoice(!requiresInvoice)}
             className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors ${
               requiresInvoice
-                ? 'bg-amber-600/20 text-sem-warning border border-amber-600/30'
-                : 'text-dax-muted hover:text-dax-muted'
+                ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             <i className={`fa-solid ${requiresInvoice ? 'fa-check-square' : 'fa-square'}`} />
@@ -929,7 +929,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
             disabled={isEmpty}
             className="flex flex-col items-center justify-center gap-1.5 py-4 px-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <i className="fa-solid fa-money-bill text-xl text-dax-text" />
+            <i className="fa-solid fa-money-bill text-xl text-white" />
             <span className="text-xs font-bold">Efectivo</span>
           </button>
           <button
@@ -937,7 +937,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
             disabled={isEmpty}
             className="flex flex-col items-center justify-center gap-1.5 py-4 px-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <i className="fa-solid fa-credit-card text-xl text-dax-text" />
+            <i className="fa-solid fa-credit-card text-xl text-white" />
             <span className="text-xs">Tarjeta</span>
           </button>
           <button
@@ -945,7 +945,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
             disabled={isEmpty}
             className="flex flex-col items-center justify-center gap-1.5 py-4 px-2 rounded-2xl bg-sky-600 hover:bg-sky-700 text-white font-semibold shadow-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <i className="fa-solid fa-mobile-screen text-xl text-dax-text" />
+            <i className="fa-solid fa-mobile-screen text-xl text-white" />
             <span className="text-xs">Transfer.</span>
           </button>
           <button
@@ -953,7 +953,7 @@ export function CartPanel({ onPay, onPark, customerName, onClearCustomer, sessio
             disabled={isEmpty}
             className="flex flex-col items-center justify-center gap-1.5 py-4 px-2 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-semibold shadow-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <i className="fa-solid fa-layer-group text-xl text-dax-text" />
+            <i className="fa-solid fa-layer-group text-xl text-white" />
             <span className="text-xs">Mixto</span>
           </button>
         </div>

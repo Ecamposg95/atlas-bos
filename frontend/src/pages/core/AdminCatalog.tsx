@@ -203,9 +203,9 @@ export function AdminCatalog() {
         <div>
           <div className="flex items-center gap-3">
             <i className="fa-solid fa-book text-indigo-400 text-xl" />
-            <h1 className="text-2xl font-black text-dax-text">Catálogo — Administración</h1>
+            <h1 className="text-2xl font-black text-white">Catálogo — Administración</h1>
           </div>
-          <p className="text-dax-muted text-xs mt-0.5">
+          <p className="text-slate-500 text-xs mt-0.5">
             Gestión completa de productos · {org?.name ?? 'Organización'}
           </p>
         </div>
@@ -221,7 +221,7 @@ export function AdminCatalog() {
             className="dax-btn-secondary text-xs inline-flex items-center gap-1.5"
             title="Exportar catálogo filtrado a Excel"
           >
-            <i className="fa-solid fa-file-excel text-sem-success" /> Exportar
+            <i className="fa-solid fa-file-excel text-emerald-400" /> Exportar
           </button>
           <Link
             to="/products"
@@ -245,29 +245,29 @@ export function AdminCatalog() {
       <DaxCard>
         <div className="flex flex-wrap gap-3 items-end">
           <div className="flex-1 min-w-[200px]">
-            <label className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1 block">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">
               Buscar
             </label>
             <div className="relative">
-              <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-dax-faint text-xs" />
+              <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 text-xs" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Nombre, SKU, código de barras..."
-                className="w-full pl-9 pr-3 py-2 rounded-lg bg-dax-bg border border-dax-border text-sm text-dax-text focus:outline-none focus:border-indigo-500"
+                className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-900/40 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
 
           <div className="min-w-[150px]">
-            <label className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1 block">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">
               Departamento
             </label>
             <select
               value={deptId}
               onChange={(e) => setDeptId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-dax-bg border border-dax-border text-sm text-dax-text focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500"
             >
               <option value="">Todos</option>
               {departments.map((d) => (
@@ -277,13 +277,13 @@ export function AdminCatalog() {
           </div>
 
           <div className="min-w-[150px]">
-            <label className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1 block">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">
               Marca
             </label>
             <select
               value={brandId}
               onChange={(e) => setBrandId(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg bg-dax-bg border border-dax-border text-sm text-dax-text focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 rounded-lg bg-slate-900/40 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500"
             >
               <option value="">Todas</option>
               {brands.map((b) => (
@@ -293,16 +293,16 @@ export function AdminCatalog() {
           </div>
 
           <div>
-            <label className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1 block">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 block">
               Aprobación
             </label>
-            <div className="inline-flex rounded-lg bg-dax-bg border border-dax-border p-0.5">
+            <div className="inline-flex rounded-lg bg-slate-900/40 border border-slate-700 p-0.5">
               {(['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as ApprovalFilter[]).map((a) => (
                 <button
                   key={a}
                   onClick={() => setApproval(a)}
                   className={`px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider transition ${
-                    approval === a ? 'bg-indigo-500 text-white' : 'text-dax-muted hover:text-dax-text'
+                    approval === a ? 'bg-indigo-500 text-white' : 'text-slate-500 hover:text-white'
                   }`}
                 >
                   {a === 'ALL' ? 'Todos' : a === 'PENDING' ? 'Pend.' : a === 'APPROVED' ? 'OK' : 'Rech.'}
@@ -314,14 +314,14 @@ export function AdminCatalog() {
           {noBranchOnly && (
             <button
               onClick={() => setNoBranchOnly(false)}
-              className="text-[11px] font-bold text-fuchsia-300 hover:text-dax-text inline-flex items-center gap-1.5 py-2"
+              className="text-[11px] font-bold text-fuchsia-300 hover:text-white inline-flex items-center gap-1.5 py-2"
               title="Quitar filtro"
             >
               <i className="fa-solid fa-xmark" /> Sin sucursal
             </button>
           )}
 
-          <label className="inline-flex items-center gap-2 text-xs text-dax-muted select-none py-2">
+          <label className="inline-flex items-center gap-2 text-xs text-slate-400 select-none py-2">
             <input
               type="checkbox"
               checked={includeArchived}
@@ -338,7 +338,7 @@ export function AdminCatalog() {
         <Spinner text="Cargando catálogo..." />
       ) : products.length === 0 ? (
         <DaxCard>
-          <div className="p-12 text-center text-dax-muted">
+          <div className="p-12 text-center text-slate-500">
             <i className="fa-solid fa-box-open text-3xl mb-3 text-slate-700" />
             <p>No hay productos que coincidan con los filtros.</p>
           </div>
@@ -348,7 +348,7 @@ export function AdminCatalog() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-[10px] font-bold text-dax-muted uppercase tracking-widest border-b border-dax-border">
+                <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800">
                   <th className="text-left py-2 px-3">Producto</th>
                   <th className="text-left py-2 px-3">SKU</th>
                   <th className="text-left py-2 px-3">Departamento</th>
@@ -360,16 +360,16 @@ export function AdminCatalog() {
               </thead>
               <tbody>
                 {products.map((p) => (
-                  <tr key={p.id} className="border-b border-dax-border hover:bg-dax-card transition">
+                  <tr key={p.id} className="border-b border-slate-800/40 hover:bg-slate-800/30 transition">
                     <td className="py-2.5 px-3">
-                      <div className="font-semibold text-dax-text truncate max-w-[280px]">{p.name}</div>
+                      <div className="font-semibold text-white truncate max-w-[280px]">{p.name}</div>
                       {p.brand_name && (
-                        <div className="text-[11px] text-dax-muted">{p.brand_name}</div>
+                        <div className="text-[11px] text-slate-500">{p.brand_name}</div>
                       )}
                     </td>
-                    <td className="py-2.5 px-3 text-dax-muted tabular-nums text-xs">{p.sku || '—'}</td>
-                    <td className="py-2.5 px-3 text-dax-muted text-xs">{p.department_name || '—'}</td>
-                    <td className="py-2.5 px-3 text-right tabular-nums text-sem-success font-semibold">
+                    <td className="py-2.5 px-3 text-slate-400 tabular-nums text-xs">{p.sku || '—'}</td>
+                    <td className="py-2.5 px-3 text-slate-400 text-xs">{p.department_name || '—'}</td>
+                    <td className="py-2.5 px-3 text-right tabular-nums text-emerald-400 font-semibold">
                       {formatCurrency(p.price)}
                     </td>
                     <td className="py-2.5 px-3 text-center">
@@ -382,7 +382,7 @@ export function AdminCatalog() {
                       <div className="inline-flex gap-1">
                         <button
                           onClick={() => handleMatrix(p)}
-                          className="p-1.5 rounded-md text-dax-muted hover:text-indigo-300 hover:bg-indigo-500/10"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10"
                           title="Matriz de sucursales"
                         >
                           <i className="fa-solid fa-store" />
@@ -391,14 +391,14 @@ export function AdminCatalog() {
                           <>
                             <button
                               onClick={() => handleApprove(p)}
-                              className="p-1.5 rounded-md text-dax-muted hover:text-sem-success hover:bg-emerald-500/10"
+                              className="p-1.5 rounded-md text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
                               title="Aprobar"
                             >
                               <i className="fa-solid fa-check" />
                             </button>
                             <button
                               onClick={() => handleReject(p)}
-                              className="p-1.5 rounded-md text-dax-muted hover:text-sem-warning hover:bg-amber-500/10"
+                              className="p-1.5 rounded-md text-slate-400 hover:text-amber-400 hover:bg-amber-500/10"
                               title="Rechazar"
                             >
                               <i className="fa-solid fa-xmark" />
@@ -407,21 +407,21 @@ export function AdminCatalog() {
                         )}
                         <button
                           onClick={() => setAuditProduct(p)}
-                          className="p-1.5 rounded-md text-dax-muted hover:text-sem-warning hover:bg-amber-500/10"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-amber-300 hover:bg-amber-500/10"
                           title="Historial"
                         >
                           <i className="fa-solid fa-clock-rotate-left" />
                         </button>
                         <button
                           onClick={() => handleEdit(p)}
-                          className="p-1.5 rounded-md text-dax-muted hover:text-dax-text hover:bg-dax-surface"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-700"
                           title="Editar"
                         >
                           <i className="fa-solid fa-pen-to-square" />
                         </button>
                         <button
                           onClick={() => handleDuplicate(p)}
-                          className="p-1.5 rounded-md text-dax-muted hover:text-cyan-300 hover:bg-cyan-500/10"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/10"
                           title="Duplicar"
                         >
                           <i className="fa-solid fa-copy" />
@@ -429,7 +429,7 @@ export function AdminCatalog() {
                         {p.is_active ? (
                           <button
                             onClick={() => handleDelete(p)}
-                            className="p-1.5 rounded-md text-dax-muted hover:text-sem-critical hover:bg-rose-500/10"
+                            className="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-500/10"
                             title="Archivar"
                           >
                             <i className="fa-solid fa-box-archive" />
@@ -437,7 +437,7 @@ export function AdminCatalog() {
                         ) : (
                           <button
                             onClick={() => handleRestore(p)}
-                            className="p-1.5 rounded-md text-dax-muted hover:text-sem-success hover:bg-emerald-500/10"
+                            className="p-1.5 rounded-md text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10"
                             title="Restaurar"
                           >
                             <i className="fa-solid fa-box-open" />
@@ -452,22 +452,22 @@ export function AdminCatalog() {
           </div>
 
           {pages > 1 && (
-            <div className="flex items-center justify-between pt-4 mt-3 border-t border-dax-border">
-              <p className="text-xs text-dax-muted">
+            <div className="flex items-center justify-between pt-4 mt-3 border-t border-slate-800">
+              <p className="text-xs text-slate-500">
                 Página {page + 1} de {pages} · {total.toLocaleString('es-MX')} productos
               </p>
               <div className="inline-flex gap-1">
                 <button
                   onClick={() => { const np = Math.max(0, page - 1); setPage(np); loadList(np) }}
                   disabled={page === 0}
-                  className="px-3 py-1.5 rounded-md text-xs font-semibold bg-dax-card text-dax-muted disabled:opacity-40 disabled:cursor-not-allowed hover:bg-dax-surface"
+                  className="px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700"
                 >
                   ← Anterior
                 </button>
                 <button
                   onClick={() => { const np = Math.min(pages - 1, page + 1); setPage(np); loadList(np) }}
                   disabled={page >= pages - 1}
-                  className="px-3 py-1.5 rounded-md text-xs font-semibold bg-dax-card text-dax-muted disabled:opacity-40 disabled:cursor-not-allowed hover:bg-dax-surface"
+                  className="px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700"
                 >
                   Siguiente →
                 </button>
@@ -503,7 +503,7 @@ function BranchBadge({ count, total }: { count: number; total: number }) {
   return (
     <span
       className={`inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums ${
-        pct === 100 ? 'text-sem-success' : pct === 0 ? 'text-dax-muted' : 'text-sem-warning'
+        pct === 100 ? 'text-emerald-400' : pct === 0 ? 'text-slate-500' : 'text-amber-400'
       }`}
     >
       <i className="fa-solid fa-store text-[10px]" />
@@ -515,14 +515,14 @@ function BranchBadge({ count, total }: { count: number; total: number }) {
 function ApprovalBadge({ status, active }: { status: string; active: boolean }) {
   if (!active) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-dax-surface border border-dax-border text-[10px] font-bold text-dax-muted">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-700/40 border border-slate-600/40 text-[10px] font-bold text-slate-400">
         Archivado
       </span>
     )
   }
   const config: Record<string, { bg: string; border: string; text: string; label: string }> = {
-    APPROVED: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', text: 'text-sem-success', label: 'Aprobado' },
-    PENDING:  { bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   text: 'text-sem-warning',   label: 'Pendiente' },
+    APPROVED: { bg: 'bg-emerald-500/15', border: 'border-emerald-500/30', text: 'text-emerald-300', label: 'Aprobado' },
+    PENDING:  { bg: 'bg-amber-500/15',   border: 'border-amber-500/30',   text: 'text-amber-300',   label: 'Pendiente' },
     REJECTED: { bg: 'bg-rose-500/15',    border: 'border-rose-500/30',    text: 'text-rose-300',    label: 'Rechazado' },
   }
   const c = config[status] || config.APPROVED

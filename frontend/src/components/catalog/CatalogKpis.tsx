@@ -95,12 +95,12 @@ interface CardProps {
 
 const COLOR_CLASSES: Record<CardProps['color'], { border: string; from: string; text: string }> = {
   indigo:   { border: 'border-indigo-500/20',   from: 'from-indigo-500/10',   text: 'text-indigo-300' },
-  emerald:  { border: 'border-emerald-500/20',  from: 'from-emerald-500/10',  text: 'text-sem-success' },
-  amber:    { border: 'border-amber-500/30',    from: 'from-amber-500/15',    text: 'text-sem-warning' },
+  emerald:  { border: 'border-emerald-500/20',  from: 'from-emerald-500/10',  text: 'text-emerald-300' },
+  amber:    { border: 'border-amber-500/30',    from: 'from-amber-500/15',    text: 'text-amber-300' },
   fuchsia:  { border: 'border-fuchsia-500/25',  from: 'from-fuchsia-500/12',  text: 'text-fuchsia-300' },
   orange:   { border: 'border-orange-500/25',   from: 'from-orange-500/12',   text: 'text-orange-300' },
   rose:     { border: 'border-rose-500/25',     from: 'from-rose-500/12',     text: 'text-rose-300' },
-  slate:    { border: 'border-dax-border',    from: 'from-slate-800/40',    text: 'text-dax-muted' },
+  slate:    { border: 'border-slate-700/50',    from: 'from-slate-800/40',    text: 'text-slate-300' },
 }
 
 function Card({ label, value, color, icon, skeleton, sub, interactive, onClick }: CardProps) {
@@ -115,19 +115,19 @@ function Card({ label, value, color, icon, skeleton, sub, interactive, onClick }
       }`}
     >
       <div className="flex items-start justify-between mb-1">
-        <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
           {label}
         </p>
         <i className={`fa-solid ${icon} ${c.text} text-xs`} />
       </div>
       {skeleton ? (
-        <div className="h-7 w-16 rounded bg-dax-surface animate-pulse" />
+        <div className="h-7 w-16 rounded bg-slate-700/40 animate-pulse" />
       ) : (
         <div className="flex items-baseline gap-2">
           <p className={`text-2xl font-black tabular-nums ${c.text}`}>
             {value.toLocaleString('es-MX')}
           </p>
-          {sub && <span className="text-[11px] font-semibold text-dax-muted">{sub}</span>}
+          {sub && <span className="text-[11px] font-semibold text-slate-500">{sub}</span>}
         </div>
       )}
     </Wrapper>

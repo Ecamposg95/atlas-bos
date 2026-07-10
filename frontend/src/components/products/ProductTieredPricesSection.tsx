@@ -18,7 +18,7 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-bold text-dax-muted uppercase tracking-wide">Precios escalonados</h2>
+        <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wide">Precios escalonados</h2>
         <button
           type="button"
           onClick={add}
@@ -27,10 +27,10 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
           <i className="fa-solid fa-plus" /> Agregar precio
         </button>
       </div>
-      {help && <p className="text-[11px] text-dax-muted">{help}</p>}
+      {help && <p className="text-[11px] text-slate-500">{help}</p>}
 
       {prices.length === 0 ? (
-        <p className="text-xs py-3 text-center text-dax-muted italic">
+        <p className="text-xs py-3 text-center text-slate-500 italic">
           Sin precios adicionales — se usa solo el precio base.
         </p>
       ) : (
@@ -38,7 +38,7 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
           {prices.map((p, i) => (
             <div key={i} className="grid grid-cols-[1fr_90px_110px_28px] gap-2 items-end">
               <div>
-                {i === 0 && <label className="block text-[10px] mb-0.5 text-dax-muted">Nombre</label>}
+                {i === 0 && <label className="block text-[10px] mb-0.5 text-slate-400">Nombre</label>}
                 <input
                   className="dax-input w-full text-xs"
                   value={p.price_name}
@@ -47,7 +47,7 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
                 />
               </div>
               <div>
-                {i === 0 && <label className="block text-[10px] mb-0.5 text-dax-muted">Mín. piezas</label>}
+                {i === 0 && <label className="block text-[10px] mb-0.5 text-slate-400">Mín. piezas</label>}
                 <input
                   className="dax-input w-full text-xs"
                   type="number" min="1"
@@ -56,7 +56,7 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
                 />
               </div>
               <div>
-                {i === 0 && <label className="block text-[10px] mb-0.5 text-dax-muted">Precio / unidad</label>}
+                {i === 0 && <label className="block text-[10px] mb-0.5 text-slate-400">Precio / unidad</label>}
                 <input
                   className="dax-input w-full text-xs"
                   type="number" min="0" step="0.01"
@@ -67,7 +67,7 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
               <button
                 type="button"
                 onClick={() => remove(i)}
-                className="h-8 w-7 flex items-center justify-center text-dax-muted hover:text-sem-critical transition-colors rounded"
+                className="h-8 w-7 flex items-center justify-center text-slate-500 hover:text-red-400 transition-colors rounded"
                 title="Eliminar"
               >
                 <i className="fa-solid fa-xmark text-xs" />

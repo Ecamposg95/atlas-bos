@@ -86,7 +86,7 @@ export function HR() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-user-tie text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Recursos Humanos</h1>
+          <h1 className="text-2xl font-black text-white">Recursos Humanos</h1>
         </div>
         <button onClick={openCreate} className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Nuevo Empleado
@@ -100,7 +100,7 @@ export function HR() {
 
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando empleados..." /> : filtered.length === 0 ? (
-          <div className="p-12 text-center text-dax-faint">Sin empleados</div>
+          <div className="p-12 text-center text-slate-600">Sin empleados</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -117,17 +117,17 @@ export function HR() {
               <tbody>
                 {filtered.map((e) => (
                   <tr key={e.id}>
-                    <td className="font-semibold text-dax-text">{employeeFullName(e)}</td>
+                    <td className="font-semibold text-white">{employeeFullName(e)}</td>
                     <td><Badge variant={typeVariant(e.employee_type ?? '') as 'green' | 'yellow' | 'blue' | 'slate'}>{typeLabel(e.employee_type ?? '')}</Badge></td>
-                    <td className="text-dax-muted text-sm">
+                    <td className="text-slate-400 text-sm">
                       {branches.find((b) => b.id === e.base_branch_id)?.name ?? 'HQ'}
                     </td>
-                    <td className="text-dax-muted text-xs">
+                    <td className="text-slate-500 text-xs">
                       {e.hire_date ? new Date(e.hire_date).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </td>
-                    <td className="text-dax-muted text-sm">{e.phone ?? '—'}</td>
+                    <td className="text-slate-400 text-sm">{e.phone ?? '—'}</td>
                     <td>
-                      <button onClick={() => openEdit(e)} className="text-dax-muted hover:text-dax-text text-xs">
+                      <button onClick={() => openEdit(e)} className="text-slate-500 hover:text-white text-xs">
                         <i className="fa-solid fa-pen" />
                       </button>
                     </td>
@@ -144,8 +144,8 @@ export function HR() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(null)}>
           <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-dax-text">{modal === 'create' ? 'Nuevo Empleado' : 'Editar Empleado'}</h3>
-              <button onClick={() => setModal(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-white">{modal === 'create' ? 'Nuevo Empleado' : 'Editar Empleado'}</h3>
+              <button onClick={() => setModal(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">

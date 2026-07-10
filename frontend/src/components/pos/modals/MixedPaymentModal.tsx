@@ -10,9 +10,9 @@ interface PaymentLine {
 }
 
 const METHOD_LABELS: Record<Method, { label: string; icon: string; color: string }> = {
-  CASH: { label: 'Efectivo', icon: 'fa-money-bill', color: 'text-sem-success' },
+  CASH: { label: 'Efectivo', icon: 'fa-money-bill', color: 'text-emerald-400' },
   CARD: { label: 'Tarjeta', icon: 'fa-credit-card', color: 'text-indigo-400' },
-  TRANSFER: { label: 'Transferencia', icon: 'fa-mobile-screen', color: 'text-sem-info' },
+  TRANSFER: { label: 'Transferencia', icon: 'fa-mobile-screen', color: 'text-blue-400' },
 }
 
 interface Props {
@@ -59,8 +59,8 @@ export function MixedPaymentModal({ total, onClose, onConfirm }: Props) {
       onClick={onClose}
     >
       <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-lg font-black text-dax-text mb-1">Pago Mixto</h3>
-        <p className="text-dax-muted text-sm mb-4">Total: <span className="text-dax-text font-bold">{formatCurrency(total)}</span></p>
+        <h3 className="text-lg font-black text-white mb-1">Pago Mixto</h3>
+        <p className="text-slate-500 text-sm mb-4">Total: <span className="text-white font-bold">{formatCurrency(total)}</span></p>
 
         <div className="space-y-3 mb-4 max-h-[40vh] overflow-y-auto pr-1">
           {lines.map((line, i) => (
@@ -77,7 +77,7 @@ export function MixedPaymentModal({ total, onClose, onConfirm }: Props) {
                   ))}
                 </select>
                 {lines.length > 1 && (
-                  <button onClick={() => removeLine(i)} className="text-sem-critical hover:text-red-300 text-sm p-1.5">
+                  <button onClick={() => removeLine(i)} className="text-red-400 hover:text-red-300 text-sm p-1.5">
                     <i className="fa-solid fa-xmark" />
                   </button>
                 )}
@@ -112,20 +112,20 @@ export function MixedPaymentModal({ total, onClose, onConfirm }: Props) {
 
         {/* Resumen */}
         <div className={`rounded-xl p-3 mb-4 text-sm space-y-1 ${remaining > 0.005 ? 'bg-red-600/10 border border-red-600/30' : 'bg-emerald-600/10 border border-emerald-600/30'}`}>
-          <div className="flex justify-between text-dax-muted">
+          <div className="flex justify-between text-slate-400">
             <span>Total</span><span>{formatCurrency(total)}</span>
           </div>
-          <div className="flex justify-between text-dax-muted">
+          <div className="flex justify-between text-slate-400">
             <span>Pagado</span><span>{formatCurrency(paid)}</span>
           </div>
-          <div className={`flex justify-between font-bold pt-1 ${remaining > 0.005 ? 'text-sem-critical' : 'text-sem-success'}`} style={{ borderTop: '1px solid var(--dax-border-dim)' }}>
+          <div className={`flex justify-between font-bold pt-1 ${remaining > 0.005 ? 'text-red-400' : 'text-emerald-400'}`} style={{ borderTop: '1px solid var(--dax-border-dim)' }}>
             <span>{remaining > 0.005 ? 'Pendiente' : change > 0.005 ? 'Cambio' : 'Exacto'}</span>
             <span>{formatCurrency(remaining > 0.005 ? remaining : change)}</span>
           </div>
         </div>
 
         {change > 0.005 && (
-          <p className="text-xs text-center mb-3 text-dax-muted">
+          <p className="text-xs text-center mb-3 text-slate-400">
             <i className="fa-solid fa-circle-info mr-1" />
             {lines.some((l) => l.method === 'CASH')
               ? 'El cambio se entrega del efectivo'

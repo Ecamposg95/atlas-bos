@@ -38,10 +38,10 @@ export function CloseSessionModal({ onClose, onConfirm }: Props) {
       <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="text-center mb-5">
           <div className="w-14 h-14 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
-            <i className="fa-solid fa-lock text-sem-warning text-2xl" />
+            <i className="fa-solid fa-lock text-amber-400 text-2xl" />
           </div>
-          <h3 className="text-xl font-black text-dax-text">Cerrar Turno</h3>
-          <p className="text-dax-muted text-xs mt-1">Registra el efectivo real en caja</p>
+          <h3 className="text-xl font-black text-white">Cerrar Turno</h3>
+          <p className="text-slate-500 text-xs mt-1">Registra el efectivo real en caja</p>
         </div>
 
         {loadingData ? (
@@ -52,13 +52,13 @@ export function CloseSessionModal({ onClose, onConfirm }: Props) {
           <div className="space-y-4">
             {expectedCash !== null && (
               <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/5 p-4 text-center">
-                <p className="text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">Efectivo esperado</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Efectivo esperado</p>
                 <p className="text-2xl font-black text-indigo-400 tabular-nums">{formatCurrency(expectedCash)}</p>
               </div>
             )}
 
             <div>
-              <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                 Efectivo real en caja
               </label>
               <input
@@ -76,15 +76,15 @@ export function CloseSessionModal({ onClose, onConfirm }: Props) {
             {diff !== null && closingAmount && (
               <div className={`rounded-xl p-3 text-center text-sm font-bold ${
                 diff >= 0
-                  ? 'bg-emerald-600/10 border border-emerald-600/30 text-sem-success'
-                  : 'bg-red-600/10 border border-red-600/30 text-sem-critical'
+                  ? 'bg-emerald-600/10 border border-emerald-600/30 text-emerald-400'
+                  : 'bg-red-600/10 border border-red-600/30 text-red-400'
               }`}>
                 {diff >= 0 ? `Sobrante: ${formatCurrency(diff)}` : `Faltante: ${formatCurrency(Math.abs(diff))}`}
               </div>
             )}
 
             <div>
-              <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
                 Notas (opcional)
               </label>
               <input

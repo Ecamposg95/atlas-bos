@@ -157,7 +157,7 @@ export function PricePickerPopover({
         <p className="text-xs font-bold uppercase tracking-widest"
            style={{ color: 'var(--dax-text-muted)' }}>Elegir precio</p>
         <button onClick={onClose}
-                className="text-dax-muted hover:text-dax-text text-sm w-7 h-7 flex items-center justify-center rounded hover:bg-dax-surface">
+                className="text-slate-500 hover:text-slate-200 text-sm w-7 h-7 flex items-center justify-center rounded hover:bg-slate-700/40">
           <i className="fa-solid fa-xmark" />
         </button>
       </div>
@@ -226,7 +226,7 @@ export function PricePickerPopover({
         <div style={{ borderTop: '1px solid rgba(139,92,246,0.15)' }}>
           <button
             onClick={onResetToAuto}
-            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold transition-colors hover:bg-dax-surface"
+            className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold transition-colors hover:bg-slate-700/30"
             style={{ color: '#fbbf24' }}
           >
             <i className="fa-solid fa-rotate-left text-[11px]" />

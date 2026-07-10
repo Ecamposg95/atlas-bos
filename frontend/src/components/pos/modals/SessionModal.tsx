@@ -40,13 +40,13 @@ export function SessionModal({ onOpened }: Props) {
           <div className="w-16 h-16 rounded-full bg-indigo-600/20 flex items-center justify-center mx-auto mb-3">
             <i className="fa-solid fa-vault text-indigo-400 text-2xl" />
           </div>
-          <h2 className="text-xl font-black text-dax-text">Abrir Turno</h2>
-          <p className="text-dax-muted text-sm mt-1">Ingresa el fondo inicial de caja</p>
+          <h2 className="text-xl font-black text-white">Abrir Turno</h2>
+          <p className="text-slate-500 text-sm mt-1">Ingresa el fondo inicial de caja</p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
               Fondo inicial
             </label>
             <input
@@ -68,8 +68,8 @@ export function SessionModal({ onOpened }: Props) {
                 onClick={() => setAmount(String(a))}
                 className={`py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                   parseFloat(amount) === a
-                    ? 'border-indigo-500 bg-indigo-600/20 text-dax-text'
-                    : 'border-dax-border text-dax-muted hover:border-dax-border hover:text-dax-text'
+                    ? 'border-indigo-500 bg-indigo-600/20 text-white'
+                    : 'border-slate-700/50 text-slate-400 hover:border-slate-600 hover:text-white'
                 }`}
               >
                 {formatCurrency(a)}
@@ -78,7 +78,7 @@ export function SessionModal({ onOpened }: Props) {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
               Notas (opcional)
             </label>
             <input
@@ -90,7 +90,7 @@ export function SessionModal({ onOpened }: Props) {
             />
           </div>
 
-          {error && <p className="text-sem-critical text-xs text-center">{error}</p>}
+          {error && <p className="text-red-400 text-xs text-center">{error}</p>}
 
           <button
             onClick={open}

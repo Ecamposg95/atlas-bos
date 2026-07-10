@@ -33,11 +33,11 @@ const STATUS_LABEL: Record<TransferStatus, string> = {
 }
 
 const STATUS_CLASS: Record<TransferStatus, string> = {
-  DRAFT: 'bg-dax-surface text-dax-muted',
-  REQUESTED: 'bg-amber-500/20 text-sem-warning',
-  PARTIALLY_FULFILLED: 'bg-blue-500/20 text-sem-info',
-  COMPLETED: 'bg-emerald-500/20 text-sem-success',
-  CANCELLED: 'bg-red-500/20 text-sem-critical',
+  DRAFT: 'bg-slate-700/50 text-slate-400',
+  REQUESTED: 'bg-amber-500/20 text-amber-400',
+  PARTIALLY_FULFILLED: 'bg-blue-500/20 text-blue-400',
+  COMPLETED: 'bg-emerald-500/20 text-emerald-400',
+  CANCELLED: 'bg-red-500/20 text-red-400',
 }
 
 function fmtDate(s: string) {
@@ -117,7 +117,7 @@ export function Logistics() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-truck-loading text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-dax-text">Logística — Transferencias</h1>
+          <h1 className="text-2xl font-black text-white">Logística — Transferencias</h1>
         </div>
         <button onClick={openModal} className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Nueva Solicitud
@@ -127,7 +127,7 @@ export function Logistics() {
       {/* Tabla */}
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando transferencias..." /> : orders.length === 0 ? (
-          <div className="p-12 text-center text-dax-faint">
+          <div className="p-12 text-center text-slate-600">
             <i className="fa-solid fa-truck text-4xl mb-3 block" />
             Sin solicitudes de transferencia
           </div>
@@ -146,15 +146,15 @@ export function Logistics() {
               <tbody>
                 {orders.map((o) => (
                   <tr key={o.id}>
-                    <td className="font-mono text-dax-muted text-xs">TR-{o.id}</td>
-                    <td className="font-medium text-dax-text">{branchName(o.requesting_branch_id)}</td>
+                    <td className="font-mono text-slate-400 text-xs">TR-{o.id}</td>
+                    <td className="font-medium text-white">{branchName(o.requesting_branch_id)}</td>
                     <td>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_CLASS[o.status]}`}>
                         {STATUS_LABEL[o.status]}
                       </span>
                     </td>
-                    <td className="text-dax-muted text-xs">{fmtDate(o.created_at)}</td>
-                    <td className="text-dax-muted text-xs max-w-[200px] truncate">{o.notes ?? '—'}</td>
+                    <td className="text-slate-400 text-xs">{fmtDate(o.created_at)}</td>
+                    <td className="text-slate-500 text-xs max-w-[200px] truncate">{o.notes ?? '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -169,8 +169,8 @@ export function Logistics() {
           onClick={() => setShowModal(false)}>
           <div className="dax-card p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-dax-text">Nueva Solicitud de Transferencia</h3>
-              <button onClick={() => setShowModal(false)} className="text-dax-muted hover:text-dax-text">
+              <h3 className="text-lg font-black text-white">Nueva Solicitud de Transferencia</h3>
+              <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-white">
                 <i className="fa-solid fa-xmark text-lg" />
               </button>
             </div>
@@ -205,12 +205,12 @@ export function Logistics() {
                     }}
                     className="dax-input w-full text-sm" />
                   {searchResults.length > 0 && (
-                    <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-dax-card border border-dax-border rounded-lg shadow-xl overflow-hidden">
+                    <div className="absolute z-30 top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl overflow-hidden">
                       {searchResults.map((p) => (
                         <button key={p.id} onClick={() => addLine(p)}
-                          className="w-full flex items-center justify-between px-3 py-2 hover:bg-dax-surface text-left text-sm border-b border-dax-border last:border-0">
-                          <span className="text-dax-text font-medium">{p.name}</span>
-                          <span className="text-dax-muted text-xs font-mono">{p.sku}</span>
+                          className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-700/60 text-left text-sm border-b border-slate-700/40 last:border-0">
+                          <span className="text-white font-medium">{p.name}</span>
+                          <span className="text-slate-500 text-xs font-mono">{p.sku}</span>
                         </button>
                       ))}
                     </div>
@@ -220,21 +220,21 @@ export function Logistics() {
 
               {/* Líneas */}
               {lines.length > 0 && (
-                <div className="border border-dax-border rounded-lg overflow-hidden">
+                <div className="border border-slate-700/50 rounded-lg overflow-hidden">
                   {lines.map((l) => (
-                    <div key={l.product_id} className="flex items-center justify-between px-3 py-2 border-b border-dax-border last:border-0">
+                    <div key={l.product_id} className="flex items-center justify-between px-3 py-2 border-b border-slate-700/40 last:border-0">
                       <div className="flex-1 min-w-0">
-                        <p className="text-dax-text text-sm font-medium truncate">{l.name}</p>
-                        <p className="text-dax-muted text-xs font-mono">{l.sku}</p>
+                        <p className="text-white text-sm font-medium truncate">{l.name}</p>
+                        <p className="text-slate-500 text-xs font-mono">{l.sku}</p>
                       </div>
                       <div className="flex items-center gap-2 ml-3">
                         <button onClick={() => updateQty(l.product_id, l.qty - 1)}
-                          className="w-6 h-6 bg-dax-surface rounded text-xs hover:bg-slate-600">−</button>
-                        <span className="w-8 text-center font-bold text-dax-text text-sm">{l.qty}</span>
+                          className="w-6 h-6 bg-slate-700 rounded text-xs hover:bg-slate-600">−</button>
+                        <span className="w-8 text-center font-bold text-white text-sm">{l.qty}</span>
                         <button onClick={() => updateQty(l.product_id, l.qty + 1)}
-                          className="w-6 h-6 bg-dax-surface rounded text-xs hover:bg-slate-600">+</button>
+                          className="w-6 h-6 bg-slate-700 rounded text-xs hover:bg-slate-600">+</button>
                         <button onClick={() => setLines((p) => p.filter((i) => i.product_id !== l.product_id))}
-                          className="text-dax-faint hover:text-sem-critical ml-1">
+                          className="text-slate-600 hover:text-red-400 ml-1">
                           <i className="fa-solid fa-xmark text-xs" />
                         </button>
                       </div>

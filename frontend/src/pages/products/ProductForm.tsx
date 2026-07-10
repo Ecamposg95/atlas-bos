@@ -243,9 +243,9 @@ export function ProductForm() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <i className={`${iconCls} text-indigo-400 text-xl`} />
-        <h1 className="text-2xl font-black text-dax-text">{title}</h1>
+        <h1 className="text-2xl font-black text-white">{title}</h1>
         {!isAdmin && user?.branch_name && (
-          <span className="text-xs text-dax-muted">· sucursal {user.branch_name}</span>
+          <span className="text-xs text-slate-500">· sucursal {user.branch_name}</span>
         )}
       </div>
       <DaxCard>
@@ -277,7 +277,7 @@ export function ProductForm() {
             />
           )}
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-dax-border">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800/60">
             <button type="button" className="dax-btn-secondary text-xs"
               onClick={() => navigate('/products')} disabled={submitting}>
               Cancelar

@@ -56,13 +56,13 @@ export function Inventory() {
     } catch { alert('Error al ajustar') } finally { setAdjSaving(false) }
   }
 
-  const movColor = (type: string) => type.includes('IN') || type === 'ADJUSTMENT_IN' ? 'text-sem-success' : 'text-sem-critical'
+  const movColor = (type: string) => type.includes('IN') || type === 'ADJUSTMENT_IN' ? 'text-emerald-400' : 'text-red-400'
 
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-boxes text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-dax-text">Inventario</h1>
+        <h1 className="text-2xl font-black text-white">Inventario</h1>
       </div>
 
       <div className="flex gap-2">
@@ -83,9 +83,9 @@ export function Inventory() {
               {products.map((p) => (
                 <tr key={p.id}>
                   <td className="font-mono text-indigo-400 text-xs">{p.sku}</td>
-                  <td className="text-dax-text font-semibold">{p.name}</td>
-                  <td className="text-right text-dax-muted tabular-nums">{formatCurrency(p.price ?? 0)}</td>
-                  <td className={`text-right font-bold tabular-nums ${(p.stock_total ?? 0) <= 0 ? 'text-sem-critical' : 'text-sem-success'}`}>
+                  <td className="text-white font-semibold">{p.name}</td>
+                  <td className="text-right text-slate-300 tabular-nums">{formatCurrency(p.price ?? 0)}</td>
+                  <td className={`text-right font-bold tabular-nums ${(p.stock_total ?? 0) <= 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                     {p.stock_total ?? 0}
                   </td>
                   <td>
@@ -104,8 +104,8 @@ export function Inventory() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-dax-muted uppercase tracking-widest">Kardex</p>
-              <p className="text-lg font-black text-dax-text">{selected.name} <span className="font-mono text-indigo-400 text-sm">{selected.sku}</span></p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest">Kardex</p>
+              <p className="text-lg font-black text-white">{selected.name} <span className="font-mono text-indigo-400 text-sm">{selected.sku}</span></p>
             </div>
             <div className="flex gap-2">
               <button onClick={() => setModal(true)} className="dax-btn-secondary text-xs">
@@ -119,7 +119,7 @@ export function Inventory() {
 
           <DaxCard padding={false}>
             {kardexLoading ? <Spinner text="Cargando..." /> : kardex.length === 0 ? (
-              <div className="p-12 text-center text-dax-faint">Sin movimientos</div>
+              <div className="p-12 text-center text-slate-600">Sin movimientos</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="dax-table w-full">
@@ -127,14 +127,14 @@ export function Inventory() {
                   <tbody>
                     {kardex.map((k) => (
                       <tr key={k.id}>
-                        <td className="text-xs text-dax-muted">{new Date(k.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}</td>
+                        <td className="text-xs text-slate-400">{new Date(k.created_at).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })}</td>
                         <td className={`text-xs font-semibold ${movColor(k.movement_type)}`}>{k.movement_type}</td>
                         <td className={`text-right font-bold tabular-nums ${movColor(k.movement_type)}`}>
                           {k.qty_change > 0 ? '+' : ''}{k.qty_change}
                         </td>
-                        <td className="text-right text-dax-muted text-xs tabular-nums">{k.qty_after}</td>
-                        <td className="text-dax-muted text-xs font-mono">{k.reference ?? '—'}</td>
-                        <td className="text-dax-muted text-xs">{k.user_name}</td>
+                        <td className="text-right text-slate-400 text-xs tabular-nums">{k.qty_after}</td>
+                        <td className="text-slate-500 text-xs font-mono">{k.reference ?? '—'}</td>
+                        <td className="text-slate-500 text-xs">{k.user_name}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -146,20 +146,20 @@ export function Inventory() {
       )}
 
       {!loading && !selected && products.length === 0 && search && (
-        <DaxCard><div className="p-12 text-center text-dax-faint">Sin resultados</div></DaxCard>
+        <DaxCard><div className="p-12 text-center text-slate-600">Sin resultados</div></DaxCard>
       )}
       {!search && !selected && !loading && (
-        <DaxCard><div className="p-12 text-center text-dax-faint">Busca un producto para ver movimientos</div></DaxCard>
+        <DaxCard><div className="p-12 text-center text-slate-600">Busca un producto para ver movimientos</div></DaxCard>
       )}
 
       {modal && selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(false)}>
           <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-black text-dax-text">Ajuste de Stock</h3>
-              <button onClick={() => setModal(false)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark" /></button>
+              <h3 className="text-lg font-black text-white">Ajuste de Stock</h3>
+              <button onClick={() => setModal(false)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark" /></button>
             </div>
-            <p className="text-dax-muted text-sm mb-4">{selected.name}</p>
+            <p className="text-slate-400 text-sm mb-4">{selected.name}</p>
             <div className="space-y-3">
               <div>
                 <label className="dax-label">Sucursal</label>

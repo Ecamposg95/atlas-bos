@@ -104,18 +104,18 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
-        className="w-full max-w-xl rounded-2xl border border-dax-border overflow-hidden"
+        className="w-full max-w-xl rounded-2xl border border-slate-700 overflow-hidden"
         style={{ background: 'var(--dax-surface)' }}
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-dax-border flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-700/60 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <i className="fa-solid fa-plus text-indigo-400" />
-            <h2 className="text-lg font-bold text-dax-text">Instalar impresora</h2>
+            <h2 className="text-lg font-bold text-white">Instalar impresora</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-dax-muted hover:text-dax-text hover:bg-dax-card"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
           >
             <i className="fa-solid fa-xmark" />
           </button>
@@ -125,14 +125,14 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
           {/* Step indicator */}
           <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest">
             <StepDot active={step === 'detect'} done={step !== 'detect'} label="1. Detectar" />
-            <span className="text-dax-faint">—</span>
+            <span className="text-slate-600">—</span>
             <StepDot active={step === 'confirm' || step === 'installing'} done={step === 'done'} label="2. Confirmar" />
-            <span className="text-dax-faint">—</span>
+            <span className="text-slate-600">—</span>
             <StepDot active={step === 'done'} done={step === 'done'} label="3. Listo" />
           </div>
 
           {platformNote && (
-            <div className="rounded-lg bg-dax-card border border-dax-border p-3 text-xs text-dax-muted">
+            <div className="rounded-lg bg-slate-800/50 border border-slate-700 p-3 text-xs text-slate-300">
               <i className="fa-solid fa-circle-info text-indigo-400 mr-2" />
               {platformNote}
             </div>
@@ -147,9 +147,9 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
 
           {step === 'detect' && (
             <>
-              <p className="text-sm text-dax-muted">
+              <p className="text-sm text-slate-300">
                 Conecta la impresora USB o verifica su IP de red. El agente ejecutará{' '}
-                <code className="font-mono text-[11px] bg-dax-card px-1 py-0.5 rounded">lpinfo -v</code>{' '}
+                <code className="font-mono text-[11px] bg-slate-800 px-1 py-0.5 rounded">lpinfo -v</code>{' '}
                 para detectarla.
               </p>
               <button
@@ -173,17 +173,17 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
                     <button
                       key={c.uri}
                       onClick={() => select(c)}
-                      className="w-full text-left p-3 rounded-lg border border-dax-border hover:border-indigo-500 hover:bg-dax-card transition"
+                      className="w-full text-left p-3 rounded-lg border border-slate-700 hover:border-indigo-500 hover:bg-slate-800/40 transition"
                     >
                       <div className="flex items-center justify-between gap-3 mb-1">
-                        <span className="font-semibold text-dax-text text-sm">
+                        <span className="font-semibold text-white text-sm">
                           {c.brand} · {c.model}
                         </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-600/20 text-sem-success">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-600/20 text-emerald-300">
                           {c.paper_width_mm}mm
                         </span>
                       </div>
-                      <div className="text-[11px] font-mono text-dax-muted break-all">{c.uri}</div>
+                      <div className="text-[11px] font-mono text-slate-500 break-all">{c.uri}</div>
                       <div className="text-[11px] text-indigo-300 mt-1">
                         Sugerido: <span className="font-mono">{c.queue_suggestion}</span>
                       </div>
@@ -196,14 +196,14 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
 
           {step === 'confirm' && picked && (
             <>
-              <div className="rounded-lg border border-dax-border bg-dax-card p-3">
-                <p className="text-xs text-dax-muted uppercase tracking-widest mb-1">Impresora</p>
-                <p className="text-sm font-bold text-dax-text">{picked.brand} · {picked.model}</p>
-                <p className="text-[11px] font-mono text-dax-muted break-all mt-1">{picked.uri}</p>
+              <div className="rounded-lg border border-slate-700 bg-slate-800/40 p-3">
+                <p className="text-xs text-slate-500 uppercase tracking-widest mb-1">Impresora</p>
+                <p className="text-sm font-bold text-white">{picked.brand} · {picked.model}</p>
+                <p className="text-[11px] font-mono text-slate-500 break-all mt-1">{picked.uri}</p>
               </div>
 
               <div>
-                <label className="text-xs text-dax-muted block mb-1">
+                <label className="text-xs text-slate-400 block mb-1">
                   Nombre de la cola CUPS
                 </label>
                 <input
@@ -211,14 +211,14 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
                   value={queueName}
                   onChange={(e) => setQueueName(e.target.value)}
                   placeholder="bixolon80"
-                  className="w-full px-3 py-2 rounded-lg bg-dax-bg border border-dax-border text-sm text-dax-text font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm text-white font-mono focus:outline-none focus:border-indigo-500"
                 />
-                <p className="text-[11px] text-dax-muted mt-1">
+                <p className="text-[11px] text-slate-500 mt-1">
                   Sin espacios. Se usa como identificador en el sistema de impresión.
                 </p>
               </div>
 
-              <label className="inline-flex items-center gap-2 text-xs text-dax-muted">
+              <label className="inline-flex items-center gap-2 text-xs text-slate-300">
                 <input
                   type="checkbox"
                   checked={setDefault}
@@ -231,7 +231,7 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={() => setStep('detect')}
-                  className="flex-1 py-2 rounded-lg border border-dax-border text-dax-muted hover:bg-dax-card text-sm"
+                  className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm"
                 >
                   ← Atrás
                 </button>
@@ -249,8 +249,8 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
           {step === 'installing' && (
             <div className="py-8 text-center">
               <i className="fa-solid fa-spinner fa-spin text-indigo-400 text-3xl" />
-              <p className="text-sm text-dax-muted mt-3">Creando cola CUPS…</p>
-              <p className="text-[11px] text-dax-muted mt-1">
+              <p className="text-sm text-slate-300 mt-3">Creando cola CUPS…</p>
+              <p className="text-[11px] text-slate-500 mt-1">
                 {'lpadmin -p {nombre} -E -v URI -m raw'.replace('{nombre}', queueName)}
               </p>
             </div>
@@ -259,16 +259,16 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
           {step === 'done' && installedQueue && (
             <div className="py-6 text-center space-y-3">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/15 border border-emerald-500/30">
-                <i className="fa-solid fa-check text-sem-success text-2xl" />
+                <i className="fa-solid fa-check text-emerald-400 text-2xl" />
               </div>
               <div>
-                <p className="text-lg font-bold text-dax-text">Impresora instalada</p>
-                <p className="text-sm text-dax-muted mt-1">
+                <p className="text-lg font-bold text-white">Impresora instalada</p>
+                <p className="text-sm text-slate-400 mt-1">
                   Cola <code className="font-mono text-indigo-300">{installedQueue}</code> en modo raw,
                   activa y aceptando trabajos.
                 </p>
                 {testPrintStatus === 'ok' && (
-                  <p className="text-[11px] text-sem-success mt-2">
+                  <p className="text-[11px] text-emerald-300 mt-2">
                     <i className="fa-solid fa-check mr-1" />
                     Ticket de prueba enviado. Verifica que salió completo y la regla
                     llegó al borde derecho.
@@ -300,7 +300,7 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
                     onClick={() => {
                       setStep('detect'); setPicked(null); setTestPrintStatus('idle'); scan()
                     }}
-                    className="flex-1 py-2 rounded-lg border border-dax-border text-dax-muted hover:bg-dax-card text-sm"
+                    className="flex-1 py-2 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 text-sm"
                   >
                     Instalar otra
                   </button>
@@ -321,8 +321,8 @@ export function PrinterInstallWizard({ open, onClose, onInstalled }: Props) {
 }
 
 function StepDot({ active, done, label }: { active: boolean; done: boolean; label: string }) {
-  let classes = 'text-dax-faint'
-  if (done) classes = 'text-sem-success'
+  let classes = 'text-slate-600'
+  if (done) classes = 'text-emerald-400'
   else if (active) classes = 'text-indigo-300'
   return <span className={classes}>{label}</span>
 }

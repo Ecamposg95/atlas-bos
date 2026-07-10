@@ -78,10 +78,10 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
     return (
       <div className={`rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 ${className}`}>
         <div className="flex items-start gap-3">
-          <i className="fa-solid fa-circle-exclamation text-sem-critical text-lg mt-0.5" />
+          <i className="fa-solid fa-circle-exclamation text-rose-400 text-lg mt-0.5" />
           <div className="flex-1">
-            <p className="text-sm font-bold text-dax-text">Agente de impresión offline</p>
-            <p className="text-xs text-dax-muted mt-0.5">
+            <p className="text-sm font-bold text-white">Agente de impresión offline</p>
+            <p className="text-xs text-slate-400 mt-0.5">
               No hay respuesta en <code className="font-mono">https://localhost:9100</code>.
               Abre el ejecutable del agente y acepta el certificado autofirmado la primera vez.
             </p>
@@ -115,9 +115,9 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
     : `Agente OK · v${diag.version} · ${diag.os}`
 
   const colorClasses: Record<string, { border: string; bg: string; icon: string; hover: string }> = {
-    rose:    { border: 'border-rose-500/40',    bg: 'bg-rose-500/10',    icon: 'text-sem-critical',    hover: 'hover:bg-rose-600/20' },
-    amber:   { border: 'border-amber-500/40',   bg: 'bg-amber-500/10',   icon: 'text-sem-warning',   hover: 'hover:bg-amber-600/20' },
-    emerald: { border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', icon: 'text-sem-success', hover: 'hover:bg-emerald-600/20' },
+    rose:    { border: 'border-rose-500/40',    bg: 'bg-rose-500/10',    icon: 'text-rose-400',    hover: 'hover:bg-rose-600/20' },
+    amber:   { border: 'border-amber-500/40',   bg: 'bg-amber-500/10',   icon: 'text-amber-400',   hover: 'hover:bg-amber-600/20' },
+    emerald: { border: 'border-emerald-500/40', bg: 'bg-emerald-500/10', icon: 'text-emerald-400', hover: 'hover:bg-emerald-600/20' },
   }
   const c = colorClasses[statusColor]
 
@@ -129,17 +129,17 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
       >
         <i className={`fa-solid ${statusIcon} ${c.icon} text-lg`} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-dax-text">{statusText}</p>
-          <p className="text-[11px] text-dax-muted">
+          <p className="text-sm font-bold text-white">{statusText}</p>
+          <p className="text-[11px] text-slate-400">
             {diag.os} · {diag.os_release ?? ''} · {diag.queues_count != null ? `${diag.queues_count} colas` : ''}
             {diag.raw_queues_count != null && ` (${diag.raw_queues_count} raw)`}
           </p>
         </div>
-        <i className={`fa-solid ${expanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-dax-muted`} />
+        <i className={`fa-solid ${expanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-slate-400`} />
       </button>
 
       {expanded && (
-        <div className="border-t border-dax-border px-4 py-3 space-y-3 text-xs">
+        <div className="border-t border-slate-700/40 px-4 py-3 space-y-3 text-xs">
           {diag.issues.length > 0 && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-rose-300 mb-1">
@@ -158,7 +158,7 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
 
           {diag.warnings.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-sem-warning mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-300 mb-1">
                 Avisos
               </p>
               <ul className="space-y-1">
@@ -172,34 +172,34 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-dax-muted pt-1">
-            <div><span className="text-dax-muted">Versión:</span> <span className="text-dax-text font-mono">v{diag.version}</span></div>
-            <div><span className="text-dax-muted">Sistema:</span> <span className="text-dax-text">{diag.os}</span></div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-400 pt-1">
+            <div><span className="text-slate-500">Versión:</span> <span className="text-white font-mono">v{diag.version}</span></div>
+            <div><span className="text-slate-500">Sistema:</span> <span className="text-white">{diag.os}</span></div>
             {diag.cert?.exists && (
               <>
-                <div><span className="text-dax-muted">Cert SSL:</span> <span className="text-dax-text">{diag.cert.valid ? 'válido' : 'inválido'}</span></div>
+                <div><span className="text-slate-500">Cert SSL:</span> <span className="text-white">{diag.cert.valid ? 'válido' : 'inválido'}</span></div>
                 {diag.cert.expires_in_days != null && (
-                  <div><span className="text-dax-muted">Vence en:</span> <span className="text-dax-text">{diag.cert.expires_in_days}d</span></div>
+                  <div><span className="text-slate-500">Vence en:</span> <span className="text-white">{diag.cert.expires_in_days}d</span></div>
                 )}
               </>
             )}
             {diag.os !== 'Windows' && (
               <>
-                <div><span className="text-dax-muted">CUPS:</span> <span className="text-dax-text">{diag.cups_daemon_running ? 'activo' : 'detenido'}</span></div>
-                <div><span className="text-dax-muted">lp:</span> <span className="text-dax-text font-mono text-[10px]">{diag.lp_path ?? '—'}</span></div>
+                <div><span className="text-slate-500">CUPS:</span> <span className="text-white">{diag.cups_daemon_running ? 'activo' : 'detenido'}</span></div>
+                <div><span className="text-slate-500">lp:</span> <span className="text-white font-mono text-[10px]">{diag.lp_path ?? '—'}</span></div>
               </>
             )}
             {diag.os === 'Windows' && (
               <>
-                <div><span className="text-dax-muted">Spooler:</span> <span className="text-dax-text">{diag.spooler_running ? 'activo' : 'detenido'}</span></div>
-                <div><span className="text-dax-muted">pywin32:</span> <span className="text-dax-text">{diag.win32print_available ? 'ok' : 'faltante'}</span></div>
+                <div><span className="text-slate-500">Spooler:</span> <span className="text-white">{diag.spooler_running ? 'activo' : 'detenido'}</span></div>
+                <div><span className="text-slate-500">pywin32:</span> <span className="text-white">{diag.win32print_available ? 'ok' : 'faltante'}</span></div>
               </>
             )}
           </div>
 
           {diag.queues && diag.queues.length > 0 && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-dax-muted mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
                 Colas CUPS
               </p>
               <div className="space-y-1">
@@ -214,7 +214,7 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
             <button
               onClick={load}
               disabled={loading}
-              className="text-xs px-3 py-1.5 rounded-md bg-dax-card text-dax-text hover:bg-dax-surface disabled:opacity-50"
+              className="text-xs px-3 py-1.5 rounded-md bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-50"
             >
               {loading ? 'Verificando…' : 'Actualizar'}
             </button>
@@ -244,7 +244,7 @@ export function AgentDiagnosticsPanel({ className = '', autoRefreshMs = 10_000 }
               href="https://localhost:9100/diagnostics"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs px-3 py-1.5 rounded-md border border-dax-border text-dax-muted hover:bg-dax-card"
+              className="text-xs px-3 py-1.5 rounded-md border border-slate-700 text-slate-300 hover:bg-slate-800"
             >
               Abrir JSON crudo
             </a>
@@ -286,20 +286,20 @@ function QueueRow({ queue, onChange }: { queue: AgentCupsQueue; onChange: () => 
   }
 
   return (
-    <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-dax-card">
+    <div className="flex items-center justify-between gap-2 px-2 py-1.5 rounded bg-slate-800/40">
       <div className="flex items-center gap-2 min-w-0">
-        <span className="font-mono text-dax-text truncate max-w-[140px]">{queue.name}</span>
+        <span className="font-mono text-white truncate max-w-[140px]">{queue.name}</span>
         {queue.is_raw ? (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600/20 text-sem-success" title="Cola en modo raw">raw</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600/20 text-emerald-300" title="Cola en modo raw">raw</span>
         ) : (
           <span
-            className="text-[10px] px-1.5 py-0.5 rounded bg-amber-600/20 text-sem-warning"
+            className="text-[10px] px-1.5 py-0.5 rounded bg-amber-600/20 text-amber-300"
             title="No es raw — puede producir basura en impresoras térmicas ESC/POS"
           >
             driver
           </span>
         )}
-        <span className={`text-[10px] ${queue.enabled && queue.accepting ? 'text-sem-success' : 'text-dax-muted'}`}>
+        <span className={`text-[10px] ${queue.enabled && queue.accepting ? 'text-emerald-400' : 'text-slate-500'}`}>
           {queue.enabled ? (queue.accepting ? 'ok' : 'pausada') : 'deshabilitada'}
         </span>
       </div>
@@ -321,8 +321,8 @@ function IconBtn({
   icon, title, onClick, busy, danger,
 }: { icon: string; title: string; onClick: () => void; busy: boolean; danger?: boolean }) {
   const color = danger
-    ? 'text-dax-muted hover:text-rose-300 hover:bg-rose-500/10'
-    : 'text-dax-muted hover:text-indigo-300 hover:bg-indigo-500/10'
+    ? 'text-slate-400 hover:text-rose-300 hover:bg-rose-500/10'
+    : 'text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10'
   return (
     <button
       onClick={onClick}

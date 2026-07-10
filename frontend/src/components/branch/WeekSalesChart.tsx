@@ -54,7 +54,7 @@ export function WeekSalesChart({ sessions, todayCashSales = 0 }: Props) {
           const hasData = slot.total > 0
           const pct = hasData ? Math.max(slot.total / maxTotal, 0.06) : 0
           const barColor = !hasData
-            ? 'bg-stone-200 dark:bg-dax-surface'
+            ? 'bg-stone-200 dark:bg-slate-700'
             : isToday
               ? 'bg-purple-500 dark:bg-purple-400'
               : 'bg-purple-500/70 dark:bg-purple-400/70'
@@ -72,7 +72,7 @@ export function WeekSalesChart({ sessions, todayCashSales = 0 }: Props) {
                 className={`text-[10px] font-semibold ${
                   isToday
                     ? 'text-purple-600 dark:text-purple-400'
-                    : 'text-dax-muted dark:text-dax-muted'
+                    : 'text-slate-400 dark:text-slate-500'
                 }`}
               >
                 {dayName}

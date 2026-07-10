@@ -68,7 +68,7 @@ export function HQBranchDetail() {
 
   if (error) return (
     <div className="p-8 text-center">
-      <p className="text-sem-critical mb-4">{error}</p>
+      <p className="text-red-400 mb-4">{error}</p>
       <button onClick={() => navigate('/hq/branches')} className="dax-btn-secondary">
         <i className="fa-solid fa-arrow-left" /> Volver
       </button>
@@ -83,22 +83,22 @@ export function HQBranchDetail() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/hq/branches')}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-dax-card hover:bg-dax-surface text-dax-muted hover:text-dax-text transition border border-dax-border"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition border border-slate-700"
             >
               <i className="fa-solid fa-arrow-left text-xs" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-dax-text flex items-center gap-2">
-                <i className="fa-solid fa-store text-sem-success" />
+              <h1 className="text-xl font-bold text-white flex items-center gap-2">
+                <i className="fa-solid fa-store text-emerald-400" />
                 {branch?.name}
               </h1>
-              <p className="text-xs text-dax-muted font-mono mt-0.5">ID #{branchId} · {branch?.branch_type}</p>
+              <p className="text-xs text-slate-500 font-mono mt-0.5">ID #{branchId} · {branch?.branch_type}</p>
             </div>
           </div>
         </div>
         <button
           onClick={load}
-          className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-500/10 text-sem-success border border-emerald-500/20 hover:bg-emerald-500/20 transition"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition"
         >
           <i className="fa-solid fa-rotate-right text-xs" />
         </button>
@@ -107,15 +107,15 @@ export function HQBranchDetail() {
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Ventas Hoy', value: formatCurrency(kpis?.kpis.sales ?? 0), icon: 'fa-cash-register', color: 'text-sem-success' },
-          { label: 'Tickets', value: kpis?.kpis.orders ?? 0, icon: 'fa-receipt', color: 'text-sem-info' },
+          { label: 'Ventas Hoy', value: formatCurrency(kpis?.kpis.sales ?? 0), icon: 'fa-cash-register', color: 'text-emerald-400' },
+          { label: 'Tickets', value: kpis?.kpis.orders ?? 0, icon: 'fa-receipt', color: 'text-blue-400' },
           { label: 'Ticket Prom.', value: formatCurrency(kpis?.kpis.avg_ticket ?? 0), icon: 'fa-chart-line', color: 'text-indigo-400' },
-          { label: 'Pendientes', value: kpis?.kpis.pending ?? 0, icon: 'fa-clock', color: 'text-sem-warning' },
+          { label: 'Pendientes', value: kpis?.kpis.pending ?? 0, icon: 'fa-clock', color: 'text-amber-400' },
         ].map((kpi) => (
           <div key={kpi.label} className="dax-card p-4">
-            <p className="text-[10px] uppercase text-dax-muted font-bold tracking-widest">{kpi.label}</p>
+            <p className="text-[10px] uppercase text-slate-500 font-bold tracking-widest">{kpi.label}</p>
             <div className="flex items-end justify-between mt-2">
-              <h2 className="text-2xl font-bold text-dax-text font-mono">{kpi.value}</h2>
+              <h2 className="text-2xl font-bold text-white font-mono">{kpi.value}</h2>
               <i className={`fa-solid ${kpi.icon} ${kpi.color} text-lg opacity-60`} />
             </div>
           </div>
@@ -126,28 +126,28 @@ export function HQBranchDetail() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Info sucursal */}
         <div className="dax-card p-4 space-y-3">
-          <h3 className="text-xs font-bold text-dax-muted uppercase tracking-widest">Información</h3>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Información</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-dax-muted">Tipo</span>
-              <span className="text-dax-text font-medium">{branch?.branch_type}</span>
+              <span className="text-slate-500">Tipo</span>
+              <span className="text-white font-medium">{branch?.branch_type}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-dax-muted">Estado</span>
-              <span className={branch?.is_active ? 'text-sem-success' : 'text-sem-critical'}>
+              <span className="text-slate-500">Estado</span>
+              <span className={branch?.is_active ? 'text-emerald-400' : 'text-red-400'}>
                 {branch?.is_active ? 'Activa' : 'Inactiva'}
               </span>
             </div>
             {branch?.address && (
               <div className="flex justify-between gap-4">
-                <span className="text-dax-muted">Dirección</span>
-                <span className="text-dax-text text-right">{branch.address}</span>
+                <span className="text-slate-500">Dirección</span>
+                <span className="text-white text-right">{branch.address}</span>
               </div>
             )}
             {branch?.phone && (
               <div className="flex justify-between">
-                <span className="text-dax-muted">Teléfono</span>
-                <span className="text-dax-text">{branch.phone}</span>
+                <span className="text-slate-500">Teléfono</span>
+                <span className="text-white">{branch.phone}</span>
               </div>
             )}
           </div>
@@ -155,18 +155,18 @@ export function HQBranchDetail() {
 
         {/* Top productos */}
         <div className="dax-card p-4">
-          <h3 className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-3">Top Productos Hoy</h3>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Top Productos Hoy</h3>
           {kpis?.top_products.length ? (
             <div className="space-y-2">
               {kpis.top_products.slice(0, 5).map((p, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-dax-muted truncate">{p.name}</span>
-                  <span className="text-dax-muted font-mono ml-2 flex-shrink-0">{p.qty} uds</span>
+                  <span className="text-slate-300 truncate">{p.name}</span>
+                  <span className="text-slate-500 font-mono ml-2 flex-shrink-0">{p.qty} uds</span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-dax-faint text-sm">Sin ventas registradas hoy</p>
+            <p className="text-slate-600 text-sm">Sin ventas registradas hoy</p>
           )}
         </div>
       </div>
@@ -174,17 +174,17 @@ export function HQBranchDetail() {
       {/* Stock bajo */}
       {(kpis?.low_stock?.length ?? 0) > 0 && (
         <div className="dax-card p-4">
-          <h3 className="text-xs font-bold text-sem-warning uppercase tracking-widest mb-3">
+          <h3 className="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">
             <i className="fa-solid fa-triangle-exclamation mr-1" /> Stock Bajo
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {kpis!.low_stock.map((item, i) => (
               <div key={i} className="flex items-center justify-between bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2 text-sm">
                 <div>
-                  <p className="text-dax-text font-medium truncate">{item.name}</p>
-                  <p className="text-xs text-dax-muted font-mono">{item.sku}</p>
+                  <p className="text-white font-medium truncate">{item.name}</p>
+                  <p className="text-xs text-slate-500 font-mono">{item.sku}</p>
                 </div>
-                <span className="text-sem-warning font-bold font-mono">{item.stock}</span>
+                <span className="text-amber-400 font-bold font-mono">{item.stock}</span>
               </div>
             ))}
           </div>
@@ -194,24 +194,24 @@ export function HQBranchDetail() {
       {/* Últimas transacciones */}
       {(kpis?.recent_sales?.length ?? 0) > 0 && (
         <div className="dax-card p-4">
-          <h3 className="text-xs font-bold text-dax-muted uppercase tracking-widest mb-3">Últimas Transacciones</h3>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Últimas Transacciones</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-[10px] text-dax-muted uppercase border-b border-dax-border">
+                <tr className="text-[10px] text-slate-500 uppercase border-b border-slate-700/50">
                   <th className="pb-2 text-left">Hora</th>
                   <th className="pb-2 text-left">Folio</th>
                   <th className="pb-2 text-left">Cliente</th>
                   <th className="pb-2 text-right">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50 text-dax-muted">
+              <tbody className="divide-y divide-slate-800/50 text-slate-300">
                 {kpis!.recent_sales.map((s, i) => (
-                  <tr key={i} className="hover:bg-dax-card transition">
-                    <td className="py-2 text-dax-muted font-mono">{s.time}</td>
+                  <tr key={i} className="hover:bg-slate-800/20 transition">
+                    <td className="py-2 text-slate-500 font-mono">{s.time}</td>
                     <td className="py-2 font-mono text-indigo-400">{s.folio}</td>
                     <td className="py-2">{s.customer || 'Público general'}</td>
-                    <td className="py-2 text-right font-bold text-sem-success">{formatCurrency(s.total)}</td>
+                    <td className="py-2 text-right font-bold text-emerald-400">{formatCurrency(s.total)}</td>
                   </tr>
                 ))}
               </tbody>

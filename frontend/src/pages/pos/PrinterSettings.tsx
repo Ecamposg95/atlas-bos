@@ -395,18 +395,18 @@ export function PrinterSettings() {
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-              tab === t.id ? 'bg-indigo-600 text-white shadow' : 'text-dax-muted hover:text-white'
+              tab === t.id ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
             }`}
           >
             <i className={t.icon} />
             {t.label}
             {detectedOS === t.id && (
-              <span className="text-[9px] bg-emerald-500/20 text-sem-success px-1.5 py-0.5 rounded-full font-black">
+              <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-black">
                 detectado
               </span>
             )}
             {t.id === 'bluetooth' && btDevice && (
-              <span className="text-[9px] bg-emerald-500/20 text-sem-success px-1.5 py-0.5 rounded-full font-black">
+              <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-black">
                 conectado
               </span>
             )}
@@ -497,13 +497,13 @@ export function PrinterSettings() {
                     Impresoras detectadas
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className={`flex items-center gap-1 text-[10px] font-bold ${agentOnline ? 'text-sem-success' : 'text-sem-critical'}`}>
+                    <span className={`flex items-center gap-1 text-[10px] font-bold ${agentOnline ? 'text-emerald-400' : 'text-red-400'}`}>
                       <i className="fa-solid fa-circle text-[7px]" />
                       Agente {agentOnline ? 'online' : 'offline'}
                     </span>
                     <button
                       onClick={loadLocalPrinters}
-                      className="text-[10px] text-dax-muted hover:text-dax-text px-2 py-1 rounded-lg transition-colors"
+                      className="text-[10px] text-slate-500 hover:text-white px-2 py-1 rounded-lg transition-colors"
                       style={{ border: '1px solid var(--dax-border-dim)' }}
                     >
                       <i className="fa-solid fa-rotate-right" /> Buscar
@@ -529,7 +529,7 @@ export function PrinterSettings() {
                 <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'rgba(99,102,241,0.1)' }}>
                   <i className="fa-solid fa-laptop text-indigo-400 text-base" />
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-dax-text">Agente Local (esta PC)</p>
+                    <p className="text-xs font-bold text-white">Agente Local (esta PC)</p>
                     <p className="text-[10px]" style={{ color: 'var(--dax-text-faint)' }}>
                       Cada PC imprime en su propia impresora local. ID: <code>...{getDeviceIdShort()}</code>
                     </p>
@@ -542,7 +542,7 @@ export function PrinterSettings() {
                   <div className="flex items-start gap-3 mb-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                          style={{ background: 'rgba(34,197,94,0.1)' }}>
-                      <i className="fa-brands fa-linux text-sem-success text-lg" />
+                      <i className="fa-brands fa-linux text-emerald-400 text-lg" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-bold" style={{ color: 'var(--dax-text)' }}>Agente Linux</p>
@@ -593,12 +593,12 @@ export function PrinterSettings() {
                       Impresoras detectadas
                     </p>
                     <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold ${agentOnline ? 'text-sem-success' : 'text-sem-critical'}`}>
+                      <span className={`text-[10px] font-bold ${agentOnline ? 'text-emerald-400' : 'text-red-400'}`}>
                         <i className="fa-solid fa-circle text-[7px]" /> {agentOnline ? 'Online' : 'Offline'}
                       </span>
                       <button
                         onClick={loadLocalPrinters}
-                        className="text-[10px] text-dax-muted hover:text-dax-text px-2 py-1 rounded-lg transition-colors"
+                        className="text-[10px] text-slate-500 hover:text-white px-2 py-1 rounded-lg transition-colors"
                         style={{ border: '1px solid var(--dax-border-dim)' }}
                       >
                         <i className="fa-solid fa-rotate-right" /> Buscar
@@ -624,7 +624,7 @@ export function PrinterSettings() {
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                        style={{ background: 'rgba(148,163,184,0.15)' }}>
-                    <i className="fa-brands fa-apple text-dax-muted text-lg" />
+                    <i className="fa-brands fa-apple text-slate-300 text-lg" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold" style={{ color: 'var(--dax-text)' }}>Agente macOS</p>
@@ -679,13 +679,13 @@ export function PrinterSettings() {
                     Impresoras detectadas
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className={`flex items-center gap-1 text-[10px] font-bold ${agentOnline ? 'text-sem-success' : 'text-sem-critical'}`}>
+                    <span className={`flex items-center gap-1 text-[10px] font-bold ${agentOnline ? 'text-emerald-400' : 'text-red-400'}`}>
                       <i className="fa-solid fa-circle text-[7px]" />
                       Agente {agentOnline ? 'online' : 'offline'}
                     </span>
                     <button
                       onClick={loadLocalPrinters}
-                      className="text-[10px] text-dax-muted hover:text-dax-text px-2 py-1 rounded-lg transition-colors"
+                      className="text-[10px] text-slate-500 hover:text-white px-2 py-1 rounded-lg transition-colors"
                       style={{ border: '1px solid var(--dax-border-dim)' }}
                     >
                       <i className="fa-solid fa-rotate-right" /> Buscar
@@ -705,7 +705,7 @@ export function PrinterSettings() {
           {tab === 'bluetooth' && (
             <DaxCard>
               <div className="flex items-center gap-2 mb-4">
-                <i className="fa-solid fa-bluetooth text-sem-info text-xl" />
+                <i className="fa-solid fa-bluetooth text-blue-400 text-xl" />
                 <div>
                   <p className="text-sm font-bold" style={{ color: 'var(--dax-text)' }}>Impresora Bluetooth</p>
                   <p className="text-xs" style={{ color: 'var(--dax-text-muted)' }}>
@@ -716,7 +716,7 @@ export function PrinterSettings() {
 
               {!btSupported && (
                 <div className="p-3 rounded-xl mb-4" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                  <p className="text-xs font-bold text-sem-critical mb-1"><i className="fa-solid fa-xmark-circle mr-1" />Web Bluetooth no disponible</p>
+                  <p className="text-xs font-bold text-red-400 mb-1"><i className="fa-solid fa-xmark-circle mr-1" />Web Bluetooth no disponible</p>
                   <p className="text-[10px]" style={{ color: 'var(--dax-text-muted)' }}>
                     Usa Chrome o Edge en HTTPS. Firefox y Safari no soportan Web Bluetooth.
                   </p>
@@ -736,7 +736,7 @@ export function PrinterSettings() {
 
               {btState === 'scanning' && (
                 <div className="text-center py-6">
-                  <i className="fa-solid fa-spinner fa-spin text-sem-info text-2xl mb-2 block" />
+                  <i className="fa-solid fa-spinner fa-spin text-blue-400 text-2xl mb-2 block" />
                   <p className="text-xs" style={{ color: 'var(--dax-text-muted)' }}>Buscando dispositivos Bluetooth...</p>
                   <p className="text-[10px] mt-1" style={{ color: 'var(--dax-text-faint)' }}>Selecciona tu impresora en el diálogo del navegador</p>
                 </div>
@@ -746,14 +746,14 @@ export function PrinterSettings() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 p-3 rounded-xl"
                        style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                    <i className="fa-solid fa-circle text-sem-success text-[8px]" />
+                    <i className="fa-solid fa-circle text-emerald-400 text-[8px]" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-sem-success">{btDevice.name}</p>
+                      <p className="text-sm font-bold text-emerald-400">{btDevice.name}</p>
                       <p className="text-[10px]" style={{ color: 'var(--dax-text-faint)' }}>Conectado via BLE · ESC/POS listo</p>
                     </div>
                     <button
                       onClick={disconnectBluetooth}
-                      className="text-xs text-sem-critical hover:text-red-300 px-2 py-1 rounded-lg transition-colors"
+                      className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded-lg transition-colors"
                       style={{ border: '1px solid rgba(239,68,68,0.2)' }}
                     >
                       <i className="fa-solid fa-xmark" /> Desconectar
@@ -765,7 +765,7 @@ export function PrinterSettings() {
               {btState === 'error' && (
                 <div className="space-y-3">
                   <div className="p-3 rounded-xl" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                    <p className="text-xs font-bold text-sem-critical mb-1"><i className="fa-solid fa-triangle-exclamation mr-1" />Error de conexión</p>
+                    <p className="text-xs font-bold text-red-400 mb-1"><i className="fa-solid fa-triangle-exclamation mr-1" />Error de conexión</p>
                     <p className="text-[10px]" style={{ color: 'var(--dax-text-muted)' }}>{btError}</p>
                   </div>
                   <button
@@ -784,7 +784,7 @@ export function PrinterSettings() {
                 </p>
                 {['Goojprt PT-210 / PT-100', 'Peripage A6 / A9', 'Xprinter XP-P300 / XP-P800', 'HOIN HOP-E200 / E300', 'Cualquier impresora ESC/POS BLE'].map((m, i) => (
                   <div key={i} className="flex items-center gap-2">
-                    <i className="fa-solid fa-check text-sem-success text-[10px]" />
+                    <i className="fa-solid fa-check text-emerald-400 text-[10px]" />
                     <span className="text-[10px]" style={{ color: 'var(--dax-text-muted)' }}>{m}</span>
                   </div>
                 ))}
@@ -808,7 +808,7 @@ export function PrinterSettings() {
                   key={w}
                   onClick={() => setConfig(c => ({ ...c, paper_width_mm: w }))}
                   className={`flex-1 py-2.5 rounded-xl border text-sm font-semibold transition-colors ${
-                    config.paper_width_mm === w ? 'border-indigo-500 bg-indigo-600/20 text-dax-text' : 'text-dax-muted hover:border-dax-border'
+                    config.paper_width_mm === w ? 'border-indigo-500 bg-indigo-600/20 text-white' : 'text-slate-400 hover:border-slate-600'
                   }`}
                   style={{ borderColor: config.paper_width_mm === w ? undefined : 'var(--dax-border-dim)' }}
                 >
@@ -830,9 +830,9 @@ export function PrinterSettings() {
                 onChange={e => setConfig(c => ({ ...c, open_drawer_on_print: e.target.checked }))}
                 className="mt-0.5 accent-indigo-500"
               />
-              <span className="text-sm text-dax-muted leading-tight">
+              <span className="text-sm text-slate-300 leading-tight">
                 Abrir cajón al imprimir ticket
-                <span className="block text-[11px] text-dax-muted mt-0.5">
+                <span className="block text-[11px] text-slate-500 mt-0.5">
                   Solo se abre si el pago incluye efectivo. El cajón debe estar conectado a la térmica por RJ-11.
                 </span>
               </span>
@@ -848,7 +848,7 @@ export function PrinterSettings() {
                   showToast(`Error: ${(e as Error).message}`, 'error')
                 }
               }}
-              className="w-full py-2 rounded-xl border text-sm font-semibold text-dax-text bg-indigo-600/10 border-indigo-500/40 hover:bg-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2 rounded-xl border text-sm font-semibold text-white bg-indigo-600/10 border-indigo-500/40 hover:bg-indigo-600/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <i className="fa-solid fa-inbox mr-2" />Abrir cajón ahora
             </button>
@@ -873,7 +873,7 @@ export function PrinterSettings() {
                   />
                   <button
                     onClick={deleteBranchLogo}
-                    className="text-[10px] text-sem-critical hover:text-red-300 flex items-center gap-1"
+                    className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1"
                   >
                     <i className="fa-solid fa-trash" /> Eliminar
                   </button>
@@ -904,7 +904,7 @@ export function PrinterSettings() {
                 <p className="text-[10px] mt-1.5" style={{ color: 'var(--dax-text-faint)' }}>
                   PNG, JPEG o WEBP · máx 1 MB
                 </p>
-                {logoError && <p className="text-[10px] mt-1 text-sem-critical">{logoError}</p>}
+                {logoError && <p className="text-[10px] mt-1 text-red-400">{logoError}</p>}
               </div>
             </div>
           </DaxCard>
@@ -1186,12 +1186,12 @@ function PrinterList({
           key={p}
           onClick={() => onSelect(p)}
           className={`w-full flex items-center gap-3 p-2.5 rounded-xl border transition-colors text-left ${
-            selected === p ? 'border-indigo-500 bg-indigo-600/10' : 'hover:border-dax-border'
+            selected === p ? 'border-indigo-500 bg-indigo-600/10' : 'hover:border-slate-600'
           }`}
           style={{ borderColor: selected === p ? undefined : 'var(--dax-border-dim)' }}
         >
-          <i className={`fa-solid fa-print ${selected === p ? 'text-indigo-400' : 'text-dax-muted'}`} />
-          <span className={`text-sm font-medium flex-1 truncate ${selected === p ? 'text-dax-text' : 'text-dax-muted'}`}>{p}</span>
+          <i className={`fa-solid fa-print ${selected === p ? 'text-indigo-400' : 'text-slate-500'}`} />
+          <span className={`text-sm font-medium flex-1 truncate ${selected === p ? 'text-white' : 'text-slate-300'}`}>{p}</span>
           {selected === p && <i className="fa-solid fa-check text-indigo-400 text-xs" />}
         </button>
       ))}

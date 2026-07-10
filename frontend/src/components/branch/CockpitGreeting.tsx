@@ -46,14 +46,14 @@ export function CockpitGreeting({ user, shift, onShiftOpened }: Props) {
       <header className={`${heroClass} px-6 py-7 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4`}>
         {/* Left — avatar + greeting + subtitle */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 text-dax-text text-xl font-bold flex-shrink-0">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 text-white text-xl font-bold flex-shrink-0">
             {getInitials(user.name)}
           </div>
           <div className="flex flex-col">
-            <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight text-dax-text">
+            <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight text-white">
               {timeGreeting()}, {firstName}.
             </h1>
-            <p className="text-base text-dax-text font-medium">
+            <p className="text-base text-white/85 font-medium">
               {user.branch_name}
               {roleLabel && <span className="opacity-70"> · {roleLabel}</span>}
             </p>
@@ -62,7 +62,7 @@ export function CockpitGreeting({ user, shift, onShiftOpened }: Props) {
 
         {/* Right — status pill + contextual CTA */}
         <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-dax-text text-xs font-semibold px-2.5 py-1">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white text-xs font-semibold px-2.5 py-1">
             <i className="fa-solid fa-circle text-[8px]" />
             {shift.is_open
               ? `${BRANCH_COPY.cockpit.shiftOpenPill} · ${formatElapsed(shift.duration_minutes ?? 0)}`

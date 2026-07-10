@@ -56,7 +56,7 @@ export function CashPaymentModal({ total, onClose, onConfirm }: Props) {
             </label>
             <button
               onClick={() => setReceived('')}
-              className="text-[10px] font-bold text-sem-critical hover:text-red-600 uppercase transition"
+              className="text-[10px] font-bold text-red-500 hover:text-red-600 uppercase transition"
             >
               Limpiar
             </button>
