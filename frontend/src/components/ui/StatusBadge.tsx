@@ -75,8 +75,8 @@ const PALETTE: Record<PaletteKey, Record<StatusBadgeVariant, string>> = {
   },
   gray: {
     solid: 'bg-slate-600 text-white',
-    outline: 'border border-slate-500/40 text-slate-300',
-    soft: 'bg-slate-500/10 text-slate-300 border border-slate-500/20',
+    outline: 'border border-slate-500/40 text-dax-muted',
+    soft: 'bg-slate-500/10 text-dax-muted border border-slate-500/20',
   },
   red: {
     solid: 'bg-red-600 text-white',
@@ -85,8 +85,8 @@ const PALETTE: Record<PaletteKey, Record<StatusBadgeVariant, string>> = {
   },
   emerald: {
     solid: 'bg-emerald-600 text-white',
-    outline: 'border border-emerald-500/40 text-emerald-300',
-    soft: 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20',
+    outline: 'border border-emerald-500/40 text-sem-success',
+    soft: 'bg-emerald-500/10 text-sem-success border border-emerald-500/20',
   },
   yellow: {
     solid: 'bg-yellow-500 text-slate-900',
@@ -94,9 +94,9 @@ const PALETTE: Record<PaletteKey, Record<StatusBadgeVariant, string>> = {
     soft: 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20',
   },
   neutral: {
-    solid: 'bg-slate-700 text-slate-200',
-    outline: 'border border-slate-600/40 text-slate-400',
-    soft: 'bg-slate-700/30 text-slate-400 border border-slate-700/40',
+    solid: 'bg-dax-surface text-dax-text',
+    outline: 'border border-dax-border text-dax-muted',
+    soft: 'bg-dax-surface text-dax-muted border border-dax-border',
   },
 }
 

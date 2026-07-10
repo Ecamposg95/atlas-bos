@@ -23,7 +23,7 @@ const PODIUM_STYLES = [
   {
     border: 'border-amber-300/60',
     glow: 'shadow-amber-300/20',
-    text: 'text-amber-300',
+    text: 'text-sem-warning',
     bg: 'from-amber-500/15 via-amber-500/5 to-transparent',
     medal: 'gold',
     icon: 'fa-trophy',
@@ -31,7 +31,7 @@ const PODIUM_STYLES = [
   {
     border: 'border-slate-300/50',
     glow: 'shadow-slate-300/15',
-    text: 'text-slate-200',
+    text: 'text-dax-text',
     bg: 'from-slate-400/15 via-slate-400/5 to-transparent',
     medal: 'silver',
     icon: 'fa-medal',
@@ -70,7 +70,7 @@ export function BranchLeaderboard({ branches }: Props) {
   }, [branches.length])
 
   if (sorted.length === 0) {
-    return <p className="text-xs text-slate-500 italic">Sin datos de sucursales.</p>
+    return <p className="text-xs text-dax-muted italic">Sin datos de sucursales.</p>
   }
 
   return (
@@ -89,12 +89,12 @@ export function BranchLeaderboard({ branches }: Props) {
                 <span className="text-2xl leading-none" aria-hidden>{MEDAL_EMOJI[st.medal]}</span>
                 <i className={`fa-solid ${st.icon} ${st.text} text-sm`} />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">#{i + 1}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-dax-muted">#{i + 1}</p>
               <p className={`text-sm font-black ${st.text} truncate`} title={b.name}>{b.name}</p>
-              <p className="text-xs font-mono font-bold text-white tabular-nums mt-1">
+              <p className="text-xs font-mono font-bold text-dax-text tabular-nums mt-1">
                 {formatCurrency(b.total_sales)}
               </p>
-              <div className="mt-2 h-1 bg-slate-800/60 rounded-full overflow-hidden">
+              <div className="mt-2 h-1 bg-dax-card rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-700 ease-out"
                   style={{ width: shown ? `${pct}%` : '0%' }}
@@ -110,16 +110,16 @@ export function BranchLeaderboard({ branches }: Props) {
           {rest.map((b, i) => {
             const pct = maxSales > 0 ? (b.total_sales / maxSales) * 100 : 0
             return (
-              <div key={b.id} className="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-slate-800/30 transition-colors">
-                <span className="text-[10px] font-mono font-bold text-slate-500 w-6 text-right">#{i + 4}</span>
-                <span className="text-xs font-bold text-slate-300 flex-1 truncate">{b.name}</span>
-                <div className="w-24 sm:w-32 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div key={b.id} className="flex items-center gap-3 px-2 py-1.5 rounded-md hover:bg-dax-card transition-colors">
+                <span className="text-[10px] font-mono font-bold text-dax-muted w-6 text-right">#{i + 4}</span>
+                <span className="text-xs font-bold text-dax-muted flex-1 truncate">{b.name}</span>
+                <div className="w-24 sm:w-32 h-1.5 bg-dax-card rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-indigo-500/70 to-violet-500/80 rounded-full transition-all duration-700 ease-out"
                     style={{ width: `${pct}%` }}
                   />
                 </div>
-                <span className="text-xs font-mono font-semibold text-emerald-400 tabular-nums w-20 text-right">
+                <span className="text-xs font-mono font-semibold text-sem-success tabular-nums w-20 text-right">
                   {formatCurrency(b.total_sales)}
                 </span>
               </div>

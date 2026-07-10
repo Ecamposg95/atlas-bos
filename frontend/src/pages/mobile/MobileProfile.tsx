@@ -48,7 +48,7 @@ export function MobileProfile() {
     <div className="space-y-5 max-w-lg mx-auto">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-user-circle text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-white">Mi Perfil</h1>
+        <h1 className="text-2xl font-black text-dax-text">Mi Perfil</h1>
       </div>
 
       {/* Info de cuenta */}
@@ -58,8 +58,8 @@ export function MobileProfile() {
             <i className="fa-solid fa-user text-indigo-400 text-xl" />
           </div>
           <div>
-            <p className="text-white font-black text-lg leading-tight">{user?.full_name ?? user?.username ?? '—'}</p>
-            <p className="text-slate-500 text-sm">{user?.username}</p>
+            <p className="text-dax-text font-black text-lg leading-tight">{user?.full_name ?? user?.username ?? '—'}</p>
+            <p className="text-dax-muted text-sm">{user?.username}</p>
             <span className="inline-block mt-1 bg-indigo-600/20 text-indigo-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
               {user?.role}
             </span>
@@ -72,17 +72,17 @@ export function MobileProfile() {
         <Spinner text="Cargando perfil..." />
       ) : noProfile ? (
         <DaxCard>
-          <div className="py-6 text-center text-slate-500">
-            <i className="fa-solid fa-id-card text-3xl mb-3 block text-slate-600" />
+          <div className="py-6 text-center text-dax-muted">
+            <i className="fa-solid fa-id-card text-3xl mb-3 block text-dax-faint" />
             <p className="font-medium">Sin expediente de empleado</p>
-            <p className="text-xs mt-1 text-slate-600">Contacta a Recursos Humanos</p>
+            <p className="text-xs mt-1 text-dax-faint">Contacta a Recursos Humanos</p>
           </div>
         </DaxCard>
       ) : employee ? (
         <>
           <DaxCard>
             <div className="flex items-center justify-between mb-4">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Datos laborales</p>
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest">Datos laborales</p>
               {!editing && (
                 <button onClick={() => setEditing(true)} className="text-indigo-400 hover:text-indigo-300 text-xs font-semibold">
                   <i className="fa-solid fa-pen mr-1" />Editar
@@ -121,8 +121,8 @@ export function MobileProfile() {
                 <InfoRow icon="fa-phone" label="Teléfono" value={employee.phone ?? '—'} />
                 <InfoRow icon="fa-envelope" label="Email personal" value={employee.email_personal ?? '—'} />
                 {employee.is_active
-                  ? <InfoRow icon="fa-circle-check" label="Estado" value="Activo" valueClass="text-emerald-400" />
-                  : <InfoRow icon="fa-circle-xmark" label="Estado" value="Inactivo" valueClass="text-red-400" />
+                  ? <InfoRow icon="fa-circle-check" label="Estado" value="Activo" valueClass="text-sem-success" />
+                  : <InfoRow icon="fa-circle-xmark" label="Estado" value="Inactivo" valueClass="text-sem-critical" />
                 }
               </div>
             )}
@@ -131,7 +131,7 @@ export function MobileProfile() {
           {/* Datos personales adicionales */}
           {(employee.curp || employee.rfc || employee.nss) && (
             <DaxCard>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Datos fiscales</p>
+              <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Datos fiscales</p>
               <div className="space-y-2.5 text-sm">
                 {employee.curp && <InfoRow icon="fa-fingerprint" label="CURP" value={employee.curp} />}
                 {employee.rfc && <InfoRow icon="fa-receipt" label="RFC" value={employee.rfc} />}
@@ -148,9 +148,9 @@ export function MobileProfile() {
 function InfoRow({ icon, label, value, valueClass }: { icon: string; label: string; value: string; valueClass?: string }) {
   return (
     <div className="flex items-start gap-3">
-      <i className={`fa-solid ${icon} text-slate-600 w-4 mt-0.5 flex-shrink-0`} />
-      <span className="text-slate-500 w-28 flex-shrink-0">{label}</span>
-      <span className={`font-medium ${valueClass ?? 'text-slate-300'} flex-1 min-w-0 break-words`}>{value}</span>
+      <i className={`fa-solid ${icon} text-dax-faint w-4 mt-0.5 flex-shrink-0`} />
+      <span className="text-dax-muted w-28 flex-shrink-0">{label}</span>
+      <span className={`font-medium ${valueClass ?? 'text-dax-muted'} flex-1 min-w-0 break-words`}>{value}</span>
     </div>
   )
 }
