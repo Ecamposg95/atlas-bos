@@ -1,5 +1,5 @@
 """Atlas BOS modules/kitchen/router — KDS REST API."""
-from datetime import timezone
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -261,11 +261,15 @@ def stats(
             by[t.status] += 1
 
     # Average prep time from tickets that reached READY (ready_at - fired_at).
+    # Ventana de 24h: acota la query (antes cargaba TODO el histórico READY del
+    # org en Python → lento con el tiempo) y el promedio refleja el servicio actual.
+    since = datetime.now(timezone.utc) - timedelta(hours=24)
     done = (
         db.query(KitchenTicket)
         .filter(
             KitchenTicket.organization_id == _org_id(current_user),
             KitchenTicket.ready_at.isnot(None),
+            KitchenTicket.fired_at >= since,
         )
     )
     if branch_id is not None:

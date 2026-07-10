@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.core.tenant_query import get_tenant_scoped, scoped_query
+from app.core.tenant_query import _resolve_org_id, get_tenant_scoped, scoped_query
 from app.models import User
 from app.modules.appointments.models import (
     Professional,
@@ -39,7 +39,10 @@ router = APIRouter()
 
 
 def _org_id(user: User) -> int:
-    org = getattr(user, "organization_id", None)
+    # User no tiene columna `organization_id` (solo relación); usar el resolvedor
+    # de tenant robusto, igual que los módulos gastro. El getattr previo devolvía
+    # None → "No active organization" espurio.
+    org = _resolve_org_id(user)
     if org is None:
         raise HTTPException(status_code=400, detail="No active organization in context")
     return org
