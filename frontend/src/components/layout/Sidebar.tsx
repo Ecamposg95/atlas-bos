@@ -21,6 +21,20 @@ const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
   { header: 'Configuración', urls: ['/printer-settings'] },
 ]
 
+// HQ/admin nav groups — lista agrupada y etiquetada (más legible que el grid de
+// códigos crípticos). Los items no listados caen en "Más" (no se ocultan).
+const HQ_NAV_GROUPS: { header: string; urls: string[] }[] = [
+  { header: 'Operación',    urls: ['/hq/operations', '/hq/reports-hub', '/hq/control'] },
+  { header: 'Restaurante',  urls: ['/tables', '/kitchen', '/meseros', '/menu', '/recipes', '/bar/bottles'] },
+  { header: 'Catálogo',     urls: ['/admin/catalog', '/departments', '/brands'] },
+  { header: 'Inventario',   urls: ['/inventory', '/hq/inventory', '/boxes', '/logistics'] },
+  { header: 'Ventas',       urls: ['/hq/sales', '/hq/returns', '/quotes', '/quotes/new', '/seguimiento'] },
+  { header: 'Compras',      urls: ['/purchases', '/expenses', '/purchasing'] },
+  { header: 'Clientes',     urls: ['/customers', '/appointments', '/commissions', '/memberships'] },
+  { header: 'Organización', urls: ['/organization', '/hq/branches', '/users', '/hr'] },
+  { header: 'Inteligencia', urls: ['/ai'] },
+]
+
 /** Hook que polea el conteo de devoluciones pendientes cada 60s para roles aprobadores. */
 function usePendingReturnsCount(role: Role): number {
   const [count, setCount] = useState(0)
@@ -203,6 +217,91 @@ function BranchNav({ items, pendingReturns }: { items: NavItem[]; pendingReturns
   )
 }
 
+// ── HQ NAV — lista agrupada + etiquetada (admin/dueño), más legible ──
+function HQNav({ items, pendingReturns }: { items: NavItem[]; pendingReturns: number }) {
+  const { pathname } = useLocation()
+  const grouped: { header: string; items: NavItem[] }[] = []
+  const placed = new Set<string>()
+
+  for (const g of HQ_NAV_GROUPS) {
+    const gItems = g.urls
+      .map((u) => items.find((it) => it.url === u))
+      .filter((it): it is NavItem => !!it)
+    if (gItems.length > 0) {
+      grouped.push({ header: g.header, items: gItems })
+      gItems.forEach((it) => placed.add(it.url))
+    }
+  }
+  const leftover = items.filter((it) => !placed.has(it.url))
+  if (leftover.length > 0) grouped.push({ header: 'Más', items: leftover })
+
+  return (
+    <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {grouped.map((section) => (
+          <div key={section.header}>
+            <p style={{
+              fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.12em', color: 'rgba(255,255,255,0.42)',
+              marginBottom: '6px', paddingLeft: '6px',
+            }}>
+              {section.header}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {section.items.map((item) => {
+                const active = pathname === item.url || pathname.startsWith(item.url + '/')
+                const showReturnsBadge = RETURNS_URLS.has(item.url) && pendingReturns > 0
+                return (
+                  <Link
+                    key={item.url}
+                    to={item.url}
+                    style={{
+                      position: 'relative',
+                      display: 'flex', alignItems: 'center', gap: '11px',
+                      padding: '9px 11px', borderRadius: '10px',
+                      textDecoration: 'none', transition: 'all 0.15s ease',
+                      background: active ? 'var(--sb-active-bg)' : 'transparent',
+                      borderLeft: `3px solid ${active ? 'var(--p-accent)' : 'transparent'}`,
+                    }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <i
+                      className={`fa-solid ${item.icon}`}
+                      style={{
+                        fontSize: '15px', width: '18px', textAlign: 'center', flexShrink: 0,
+                        color: active ? 'var(--sb-active-icon)' : 'rgba(255,255,255,0.75)',
+                      }}
+                    />
+                    <span style={{
+                      fontSize: '12.5px',
+                      fontWeight: active ? 700 : 500,
+                      color: active ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.9)',
+                      letterSpacing: '-0.01em', flex: 1,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {item.label}
+                    </span>
+                    {showReturnsBadge && (
+                      <span style={{
+                        minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '9px', flexShrink: 0,
+                        background: '#f59e0b', color: '#1c1917', fontSize: '10px', fontWeight: 900,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        {pendingReturns > 99 ? '99+' : pendingReturns}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </nav>
+  )
+}
+
 // ── MATRIX SIDEBAR (expandido) ──────────────────────────────────
 function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logout: () => void; isBranchRole: boolean }) {
   const { pathname } = useLocation()
@@ -324,56 +423,7 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
       {isBranchRole ? (
         <BranchNav items={items} pendingReturns={pendingReturns} />
       ) : (
-        <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-            {items.map((item) => {
-              const active = pathname === item.url || pathname.startsWith(item.url + '/')
-              const showReturnsBadge = RETURNS_URLS.has(item.url) && pendingReturns > 0
-              return (
-                <Link
-                  key={item.url}
-                  to={item.url}
-                  title={item.label}
-                  style={{
-                    position: 'relative',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    gap: '5px', height: '68px', borderRadius: '10px',
-                    textDecoration: 'none', transition: 'all 0.15s ease',
-                    background: active ? 'var(--sb-active-bg)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${active ? 'var(--sb-active-line)' : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: active ? '0 0 14px var(--sb-glow), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none',
-                  }}
-                >
-                  <i
-                    className={`fa-solid ${item.icon}`}
-                    style={{ fontSize: '16px', color: active ? 'var(--sb-active-icon)' : 'rgba(255,255,255,0.80)' }}
-                  />
-                  <span style={{
-                    fontSize: '0.53rem', fontWeight: 800,
-                    textTransform: 'uppercase', letterSpacing: '0.06em',
-                    color: active ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.72)',
-                  }}>
-                    {item.short}
-                  </span>
-                  {showReturnsBadge && (
-                    <span style={{
-                      position: 'absolute', top: '4px', right: '4px',
-                      minWidth: '18px', height: '18px', padding: '0 5px',
-                      borderRadius: '9px',
-                      background: '#f59e0b', color: '#1c1917',
-                      fontSize: '10px', fontWeight: 900,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 0 8px rgba(245,158,11,0.5)',
-                    }}>
-                      {pendingReturns > 99 ? '99+' : pendingReturns}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-          </div>
-        </nav>
+        <HQNav items={items} pendingReturns={pendingReturns} />
       )}
 
       {/* ── Footer: user card + logout ── */}
