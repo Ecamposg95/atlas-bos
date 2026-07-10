@@ -25,22 +25,22 @@ export function TransferPaymentModal({ total, onClose, onConfirm }: Props) {
     >
       <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
-          <i className="fa-solid fa-mobile-screen text-blue-400 text-xl" />
+          <i className="fa-solid fa-mobile-screen text-sem-info text-xl" />
           <div>
-            <h3 className="text-lg font-black text-white">Transferencia / SPEI</h3>
-            <p className="text-slate-500 text-sm">{formatCurrency(total)}</p>
+            <h3 className="text-lg font-black text-dax-text">Transferencia / SPEI</h3>
+            <p className="text-dax-muted text-sm">{formatCurrency(total)}</p>
           </div>
         </div>
 
         <div className="bg-blue-600/10 border border-blue-600/20 rounded-xl p-4 mb-4 text-center">
-          <i className="fa-solid fa-qrcode text-blue-400 text-3xl mb-2 block" />
-          <p className="text-slate-300 text-sm font-semibold">Solicita al cliente el comprobante</p>
-          <p className="text-slate-500 text-xs mt-1">Ingresa la referencia del comprobante</p>
+          <i className="fa-solid fa-qrcode text-sem-info text-3xl mb-2 block" />
+          <p className="text-dax-muted text-sm font-semibold">Solicita al cliente el comprobante</p>
+          <p className="text-dax-muted text-xs mt-1">Ingresa la referencia del comprobante</p>
         </div>
 
         <div className="mb-4">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-            Referencia <span className="text-red-400">*</span>
+          <label className="block text-[10px] font-bold text-dax-muted uppercase tracking-wider mb-1">
+            Referencia <span className="text-sem-critical">*</span>
           </label>
           <input
             type="text"
@@ -51,7 +51,7 @@ export function TransferPaymentModal({ total, onClose, onConfirm }: Props) {
             autoFocus
             onKeyDown={(e) => { if (e.key === 'Enter' && reference.trim()) submit() }}
           />
-          {!reference.trim() && <p className="text-red-400 text-xs mt-1">Campo requerido</p>}
+          {!reference.trim() && <p className="text-sem-critical text-xs mt-1">Campo requerido</p>}
         </div>
 
         <div className="flex gap-2">

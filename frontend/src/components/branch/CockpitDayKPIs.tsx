@@ -17,7 +17,7 @@ function HeroSales({ today }: TodayProps) {
     <div className={`${ui.card} p-6 h-full flex flex-col justify-between`}>
       <div>
         <p className={`${ui.kpiLabel} mb-1`}>{BRANCH_COPY.cockpit.salesToday}</p>
-        <p className={`${ui.kpiHero} text-emerald-500 dark:text-emerald-400`}>
+        <p className={`${ui.kpiHero} text-sem-success dark:text-sem-success`}>
           {fmtMoney(today.sales_total)}
         </p>
         <p className={`mt-2 text-sm ${ui.muted}`}>
@@ -29,11 +29,11 @@ function HeroSales({ today }: TodayProps) {
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1.5">
             <p className={ui.kpiLabel}>{BRANCH_COPY.cockpit.goalLabel}</p>
-            <span className="text-sm font-bold tabular-nums text-slate-700 dark:text-slate-200">
+            <span className="text-sm font-bold tabular-nums text-slate-700 dark:text-dax-text">
               {goalPct ?? 0}%
             </span>
           </div>
-          <div className="h-2 bg-stone-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-stone-100 dark:bg-dax-card rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${barColor}`}
               style={{ width: `${Math.min(100, goalPct ?? 0)}%` }}
@@ -58,7 +58,7 @@ function SecondaryKPIs({ today }: TodayProps) {
           <i className="fa-solid fa-receipt text-purple-400 dark:text-purple-500 text-[10px]" aria-hidden="true" />
           <p className={ui.kpiLabel}>{BRANCH_COPY.cockpit.avgTicket}</p>
         </div>
-        <p className="text-2xl font-extrabold tabular-nums tracking-tight text-slate-900 dark:text-slate-100 mt-0.5">
+        <p className="text-2xl font-extrabold tabular-nums tracking-tight text-slate-900 dark:text-dax-text mt-0.5">
           {fmtMoney(today.avg_ticket)}
         </p>
       </div>
@@ -73,7 +73,7 @@ function TopProducts({ today }: TodayProps) {
   return (
     <div className={`${ui.card} p-5 h-full flex flex-col`}>
       <div className="flex items-center gap-1.5 mb-3">
-        <i className="fa-solid fa-trophy text-amber-400 text-[10px]" aria-hidden="true" />
+        <i className="fa-solid fa-trophy text-sem-warning text-[10px]" aria-hidden="true" />
         <p className={ui.kpiLabel}>{BRANCH_COPY.cockpit.topProducts}</p>
       </div>
 
@@ -83,7 +83,7 @@ function TopProducts({ today }: TodayProps) {
         <ol className={`${ui.divider} flex-1`}>
           {topProds.map((p, i) => (
             <li key={i} className="flex items-center justify-between gap-2 py-2.5">
-              <span className="text-sm text-slate-600 dark:text-slate-400 truncate flex-1">
+              <span className="text-sm text-dax-faint dark:text-dax-muted truncate flex-1">
                 {p.name}
               </span>
               <span className={`text-sm font-bold tabular-nums ${brand.purpleText} flex-shrink-0`}>
@@ -128,7 +128,7 @@ function PaymentMethods({ today }: TodayProps) {
                 <p className={`text-[10px] font-semibold uppercase tracking-wider ${ui.muted}`}>
                   {PAY_METHOD_LABELS[key] ?? key}
                 </p>
-                <p className="text-sm font-bold tabular-nums text-slate-800 dark:text-slate-100 mt-0.5">
+                <p className="text-sm font-bold tabular-nums text-slate-800 dark:text-dax-text mt-0.5">
                   {fmtMoney(amount)}
                 </p>
               </div>

@@ -39,11 +39,11 @@ function StepPills({ current }: { current: Step }) {
               inline-flex items-center justify-center
               w-6 h-6 rounded-full text-xs font-bold
               transition-colors
-              ${active ? 'bg-purple-600 text-white' : past ? 'bg-purple-200 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' : 'bg-stone-200 dark:bg-slate-800 text-slate-400'}
+              ${active ? 'bg-purple-600 text-white' : past ? 'bg-purple-200 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' : 'bg-stone-200 dark:bg-dax-card text-dax-muted'}
             `}>
               {past ? <i className="fa-solid fa-check text-[9px]" /> : i + 1}
             </span>
-            <span className={`text-xs font-medium ${active ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
+            <span className={`text-xs font-medium ${active ? 'text-slate-900 dark:text-dax-text' : 'text-dax-muted dark:text-dax-muted'}`}>
               {labels[i]}
             </span>
             {i < steps.length - 1 && (
@@ -154,9 +154,9 @@ export function ReturnsBranchView() {
             {sale.lines.map((l) => {
               const id = String(l.id)
               return (
-                <div key={id} className="rounded-2xl bg-stone-50 dark:bg-slate-800/60 p-4 space-y-3">
+                <div key={id} className="rounded-2xl bg-stone-50 dark:bg-dax-card p-4 space-y-3">
                   <div>
-                    <p className="font-medium text-slate-900 dark:text-slate-100">{l.description ?? l.sku ?? id}</p>
+                    <p className="font-medium text-slate-900 dark:text-dax-text">{l.description ?? l.sku ?? id}</p>
                     <p className={`text-xs ${ui.muted}`}>{l.sku ?? ''} · {l.quantity} unidades</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -229,7 +229,7 @@ export function ReturnsBranchView() {
             <div className="w-14 h-14 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mx-auto">
               <i className="fa-solid fa-check text-2xl text-purple-600 dark:text-purple-400" />
             </div>
-            <p className="font-semibold text-lg text-slate-900 dark:text-slate-100">Devolución registrada.</p>
+            <p className="font-semibold text-lg text-slate-900 dark:text-dax-text">Devolución registrada.</p>
             <button
               onClick={() => { setStep('find'); setSale(null); setPicked({}); setQuery('') }}
               className={ui.btnSecondary}

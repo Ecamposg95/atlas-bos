@@ -40,14 +40,14 @@ export function CockpitClosingWizard({ sessionId, onClosed }: Props) {
   return (
     <div className="
       rounded-3xl
-      bg-amber-50/80 dark:bg-slate-900
+      bg-amber-50/80 dark:bg-dax-bg
       border border-amber-200/60 dark:border-amber-900/40
       shadow-lg shadow-amber-900/5 dark:shadow-black/20
       p-6
     ">
       <div className="flex items-center gap-2 mb-5">
-        <i className="fa-solid fa-moon text-amber-500 dark:text-amber-400 text-sm" aria-hidden="true" />
-        <h2 className="font-bold text-base text-slate-800 dark:text-slate-200">
+        <i className="fa-solid fa-moon text-sem-warning dark:text-sem-warning text-sm" aria-hidden="true" />
+        <h2 className="font-bold text-base text-slate-800 dark:text-dax-text">
           {BRANCH_COPY.cockpit.closingChecklistTitle}
         </h2>
       </div>
@@ -64,7 +64,7 @@ export function CockpitClosingWizard({ sessionId, onClosed }: Props) {
                   onChange={(e) => setDone((d) => ({ ...d, [s.key]: e.target.checked }))}
                   className="
                     w-4 h-4 rounded
-                    border-stone-300 dark:border-slate-600
+                    border-stone-300 dark:border-dax-border
                     text-purple-600
                     focus:ring-purple-500
                     transition-all duration-150
@@ -73,8 +73,8 @@ export function CockpitClosingWizard({ sessionId, onClosed }: Props) {
                 <span className={`
                   text-sm transition-colors duration-150
                   ${done[s.key]
-                    ? 'text-slate-400 dark:text-slate-600 line-through'
-                    : 'text-slate-700 dark:text-slate-300'
+                    ? 'text-dax-muted dark:text-dax-faint line-through'
+                    : 'text-slate-700 dark:text-dax-muted'
                   }
                 `}>
                   {s.label}
@@ -103,7 +103,7 @@ export function CockpitClosingWizard({ sessionId, onClosed }: Props) {
           </label>
 
           {error && (
-            <p className="text-sm text-rose-600 dark:text-rose-400">{error}</p>
+            <p className="text-sm text-rose-600 dark:text-sem-critical">{error}</p>
           )}
 
           <button

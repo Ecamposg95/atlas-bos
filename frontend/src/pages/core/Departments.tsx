@@ -50,7 +50,7 @@ export function Departments() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <i className="fa-solid fa-layer-group text-indigo-400 text-xl" />
-          <h1 className="text-2xl font-black text-white">Departamentos</h1>
+          <h1 className="text-2xl font-black text-dax-text">Departamentos</h1>
         </div>
         <button onClick={openCreate} className="dax-btn-primary text-xs">
           <i className="fa-solid fa-plus" /> Nuevo
@@ -59,7 +59,7 @@ export function Departments() {
 
       <DaxCard padding={false}>
         {loading ? <Spinner text="Cargando..." /> : departments.length === 0 ? (
-          <div className="p-12 text-center text-slate-600">Sin departamentos</div>
+          <div className="p-12 text-center text-dax-faint">Sin departamentos</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="dax-table w-full">
@@ -72,10 +72,10 @@ export function Departments() {
               <tbody>
                 {departments.map((d) => (
                   <tr key={d.id}>
-                    <td className="font-semibold text-white">{d.name}</td>
+                    <td className="font-semibold text-dax-text">{d.name}</td>
                     <td className="flex gap-2">
-                      <button onClick={() => openEdit(d)} className="text-slate-500 hover:text-white text-xs"><i className="fa-solid fa-pen" /></button>
-                      <button onClick={() => handleDelete(d.id)} className="text-slate-600 hover:text-red-400 text-xs"><i className="fa-solid fa-trash" /></button>
+                      <button onClick={() => openEdit(d)} className="text-dax-muted hover:text-dax-text text-xs"><i className="fa-solid fa-pen" /></button>
+                      <button onClick={() => handleDelete(d.id)} className="text-dax-faint hover:text-sem-critical text-xs"><i className="fa-solid fa-trash" /></button>
                     </td>
                   </tr>
                 ))}
@@ -90,8 +90,8 @@ export function Departments() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setModal(null)}>
           <div className="dax-card p-6 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-white">{modal === 'create' ? 'Nuevo Departamento' : 'Editar Departamento'}</h3>
-              <button onClick={() => setModal(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-dax-text">{modal === 'create' ? 'Nuevo Departamento' : 'Editar Departamento'}</h3>
+              <button onClick={() => setModal(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
             <div>
               <label className="dax-label">Nombre</label>

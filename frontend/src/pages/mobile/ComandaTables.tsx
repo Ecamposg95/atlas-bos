@@ -44,11 +44,11 @@ export function ComandaTables() {
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black text-white"><i className="fa-solid fa-utensils text-amber-400 mr-2" />Comanda</h1>
-        <div className="flex rounded-lg overflow-hidden border border-slate-700 text-xs">
-          <button className={`px-3 py-1.5 ${scope === 'mine' ? 'bg-amber-500 text-black font-bold' : 'text-slate-400'}`}
+        <h1 className="text-xl font-black text-dax-text"><i className="fa-solid fa-utensils text-sem-warning mr-2" />Comanda</h1>
+        <div className="flex rounded-lg overflow-hidden border border-dax-border text-xs">
+          <button className={`px-3 py-1.5 ${scope === 'mine' ? 'bg-amber-500 text-black font-bold' : 'text-dax-muted'}`}
             onClick={() => setScope('mine')}>Mis mesas</button>
-          <button className={`px-3 py-1.5 ${scope === 'all' ? 'bg-amber-500 text-black font-bold' : 'text-slate-400'}`}
+          <button className={`px-3 py-1.5 ${scope === 'all' ? 'bg-amber-500 text-black font-bold' : 'text-dax-muted'}`}
             onClick={() => setScope('all')}>Todas</button>
         </div>
       </div>
@@ -58,19 +58,19 @@ export function ComandaTables() {
           <button key={t.id} disabled={busy === t.id} onClick={() => openAndGo(t)}
             className="dax-card text-left active:scale-95 transition-transform disabled:opacity-50">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-black text-white">{t.code}</span>
+              <span className="text-2xl font-black text-dax-text">{t.code}</span>
               <StatusChip tone={TABLE_STATUS[t.status].tone} dotOnly style={{ transform: 'scale(1.15)' }} />
             </div>
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-dax-muted">
               <i className="fa-solid fa-user" /> {t.seats}
               {t.opened_at && <span className="ml-2"><i className="fa-solid fa-clock" /> {minutesOpen(t.opened_at, now)}m</span>}
             </p>
-            <p className="mt-2 text-xs font-bold text-amber-300">
+            <p className="mt-2 text-xs font-bold text-sem-warning">
               {t.status === 'AVAILABLE' ? 'Tocar para abrir' : 'Ver comanda'}
             </p>
           </button>
         ))}
-        {visible.length === 0 && <p className="col-span-2 text-sm text-slate-500">No hay mesas para mostrar.</p>}
+        {visible.length === 0 && <p className="col-span-2 text-sm text-dax-muted">No hay mesas para mostrar.</p>}
       </div>
     </div>
   )
