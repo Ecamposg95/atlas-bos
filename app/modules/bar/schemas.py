@@ -42,3 +42,20 @@ class WasteRequest(BaseModel):
 class RefillRequest(BaseModel):
     # reajuste manual del volumen restante (conteo físico)
     remaining_ml: Decimal = Field(ge=0)
+
+
+class BarReportRow(BaseModel):
+    bottle_id: int
+    name: Optional[str] = None
+    poured_ml: Decimal
+    poured_count: int
+    wasted_ml: Decimal
+    variance_ml: Decimal
+
+
+class BarReport(BaseModel):
+    poured_ml: Decimal
+    wasted_ml: Decimal
+    variance_ml: Decimal
+    poured_count: int
+    bottles: list[BarReportRow]
