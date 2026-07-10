@@ -87,7 +87,7 @@ function SessionRow({ session, onReprint, reprinting }: SessionRowProps) {
   const isNeg = diff < 0
   // STATUS colors for variance — semantic, not brand
   const diffClass = isNeg
-    ? 'text-rose-600 dark:text-rose-400'
+    ? 'text-rose-600 dark:text-sem-critical'
     : diff === 0
     ? ui.muted
     : brand.greenText
@@ -96,7 +96,7 @@ function SessionRow({ session, onReprint, reprinting }: SessionRowProps) {
     <li className="py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
       {/* dates */}
       <div className="flex flex-col min-w-[130px]">
-        <span className="font-medium text-slate-800 dark:text-slate-200">
+        <span className="font-medium text-slate-800 dark:text-dax-text">
           {fmtDateTime(session.opened_at)}
         </span>
         {session.closed_at && (
@@ -202,8 +202,8 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
     >
       <div className={`${ui.card} w-full max-w-md p-6`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Finalizar turno</h3>
-          <button onClick={onCancel} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1" aria-label="Cancelar">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-dax-text">Finalizar turno</h3>
+          <button onClick={onCancel} className="text-dax-muted hover:text-slate-700 dark:hover:text-dax-text p-1" aria-label="Cancelar">
             <i className="fa-solid fa-xmark text-lg" />
           </button>
         </div>
@@ -218,15 +218,15 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
               <Row label="Fondo inicial"  value={fmtMoney(String(summary.opening_amount))} />
               <Row label="Ventas efectivo" value={fmtMoney(String(summary.total_cash))} />
               <Row label="Entradas"        value={`+${fmtMoney(String(summary.total_inflows))}`}  valueClass={brand.greenText} />
-              <Row label="Salidas"         value={`-${fmtMoney(String(summary.total_outflows))}`} valueClass="text-rose-600 dark:text-rose-400" />
+              <Row label="Salidas"         value={`-${fmtMoney(String(summary.total_outflows))}`} valueClass="text-rose-600 dark:text-sem-critical" />
               {summary.cash_refunds > 0 && (
                 <Row
                   label={`Reembolsos efectivo${summary.returns_count > 0 ? ` (${summary.returns_count})` : ''}`}
                   value={`-${fmtMoney(String(summary.cash_refunds))}`}
-                  valueClass="text-rose-600 dark:text-rose-400"
+                  valueClass="text-rose-600 dark:text-sem-critical"
                 />
               )}
-              <div className="border-t border-stone-200 dark:border-slate-700 pt-2 flex justify-between font-bold text-slate-900 dark:text-slate-100">
+              <div className="border-t border-stone-200 dark:border-dax-border pt-2 flex justify-between font-bold text-slate-900 dark:text-dax-text">
                 <span>Esperado en caja</span>
                 <span className="tabular-nums">{fmtMoney(String(expected))}</span>
               </div>
@@ -242,7 +242,7 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
               className={ui.input}
             />
             {!isNaN(countedNum) && diff !== 0 && (
-              <p className={`text-xs mt-2 font-semibold ${diff > 0 ? brand.greenText : 'text-rose-600 dark:text-rose-400'}`}>
+              <p className={`text-xs mt-2 font-semibold ${diff > 0 ? brand.greenText : 'text-rose-600 dark:text-sem-critical'}`}>
                 Diferencia: {diff > 0 ? '+' : ''}{fmtMoney(String(diff))}
               </p>
             )}
@@ -475,40 +475,40 @@ export function CashBranchView() {
           return (
             <div className={`${heroClass} px-6 py-6 flex flex-wrap items-center justify-between gap-4`}>
               <div>
-                <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-0.5">
+                <p className="text-dax-text text-xs font-semibold uppercase tracking-widest mb-0.5">
                   {COPY.cash}
                 </p>
-                <h1 className="text-2xl lg:text-3xl font-bold text-white">Mi caja</h1>
+                <h1 className="text-2xl lg:text-3xl font-bold text-dax-text">Mi caja</h1>
               </div>
 
               <div className="flex items-center gap-3 flex-wrap">
-                <i className="fa-solid fa-vault text-white/50 text-2xl" />
+                <i className="fa-solid fa-vault text-dax-text text-2xl" />
 
                 {current ? (
                   <div className="text-right flex flex-col items-end gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white text-xs font-semibold px-2.5 py-1">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-dax-text text-xs font-semibold px-2.5 py-1">
                       <i className="fa-solid fa-circle text-[8px]" />
                       Turno abierto
                     </span>
-                    <p className="text-white/80 text-sm">
-                      <i className="fa-solid fa-clock mr-1 text-white/50" />
+                    <p className="text-dax-text text-sm">
+                      <i className="fa-solid fa-clock mr-1 text-dax-text" />
                       {formatElapsed(current.opened_at)}
                     </p>
                   </div>
                 ) : todayClosedSession ? (
                   <div className="text-right flex flex-col items-end gap-2">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white text-xs font-semibold px-2.5 py-1">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 text-dax-text text-xs font-semibold px-2.5 py-1">
                       <i className="fa-solid fa-circle-check text-[10px]" />
                       Turno cerrado hoy
                     </span>
-                    <p className="text-white/70 text-xs">
-                      <i className="fa-solid fa-clock mr-1 text-white/50" />
+                    <p className="text-dax-text text-xs">
+                      <i className="fa-solid fa-clock mr-1 text-dax-text" />
                       {fmtDateTime(todayClosedSession.closed_at!)}
                     </p>
                   </div>
                 ) : (
                   <span className={ui.pillSlate}>
-                    <i className="fa-solid fa-circle text-[8px] text-slate-400" />
+                    <i className="fa-solid fa-circle text-[8px] text-dax-muted" />
                     Sin caja abierta
                   </span>
                 )}
@@ -524,8 +524,8 @@ export function CashBranchView() {
               onClick={() => setOpenShiftModalVisible(true)}
               className={`${ui.card} p-5 flex flex-col items-center gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors col-span-2 lg:col-span-4`}
             >
-              <i className="fa-solid fa-play text-3xl text-emerald-600 dark:text-emerald-400" />
-              <span className="text-base font-bold text-slate-900 dark:text-slate-100">Abrir turno</span>
+              <i className="fa-solid fa-play text-3xl text-sem-success dark:text-sem-success" />
+              <span className="text-base font-bold text-slate-900 dark:text-dax-text">Abrir turno</span>
             </button>
           )}
 
@@ -535,22 +535,22 @@ export function CashBranchView() {
                 onClick={() => setMovementModal('IN')}
                 className={`${ui.card} p-5 flex flex-col items-center gap-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 transition-colors`}
               >
-                <i className="fa-solid fa-arrow-down text-3xl text-emerald-600 dark:text-emerald-400" />
-                <span className="text-base font-bold text-slate-900 dark:text-slate-100">Entrada</span>
+                <i className="fa-solid fa-arrow-down text-3xl text-sem-success dark:text-sem-success" />
+                <span className="text-base font-bold text-slate-900 dark:text-dax-text">Entrada</span>
               </button>
               <button
                 onClick={() => setMovementModal('OUT')}
                 className={`${ui.card} p-5 flex flex-col items-center gap-2 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors`}
               >
-                <i className="fa-solid fa-arrow-up text-3xl text-rose-600 dark:text-rose-400" />
-                <span className="text-base font-bold text-slate-900 dark:text-slate-100">Salida</span>
+                <i className="fa-solid fa-arrow-up text-3xl text-rose-600 dark:text-sem-critical" />
+                <span className="text-base font-bold text-slate-900 dark:text-dax-text">Salida</span>
               </button>
               <button
                 onClick={() => setShowCloseWizard(true)}
                 className={`${ui.card} p-5 flex flex-col items-center gap-2 hover:bg-amber-50 dark:hover:bg-amber-900/10 transition-colors col-span-2`}
               >
-                <i className="fa-solid fa-moon text-3xl text-amber-600 dark:text-amber-400" />
-                <span className="text-base font-bold text-slate-900 dark:text-slate-100">Cerrar turno</span>
+                <i className="fa-solid fa-moon text-3xl text-amber-600 dark:text-sem-warning" />
+                <span className="text-base font-bold text-slate-900 dark:text-dax-text">Cerrar turno</span>
               </button>
             </>
           )}
@@ -564,7 +564,7 @@ export function CashBranchView() {
             value={summary ? fmtMoney(String(summary.total_sales)) : '—'}
             iconBg="rgba(16,185,129,0.12)"
             iconColor="#10b981"
-            valueClass="text-emerald-600 dark:text-emerald-400"
+            valueClass="text-sem-success dark:text-sem-success"
           />
           <KpiCard
             icon="fa-scale-balanced"
@@ -590,7 +590,7 @@ export function CashBranchView() {
             value={summary ? `+${fmtMoney(String(summary.total_inflows))}` : '—'}
             iconBg="rgba(16,185,129,0.12)"
             iconColor="#10b981"
-            valueClass="text-emerald-600 dark:text-emerald-400"
+            valueClass="text-sem-success dark:text-sem-success"
           />
           <KpiCard
             icon="fa-arrow-up"
@@ -598,7 +598,7 @@ export function CashBranchView() {
             value={summary ? `-${fmtMoney(String(summary.total_outflows))}` : '—'}
             iconBg="rgba(244,63,94,0.12)"
             iconColor="#f43f5e"
-            valueClass="text-rose-600 dark:text-rose-400"
+            valueClass="text-rose-600 dark:text-sem-critical"
           />
         </div>
 
@@ -645,7 +645,7 @@ export function CashBranchView() {
                       <p className={`text-[10px] font-semibold uppercase tracking-wider ${ui.muted}`}>
                         {PAY_METHOD_LABELS[key] ?? key}
                       </p>
-                      <p className="text-sm font-bold tabular-nums text-slate-800 dark:text-slate-100 mt-0.5">
+                      <p className="text-sm font-bold tabular-nums text-slate-800 dark:text-dax-text mt-0.5">
                         {fmtMoney(String(amount))}
                       </p>
                     </div>
@@ -666,14 +666,14 @@ export function CashBranchView() {
                   <span
                     className={`inline-flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 ${
                       m.type === 'IN'
-                        ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400'
-                        : 'bg-rose-100 dark:bg-rose-900/20 text-rose-700 dark:text-rose-400'
+                        ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-sem-success'
+                        : 'bg-rose-100 dark:bg-rose-900/20 text-rose-700 dark:text-sem-critical'
                     }`}
                   >
                     <i className={`fa-solid ${m.type === 'IN' ? 'fa-arrow-down' : 'fa-arrow-up'} text-xs`} />
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-slate-800 dark:text-slate-200 truncate">{m.concept || '—'}</p>
+                    <p className="text-slate-800 dark:text-dax-text truncate">{m.concept || '—'}</p>
                     <p className={`text-xs ${ui.muted}`}>
                       {new Date(m.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -681,8 +681,8 @@ export function CashBranchView() {
                   <span
                     className={`font-bold tabular-nums flex-shrink-0 ${
                       m.type === 'IN'
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-rose-600 dark:text-rose-400'
+                        ? 'text-sem-success dark:text-sem-success'
+                        : 'text-rose-600 dark:text-sem-critical'
                     }`}
                   >
                     {m.type === 'IN' ? '+' : '-'}{fmtMoney(String(m.amount))}
