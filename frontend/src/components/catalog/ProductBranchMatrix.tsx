@@ -145,15 +145,15 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
             <div>
               <div className="flex items-center gap-2">
                 <i className="fa-solid fa-store text-indigo-400" />
-                <h2 className="text-lg font-bold text-white">Matriz de Sucursales</h2>
+                <h2 className="text-lg font-bold text-dax-text">Matriz de Sucursales</h2>
               </div>
-              <p className="text-xs text-slate-500 mt-1 truncate max-w-[420px]">
+              <p className="text-xs text-dax-muted mt-1 truncate max-w-[420px]">
                 {product.name} · SKU <span className="font-mono">{variant?.sku ?? '—'}</span>
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              className="p-2 rounded-lg text-dax-muted hover:text-dax-text hover:bg-dax-card"
               title="Cerrar"
             >
               <i className="fa-solid fa-xmark text-xl" />
@@ -164,9 +164,9 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
         <div className="p-5 space-y-4">
           {/* Summary chip */}
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="text-sm text-slate-400">
+            <div className="text-sm text-dax-muted">
               Activo en{' '}
-              <span className={`font-bold ${activeCount === branches.length ? 'text-emerald-400' : activeCount === 0 ? 'text-rose-400' : 'text-amber-400'}`}>
+              <span className={`font-bold ${activeCount === branches.length ? 'text-sem-success' : activeCount === 0 ? 'text-sem-critical' : 'text-sem-warning'}`}>
                 {activeCount}/{branches.length}
               </span>{' '}
               sucursales
@@ -175,7 +175,7 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
               <button
                 onClick={() => bulkEnableAll(true)}
                 disabled={saving || branches.length === 0}
-                className="text-xs px-3 py-1.5 rounded-md bg-emerald-600/15 text-emerald-300 border border-emerald-600/30 hover:bg-emerald-600/25 disabled:opacity-50"
+                className="text-xs px-3 py-1.5 rounded-md bg-emerald-600/15 text-sem-success border border-emerald-600/30 hover:bg-emerald-600/25 disabled:opacity-50"
               >
                 <i className="fa-solid fa-check mr-1" /> Activar todas
               </button>
@@ -190,17 +190,17 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
           </div>
 
           {/* Clone from branch */}
-          <div className="rounded-xl border border-slate-700 p-3 bg-slate-900/30">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
+          <div className="rounded-xl border border-dax-border p-3 bg-dax-bg">
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-2">
               Replicar configuración
             </p>
             <div className="flex items-end gap-2 flex-wrap">
               <div className="flex-1 min-w-[180px]">
-                <label className="text-xs text-slate-400 block mb-1">Copiar desde</label>
+                <label className="text-xs text-dax-muted block mb-1">Copiar desde</label>
                 <select
                   value={cloneFrom}
                   onChange={(e) => setCloneFrom(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="w-full px-3 py-2 rounded-lg bg-slate-900/60 border border-slate-700 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-lg bg-dax-bg border border-dax-border text-sm text-dax-text focus:outline-none focus:border-indigo-500"
                 >
                   <option value="">Seleccionar sucursal origen…</option>
                   {branches
@@ -212,7 +212,7 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
                     ))}
                 </select>
               </div>
-              <label className="inline-flex items-center gap-2 text-xs text-slate-400 select-none">
+              <label className="inline-flex items-center gap-2 text-xs text-dax-muted select-none">
                 <input
                   type="checkbox"
                   checked={cloneOverwrite}
@@ -235,14 +235,14 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
           {loading ? (
             <Spinner text="Cargando sucursales..." />
           ) : branches.length === 0 ? (
-            <p className="text-sm text-slate-500 py-6 text-center">
+            <p className="text-sm text-dax-muted py-6 text-center">
               No hay sucursales configuradas en esta organización.
             </p>
           ) : (
-            <div className="rounded-xl border border-slate-800 overflow-hidden">
+            <div className="rounded-xl border border-dax-border overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-900/40">
-                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800">
+                <thead className="bg-dax-bg">
+                  <tr className="text-[10px] font-bold text-dax-muted uppercase tracking-widest border-b border-dax-border">
                     <th className="text-left py-2 px-3">Sucursal</th>
                     <th className="text-center py-2 px-3">POS</th>
                     <th className="text-right py-2 px-3">Precio override</th>
@@ -294,11 +294,11 @@ function BranchRow({ branch, pbs, variantPrice, disabled, onToggle, onPriceOverr
   const maxStock = pbs?.max_stock_limit
 
   return (
-    <tr className="border-b border-slate-800/60 hover:bg-slate-800/20">
+    <tr className="border-b border-dax-border hover:bg-dax-card">
       <td className="py-2.5 px-3">
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${active ? 'bg-emerald-400' : pbs ? 'bg-slate-600' : 'bg-fuchsia-500'}`} />
-          <span className="text-white font-semibold">{branch.name}</span>
+          <span className="text-dax-text font-semibold">{branch.name}</span>
           {branch.is_headquarters && (
             <span className="text-[9px] font-bold uppercase tracking-widest text-indigo-400">HQ</span>
           )}
@@ -395,7 +395,7 @@ function NumberBlurInput({ value, placeholder, disabled, onCommit, min, width = 
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
         if (e.key === 'Escape') setLocal(value !== null ? String(value) : '')
       }}
-      className={`${width} px-2 py-1 rounded-md bg-slate-900/60 border border-slate-700 text-xs text-white text-right focus:outline-none focus:border-indigo-500 disabled:opacity-40`}
+      className={`${width} px-2 py-1 rounded-md bg-dax-bg border border-dax-border text-xs text-dax-text text-right focus:outline-none focus:border-indigo-500 disabled:opacity-40`}
     />
   )
 }

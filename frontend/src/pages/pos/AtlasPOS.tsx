@@ -24,10 +24,10 @@ function Clock() {
   }, [])
   return (
     <div className="text-right">
-      <p className="text-3xl font-mono font-black text-white tabular-nums">
+      <p className="text-3xl font-mono font-black text-dax-text tabular-nums">
         {time.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
       </p>
-      <p className="text-slate-500 text-xs mt-0.5">
+      <p className="text-dax-muted text-xs mt-0.5">
         {time.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
       </p>
     </div>
@@ -36,11 +36,11 @@ function Clock() {
 
 const QUICK_ACCESS = [
   { label: 'Punto de Venta', icon: 'fa-cash-register', url: '/pos', color: 'bg-indigo-600' },
-  { label: 'Historial Ventas', icon: 'fa-history', url: '/sales', color: 'bg-slate-700' },
-  { label: 'Control de Caja', icon: 'fa-vault', url: '/cash-history', color: 'bg-slate-700' },
-  { label: 'Productos', icon: 'fa-barcode', url: '/products', color: 'bg-slate-700' },
-  { label: 'Devoluciones', icon: 'fa-undo', url: '/returns', color: 'bg-slate-700' },
-  { label: 'Mi Expediente', icon: 'fa-id-card', url: '/hr/me', color: 'bg-slate-700' },
+  { label: 'Historial Ventas', icon: 'fa-history', url: '/sales', color: 'bg-dax-surface' },
+  { label: 'Control de Caja', icon: 'fa-vault', url: '/cash-history', color: 'bg-dax-surface' },
+  { label: 'Productos', icon: 'fa-barcode', url: '/products', color: 'bg-dax-surface' },
+  { label: 'Devoluciones', icon: 'fa-undo', url: '/returns', color: 'bg-dax-surface' },
+  { label: 'Mi Expediente', icon: 'fa-id-card', url: '/hr/me', color: 'bg-dax-surface' },
 ]
 
 export function AtlasPOS() {
@@ -76,19 +76,19 @@ export function AtlasPOS() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest mb-1">
+          <p className="text-[10px] text-dax-text uppercase font-bold tracking-widest mb-1">
             AtlasPOS — {org?.name ?? 'Sucursal'}
           </p>
-          <h2 className="text-2xl font-black text-white">
+          <h2 className="text-2xl font-black text-dax-text">
             {greeting()}, {user?.full_name?.split(' ')[0] ?? user?.username}
           </h2>
-          <p className="text-slate-400 text-sm mt-0.5">
-            <i className="fa-solid fa-circle text-emerald-400 text-[8px] mr-1.5" />
+          <p className="text-dax-muted text-sm mt-0.5">
+            <i className="fa-solid fa-circle text-sem-success text-[8px] mr-1.5" />
             Sesión activa
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={loadData} disabled={loading} className="text-slate-500 hover:text-white transition-colors disabled:opacity-40" title="Actualizar">
+          <button onClick={loadData} disabled={loading} className="text-dax-muted hover:text-dax-text transition-colors disabled:opacity-40" title="Actualizar">
             <i className={`fa-solid fa-rotate-right text-sm ${loading ? 'animate-spin' : ''}`} />
           </button>
           <Clock />
@@ -98,20 +98,20 @@ export function AtlasPOS() {
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4">
         <DaxCard>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ventas hoy</p>
-          <p className="text-3xl font-black text-white tabular-nums">{kpiCount}</p>
-          <p className="text-slate-500 text-xs mt-0.5">tickets registrados</p>
+          <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1">Ventas hoy</p>
+          <p className="text-3xl font-black text-dax-text tabular-nums">{kpiCount}</p>
+          <p className="text-dax-muted text-xs mt-0.5">tickets registrados</p>
         </DaxCard>
         <DaxCard>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total hoy</p>
+          <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-1">Total hoy</p>
           <p className="text-3xl font-black text-indigo-400 tabular-nums">{formatCurrency(kpiTotal)}</p>
-          <p className="text-slate-500 text-xs mt-0.5">en ventas del día</p>
+          <p className="text-dax-muted text-xs mt-0.5">en ventas del día</p>
         </DaxCard>
       </div>
 
       {/* Accesos rápidos */}
       <div>
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Acceso rápido</p>
+        <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-3">Acceso rápido</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {QUICK_ACCESS.map((item) => (
             <Link
@@ -119,8 +119,8 @@ export function AtlasPOS() {
               to={item.url}
               className={`${item.color} rounded-xl p-4 flex flex-col items-center gap-2 hover:opacity-90 transition-opacity`}
             >
-              <i className={`fa-solid ${item.icon} text-white text-xl`} />
-              <span className="text-white text-xs font-semibold text-center">{item.label}</span>
+              <i className={`fa-solid ${item.icon} text-dax-text text-xl`} />
+              <span className="text-dax-text text-xs font-semibold text-center">{item.label}</span>
             </Link>
           ))}
         </div>
@@ -128,19 +128,19 @@ export function AtlasPOS() {
 
       {/* Últimas operaciones */}
       <DaxCard padding={false}>
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Últimas operaciones</p>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-dax-border">
+          <p className="text-xs font-bold text-dax-muted uppercase tracking-widest">Últimas operaciones</p>
           <div className="flex items-center gap-3">
-            <button onClick={loadData} className="text-slate-500 hover:text-white text-xs transition-colors">
+            <button onClick={loadData} className="text-dax-muted hover:text-dax-text text-xs transition-colors">
               <i className="fa-solid fa-rotate-right" />
             </button>
             <Link to="/sales" className="text-indigo-400 text-xs hover:text-indigo-300">Ver todo →</Link>
           </div>
         </div>
         {loading ? (
-          <div className="p-6 text-center text-slate-500 text-sm">Cargando...</div>
+          <div className="p-6 text-center text-dax-muted text-sm">Cargando...</div>
         ) : sales.length === 0 ? (
-          <div className="p-6 text-center text-slate-600 text-sm">Sin ventas registradas hoy</div>
+          <div className="p-6 text-center text-dax-faint text-sm">Sin ventas registradas hoy</div>
         ) : (
           <table className="dax-table w-full">
             <thead>

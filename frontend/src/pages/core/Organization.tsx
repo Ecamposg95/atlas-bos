@@ -106,14 +106,14 @@ export function Organization() {
     <div className="space-y-5">
       <div className="flex items-center gap-3">
         <i className="fa-solid fa-building text-indigo-400 text-xl" />
-        <h1 className="text-2xl font-black text-white">Empresa y Sucursales</h1>
+        <h1 className="text-2xl font-black text-dax-text">Empresa y Sucursales</h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-800/50 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-dax-card p-1 rounded-lg w-fit">
         {(['org', 'branches'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
+            className={`px-4 py-1.5 rounded-md text-sm font-semibold transition-colors ${tab === t ? 'bg-indigo-600 text-white' : 'text-dax-muted hover:text-white'}`}>
             {t === 'org' ? 'Datos de Empresa' : `Sucursales (${branches.length})`}
           </button>
         ))}
@@ -122,7 +122,7 @@ export function Organization() {
       {tab === 'org' && org && (
         <div className="space-y-4">
           <DaxCard>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">Información de la Empresa</p>
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-4">Información de la Empresa</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="dax-label">Razón social</label>
@@ -154,7 +154,7 @@ export function Organization() {
 
           {/* Logo de la empresa */}
           <DaxCard>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-4">
               <i className="fa-solid fa-image mr-1.5" />Logo de la Empresa
             </p>
             <div className="flex items-start gap-4">
@@ -163,22 +163,22 @@ export function Organization() {
                   <img
                     src={org.logo_url}
                     alt="Logo"
-                    className="h-20 w-20 object-contain rounded-xl border border-slate-700 bg-slate-800 p-1"
+                    className="h-20 w-20 object-contain rounded-xl border border-dax-border bg-dax-card p-1"
                   />
                   <button
                     onClick={deleteOrgLogo}
-                    className="text-[10px] text-red-400 hover:text-red-300 flex items-center gap-1"
+                    className="text-[10px] text-sem-critical hover:text-red-300 flex items-center gap-1"
                   >
                     <i className="fa-solid fa-trash" /> Eliminar
                   </button>
                 </div>
               ) : (
-                <div className="h-20 w-20 rounded-xl border border-dashed border-slate-600 bg-slate-800/50 flex items-center justify-center flex-shrink-0">
-                  <i className="fa-solid fa-image text-2xl text-slate-600" />
+                <div className="h-20 w-20 rounded-xl border border-dashed border-dax-border bg-dax-card flex items-center justify-center flex-shrink-0">
+                  <i className="fa-solid fa-image text-2xl text-dax-faint" />
                 </div>
               )}
               <div className="flex-1">
-                <p className="text-xs text-slate-400 mb-2">
+                <p className="text-xs text-dax-muted mb-2">
                   Se imprime en la parte superior del ticket. Formatos: PNG, JPEG, WEBP. Máx 1 MB.
                 </p>
                 <input
@@ -195,14 +195,14 @@ export function Organization() {
                 >
                   {logoUploading ? <i className="fa-solid fa-spinner fa-spin" /> : <><i className="fa-solid fa-upload" /> {org.logo_url ? 'Cambiar logo' : 'Subir logo'}</>}
                 </button>
-                {logoError && <p className="text-xs text-red-400 mt-1">{logoError}</p>}
+                {logoError && <p className="text-xs text-sem-critical mt-1">{logoError}</p>}
               </div>
             </div>
           </DaxCard>
 
           {/* Encabezado y pie de ticket */}
           <DaxCard>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+            <p className="text-[10px] font-bold text-dax-muted uppercase tracking-widest mb-4">
               <i className="fa-solid fa-receipt mr-1.5" />Encabezado y Pie de Ticket
             </p>
             <div className="space-y-4">
@@ -216,7 +216,7 @@ export function Organization() {
                   className="dax-input w-full resize-none font-mono text-xs"
                   placeholder={"ATLAS POS - Nota de Venta\nHorario: Lun-Sáb 9am-8pm"}
                 />
-                <p className="text-[10px] mt-1 text-slate-600">Hasta 4 líneas · se muestra antes del nombre de la empresa.</p>
+                <p className="text-[10px] mt-1 text-dax-faint">Hasta 4 líneas · se muestra antes del nombre de la empresa.</p>
               </div>
               <div>
                 <label className="dax-label">Pie de página del ticket</label>
@@ -228,7 +228,7 @@ export function Organization() {
                   className="dax-input w-full resize-none font-mono text-xs"
                   placeholder={"Gracias por su compra!\nwww.mitienda.mx"}
                 />
-                <p className="text-[10px] mt-1 text-slate-600">Hasta 2 líneas · se muestra al final del ticket.</p>
+                <p className="text-[10px] mt-1 text-dax-faint">Hasta 2 líneas · se muestra al final del ticket.</p>
               </div>
               <div className="flex justify-end">
                 <button onClick={saveOrg} disabled={saving} className="dax-btn-primary disabled:opacity-40">
@@ -249,7 +249,7 @@ export function Organization() {
           </div>
           <DaxCard padding={false}>
             {branches.length === 0 ? (
-              <div className="p-12 text-center text-slate-600">Sin sucursales</div>
+              <div className="p-12 text-center text-dax-faint">Sin sucursales</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="dax-table w-full">
@@ -266,21 +266,21 @@ export function Organization() {
                   <tbody>
                     {branches.map((b) => (
                       <tr key={b.id}>
-                        <td className="font-semibold text-white">{b.name}</td>
+                        <td className="font-semibold text-dax-text">{b.name}</td>
                         <td><Badge variant={b.branch_type === 'HQ' ? 'yellow' : 'blue'}>{branchTypeLabel(b.branch_type)}</Badge></td>
-                        <td className="text-slate-400 text-sm">{b.phone ?? '—'}</td>
-                        <td className="text-slate-400 text-sm max-w-[200px] truncate">{b.address ?? '—'}</td>
+                        <td className="text-dax-muted text-sm">{b.phone ?? '—'}</td>
+                        <td className="text-dax-muted text-sm max-w-[200px] truncate">{b.address ?? '—'}</td>
                         <td>
                           <Badge variant={b.is_active ? 'green' : 'slate'}>
                             {b.is_active ? 'Activa' : 'Inactiva'}
                           </Badge>
                         </td>
                         <td className="flex gap-1">
-                          <button onClick={() => openEditBranch(b)} className="text-slate-500 hover:text-white text-xs">
+                          <button onClick={() => openEditBranch(b)} className="text-dax-muted hover:text-dax-text text-xs">
                             <i className="fa-solid fa-pen" />
                           </button>
                           {!b.is_headquarters && (
-                            <button onClick={() => deleteBranch(b.id)} className="text-slate-600 hover:text-red-400 text-xs ml-1">
+                            <button onClick={() => deleteBranch(b.id)} className="text-dax-faint hover:text-sem-critical text-xs ml-1">
                               <i className="fa-solid fa-trash" />
                             </button>
                           )}
@@ -300,8 +300,8 @@ export function Organization() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={() => setBranchModal(null)}>
           <div className="dax-card p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-white">{branchModal === 'create' ? 'Nueva Sucursal' : 'Editar Sucursal'}</h3>
-              <button onClick={() => setBranchModal(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <h3 className="text-lg font-black text-dax-text">{branchModal === 'create' ? 'Nueva Sucursal' : 'Editar Sucursal'}</h3>
+              <button onClick={() => setBranchModal(null)} className="text-dax-muted hover:text-dax-text"><i className="fa-solid fa-xmark text-lg" /></button>
             </div>
             <div className="space-y-3">
               <div>
