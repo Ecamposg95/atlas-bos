@@ -203,7 +203,9 @@ export function LoginPage() {
         if (['VENDEDOR', 'SOPORTE_OPERATIVO'].includes(role)) navigate('/mobile/dashboard')
         else if (['CAJERO', 'GERENTE'].includes(role)) navigate('/atlas-pos')
         else if (role === 'CLIENTE') navigate('/portal')
-        else navigate('/hq/operations')
+        // Admin/Dueño → raíz: RoleHomeRedirect enruta por preset (gastro → /home
+        // con el Home del día; sin preset Atlas One → /hq/operations).
+        else navigate('/')
       }, 600)
     } catch {
       setError('Credenciales inválidas. Intenta de nuevo.')
