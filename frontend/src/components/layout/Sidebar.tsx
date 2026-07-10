@@ -11,10 +11,18 @@ const APPROVER_ROLES: Role[] = ['ADMINISTRADOR', 'DUEÑO', 'GERENTE']
 const BRANCH_ROLES: Role[] = ['CAJERO', 'GERENTE']
 const RETURNS_URLS = new Set(['/returns', '/hq/returns'])
 
+// Presets gastronómicos (valor de `preset` = industry_type de la org). En estos
+// verticales ocultamos los ítems marcados `hideForGastro` (lenguaje retail que
+// no aplica a una cocina). Incluye taxonomía v2 (ATLAS_ONE_*) y v1 legacy.
+const GASTRO_PRESETS = new Set([
+  'ATLAS_ONE_RESTAURANT', 'ATLAS_ONE_CAFE', 'ATLAS_ONE_BAR', 'ATLAS_ONE_GASTRO',
+  'RESTAURANT_FULL', 'RESTAURANT_QSR', 'CAFE_BAKERY',
+])
+
 // Branch nav group labels — keyed by URL, defines section header shown above each group
 const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
   { header: 'Mi día',        urls: ['/atlas-pos', '/pos'] },
-  { header: 'Restaurante',   urls: ['/tables', '/kitchen', '/bar/bottles', '/menu'] },
+  { header: 'Restaurante',   urls: ['/menu', '/tables', '/mobile/comanda', '/kitchen', '/bar/bottles'] },
   { header: 'Mi turno',      urls: ['/cash-history', '/sales'] },
   { header: 'Inventario',    urls: ['/products'] },
   { header: 'Reportes',      urls: ['/reports', '/meseros'] },
@@ -24,8 +32,8 @@ const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
 // HQ/admin nav groups — lista agrupada y etiquetada (más legible que el grid de
 // códigos crípticos). Los items no listados caen en "Más" (no se ocultan).
 const HQ_NAV_GROUPS: { header: string; urls: string[] }[] = [
+  { header: 'Restaurante',  urls: ['/menu', '/tables', '/mobile/comanda', '/kitchen', '/recipes', '/meseros', '/bar/bottles'] },
   { header: 'Operación',    urls: ['/hq/operations', '/hq/reports-hub', '/hq/control'] },
-  { header: 'Restaurante',  urls: ['/tables', '/kitchen', '/meseros', '/menu', '/recipes', '/bar/bottles'] },
   { header: 'Catálogo',     urls: ['/admin/catalog', '/departments', '/brands'] },
   { header: 'Inventario',   urls: ['/inventory', '/hq/inventory', '/boxes', '/logistics'] },
   { header: 'Ventas',       urls: ['/hq/sales', '/hq/returns', '/quotes', '/quotes/new', '/seguimiento'] },
@@ -59,27 +67,29 @@ interface NavItem {
    *  this module enabled (`OrganizationModule.is_enabled=true`). Items without
    *  this field are always visible (subject to ROLE_ROUTES). */
   module?: string
+  /** Hide this item for gastro presets (retail-only concept). See GASTRO_PRESETS. */
+  hideForGastro?: boolean
 }
 
 const ALL_NAV: NavItem[] = [
   { label: 'Operaciones',       short: 'OPS', icon: 'fa-gauge-high',          url: '/hq/operations',    group: 'hq',   sort: 0  },
   { label: 'Reportes',          short: 'REP', icon: 'fa-chart-line',          url: '/hq/reports-hub',   group: 'hq',   sort: 1  },
   { label: 'Control HQ',        short: 'HQ',  icon: 'fa-sliders',             url: '/hq/control',       group: 'hq',   sort: 2  },
-  { label: 'Catálogo',          short: 'CAT', icon: 'fa-book',                url: '/admin/catalog',    group: 'hq',   sort: 3  },
-  { label: 'Deptos.',           short: 'DEP', icon: 'fa-layer-group',         url: '/departments',      group: 'hq',   sort: 4  },
-  { label: 'Marcas',            short: 'MRC', icon: 'fa-tags',                url: '/brands',           group: 'hq',   sort: 5  },
-  { label: 'Ventas HQ',         short: 'VTA', icon: 'fa-receipt',             url: '/hq/sales',         group: 'hq',   sort: 6  },
-  { label: 'Devoluc. HQ',       short: 'DEV', icon: 'fa-undo',                url: '/hq/returns',       group: 'hq',   sort: 7  },
-  { label: 'Cotizaciones',      short: 'COT', icon: 'fa-file-invoice',        url: '/quotes',           group: 'hq',   sort: 8  },
-  { label: 'Nueva Cot.',        short: 'NEW', icon: 'fa-file-invoice-dollar', url: '/quotes/new',       group: 'hq',   sort: 9  },
-  { label: 'Pedidos',           short: 'PED', icon: 'fa-clipboard-check',     url: '/seguimiento',      group: 'hq',   sort: 10 },
+  { label: 'Catálogo',          short: 'CAT', icon: 'fa-book',                url: '/admin/catalog',    group: 'hq',   sort: 3,  module: 'catalog' },
+  { label: 'Deptos.',           short: 'DEP', icon: 'fa-layer-group',         url: '/departments',      group: 'hq',   sort: 4,  module: 'catalog', hideForGastro: true },
+  { label: 'Marcas',            short: 'MRC', icon: 'fa-tags',                url: '/brands',           group: 'hq',   sort: 5,  module: 'catalog', hideForGastro: true },
+  { label: 'Ventas HQ',         short: 'VTA', icon: 'fa-receipt',             url: '/hq/sales',         group: 'hq',   sort: 6,  module: 'pos' },
+  { label: 'Devoluc. HQ',       short: 'DEV', icon: 'fa-undo',                url: '/hq/returns',       group: 'hq',   sort: 7,  module: 'returns' },
+  { label: 'Cotizaciones',      short: 'COT', icon: 'fa-file-invoice',        url: '/quotes',           group: 'hq',   sort: 8,  module: 'quotes' },
+  { label: 'Nueva Cot.',        short: 'NEW', icon: 'fa-file-invoice-dollar', url: '/quotes/new',       group: 'hq',   sort: 9,  module: 'quotes' },
+  { label: 'Pedidos',           short: 'PED', icon: 'fa-clipboard-check',     url: '/seguimiento',      group: 'hq',   sort: 10, module: 'quotes' },
   { label: 'Compras',           short: 'CMP', icon: 'fa-shopping-cart',       url: '/purchases',        group: 'hq',   sort: 11 },
   { label: 'Gastos',            short: 'GST', icon: 'fa-money-bill-wave',     url: '/expenses',         group: 'hq',   sort: 12 },
-  { label: 'Inventario',        short: 'INV', icon: 'fa-boxes',               url: '/inventory',        group: 'hq',   sort: 13 },
-  { label: 'Inv. Global',       short: 'GLB', icon: 'fa-globe',               url: '/hq/inventory',     group: 'hq',   sort: 14 },
-  { label: 'Logística',         short: 'LOG', icon: 'fa-truck-loading',       url: '/logistics',        group: 'hq',   sort: 15 },
-  { label: 'Cajas',             short: 'CJA', icon: 'fa-box-open',            url: '/boxes',            group: 'hq',   sort: 16 },
-  { label: 'Clientes',          short: 'CRM', icon: 'fa-address-book',        url: '/customers',        group: 'hq',   sort: 17 },
+  { label: 'Inventario',        short: 'INV', icon: 'fa-boxes',               url: '/inventory',        group: 'hq',   sort: 13, module: 'inventory' },
+  { label: 'Inv. Global',       short: 'GLB', icon: 'fa-globe',               url: '/hq/inventory',     group: 'hq',   sort: 14, module: 'inventory', hideForGastro: true },
+  { label: 'Logística',         short: 'LOG', icon: 'fa-truck-loading',       url: '/logistics',        group: 'hq',   sort: 15, module: 'logistics' },
+  { label: 'Cajas',             short: 'CJA', icon: 'fa-box-open',            url: '/boxes',            group: 'hq',   sort: 16, module: 'logistics' },
+  { label: 'Clientes',          short: 'CRM', icon: 'fa-address-book',        url: '/customers',        group: 'hq',   sort: 17, module: 'crm' },
   { label: 'Empresa',           short: 'EMP', icon: 'fa-building',            url: '/organization',     group: 'hq',   sort: 18 },
   { label: 'Sucursales',        short: 'SCR', icon: 'fa-store',               url: '/hq/branches',      group: 'hq',   sort: 19 },
   { label: 'Usuarios',          short: 'USR', icon: 'fa-users-cog',           url: '/users',            group: 'hq',   sort: 20 },
@@ -94,8 +104,9 @@ const ALL_NAV: NavItem[] = [
   { label: 'Mesas',             short: 'MSA', icon: 'fa-chair',               url: '/tables',           group: 'hq',   sort: 28, module: 'tables' },
   { label: 'Cocina (KDS)',      short: 'KDS', icon: 'fa-fire-burner',         url: '/kitchen',          group: 'hq',   sort: 29, module: 'kitchen' },
   { label: 'Meseros',           short: 'MSR', icon: 'fa-user-tie',            url: '/meseros',          group: 'hq',   sort: 30, module: 'tables' },
-  { label: 'Botellas',          short: 'BTL', icon: 'fa-wine-bottle',         url: '/bar/bottles',      group: 'hq',   sort: 31, module: 'tables' },
-  { label: 'Menú',              short: 'MNU', icon: 'fa-book-open',           url: '/menu',             group: 'hq',   sort: 32, module: 'tables' },
+  { label: 'Botellas',          short: 'BTL', icon: 'fa-wine-bottle',         url: '/bar/bottles',      group: 'hq',   sort: 31, module: 'bar' },
+  { label: 'Menú',              short: 'MNU', icon: 'fa-book-open',           url: '/menu',             group: 'hq',   sort: 32, module: 'menu' },
+  { label: 'Comanda',           short: 'CMD', icon: 'fa-clipboard-list',      url: '/mobile/comanda',   group: 'hq',   sort: 33, module: 'tables' },
   { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/atlas-pos',         group: 'pos',  sort: 0  },
   { label: 'Cobrar',            short: 'POS', icon: 'fa-cash-register',       url: '/pos',              group: 'pos',  sort: 1  },
   { label: 'Mis ventas',        short: 'HST', icon: 'fa-history',             url: '/sales',            group: 'pos',  sort: 2  },
@@ -112,10 +123,10 @@ const ALL_NAV: NavItem[] = [
 ]
 
 const ROLE_ROUTES: Record<Role, string[]> = {
-  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles','/menu'],
-  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles','/menu'],
-  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes','/meseros','/bar/bottles','/menu'],
-  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos','/tables','/kitchen','/bar/bottles','/menu'],
+  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles','/menu','/mobile/comanda'],
+  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles','/menu','/mobile/comanda'],
+  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes','/meseros','/bar/bottles','/menu','/mobile/comanda'],
+  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos','/tables','/kitchen','/bar/bottles','/menu','/mobile/comanda'],
   VENDEDOR:         ['/mobile/dashboard','/mobile/query','/mobile/sales','/mobile/profile','/hr/me','/atlas-pos'],
   SOPORTE_OPERATIVO:['/mobile/dashboard','/mobile/query','/mobile/profile','/hr/me','/atlas-pos'],
   CLIENTE:          ['/portal'],
@@ -665,14 +676,20 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
 
   // Module gating: items with `module` declared only appear when the org has
   // that module enabled. Items without `module` are always shown.
-  const { enabledModules, loaded, load } = useEnabledModulesStore()
+  const { enabledModules, preset, loaded, load } = useEnabledModulesStore()
   useEffect(() => {
     if (isAuthenticated && !loaded) load()
   }, [isAuthenticated, loaded, load])
 
+  // Fail-open: enabledModules is empty only while context hasn't loaded (or the
+  // fetch failed). In that state we skip module gating and show every allowed
+  // item rather than lock the user out. On success the backend always returns
+  // at least ['core'], so a non-empty list means the preset is authoritative.
+  const isGastro = !!preset && GASTRO_PRESETS.has(preset)
   const items = ALL_NAV
     .filter((n) => allowed.includes(n.url))
-    .filter((n) => !n.module || enabledModules.includes(n.module))
+    .filter((n) => !n.module || enabledModules.length === 0 || enabledModules.includes(n.module))
+    .filter((n) => !(n.hideForGastro && isGastro))
     .sort((a, b) => a.sort - b.sort)
 
   const handleLogout = async () => {

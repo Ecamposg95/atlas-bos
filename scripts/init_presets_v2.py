@@ -43,6 +43,8 @@ MODULES_CATALOG = [
     ("workshops", "Taller / Servicio", "Órdenes de servicio y reparación", ModuleScope.GLOBAL, ModuleStatus.STABLE),
     ("kitchen", "Cocina / KDS", "Display de cocina para restaurantes", ModuleScope.BRANCH, ModuleStatus.STABLE),
     ("tables", "Mesas", "Gestión de plano de mesas", ModuleScope.BRANCH, ModuleStatus.STABLE),
+    ("menu", "Menú", "Carta visual de productos y modificadores", ModuleScope.BRANCH, ModuleStatus.STABLE),
+    ("bar", "Bar / Botellas", "Inventario líquido: servir, rellenar, merma", ModuleScope.BRANCH, ModuleStatus.STABLE),
     ("logistics", "Logística", "Envíos, rutas, paquetería", ModuleScope.GLOBAL, ModuleStatus.STABLE),
     ("manufacturing", "Manufactura", "Producción y ensamblaje", ModuleScope.GLOBAL, ModuleStatus.STABLE),
     ("hr", "Recursos Humanos", "Asistencia, nómina básica", ModuleScope.GLOBAL, ModuleStatus.STABLE),
@@ -304,7 +306,7 @@ PRESETS = [
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
-            "kitchen", "tables", "recipes",
+            "kitchen", "tables", "menu", "bar", "recipes",
             "reports",
         ],
     },
@@ -346,7 +348,7 @@ PRESETS = [
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
-            "kitchen", "tables", "recipes", "commissions", "reports",
+            "kitchen", "tables", "menu", "bar", "recipes", "commissions", "reports",
         ],
     },
     {
@@ -356,7 +358,7 @@ PRESETS = [
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
-            "kitchen", "reports",
+            "kitchen", "menu", "recipes", "reports",
         ],
     },
     {
@@ -366,7 +368,7 @@ PRESETS = [
         "mods": [
             "core", "users", "catalog", "inventory", "payments",
             "cash_management", "crm", "pos",
-            "tables", "recipes", "commissions", "reports",
+            "tables", "menu", "bar", "recipes", "commissions", "reports",
         ],
     },
     {
@@ -440,6 +442,41 @@ def seed_modules_and_presets(db: Session) -> None:
     db.commit()
 
     _cleanup_legacy_dataxpos(db)
+    _backfill_gastro_modules(db)
+
+
+def _backfill_gastro_modules(db: Session) -> None:
+    """Backfill de módulos gastro nuevos (menu/bar/recipes) en orgs YA existentes.
+
+    `apply_industry_preset` solo corre al crear una org (o al re-aplicar preset
+    manualmente), así que las orgs gastro creadas ANTES de agregar `menu`/`bar`
+    al preset no tendrían esas filas en `organization_modules`. Este backfill es
+    idempotente y ADITIVO: solo inserta filas faltantes — nunca deshabilita ni
+    toca módulos existentes, respetando toggles manuales del cliente.
+    """
+    from app.models.organization import IndustryType, Organization
+    from app.models.modules import OrganizationModule
+
+    backfill = {
+        IndustryType.ATLAS_ONE_RESTAURANT: ["menu", "bar"],
+        IndustryType.ATLAS_ONE_CAFE:       ["menu", "recipes"],
+        IndustryType.ATLAS_ONE_BAR:        ["menu", "bar"],
+        IndustryType.ATLAS_ONE_GASTRO:     ["menu", "bar"],
+    }
+    added = 0
+    for industry, keys in backfill.items():
+        orgs = db.query(Organization).filter(Organization.industry_type == industry).all()
+        for org in orgs:
+            for key in keys:
+                exists = db.query(OrganizationModule).filter(
+                    OrganizationModule.organization_id == org.id,
+                    OrganizationModule.module_key == key,
+                ).first()
+                if not exists:
+                    db.add(OrganizationModule(organization_id=org.id, module_key=key, is_enabled=True))
+                    added += 1
+    db.commit()
+    logger.info(f"  ✓ gastro backfill: {added} fila(s) de módulo agregadas")
 
 
 def _cleanup_legacy_dataxpos(db: Session) -> None:
