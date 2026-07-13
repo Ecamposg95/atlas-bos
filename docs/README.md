@@ -12,6 +12,7 @@
 | [`DATA_MODEL.md`](DATA_MODEL.md) | Catálogo de las 73 tablas por dominio, mixins, enums y *gotchas* de esquema. |
 | [`RBAC.md`](RBAC.md) | Tipos de usuario (7 roles tenant + 2 platform), auth/JWT, gating por rol y por módulo, tenancy, y huecos de seguridad conocidos. |
 | [`FRONTEND_VIEWS.md`](FRONTEND_VIEWS.md) | Mapa de las 76 vistas del frontend (ruta → archivo → roles → API). |
+| [`UI_REVIEW.md`](UI_REVIEW.md) | Revisión UI/UX de las 76 vistas (dark+claro, paleta, consistencia) + **plan de ejecución de Fase 5** (fundación de tokens/componentes + reskin por pantalla). |
 | [`modules/MODULE_GUIDE.md`](modules/MODULE_GUIDE.md) | Cómo crear/mover un módulo (backend + seed + preset + frontend + tests + migración). |
 | [`modules/GASTRO_MESAS_COMANDAS.md`](modules/GASTRO_MESAS_COMANDAS.md) | Feature doc del flujo mesas → comanda → KDS → cuenta → cobro. |
 | [`platform/superadmin-creation.md`](platform/superadmin-creation.md) | Crear SUPERADMINs de plataforma. |
