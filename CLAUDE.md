@@ -154,6 +154,7 @@ Edita `scripts/init_presets_v2.py` (seed de `industry_presets`) y/o el fallback 
 
 | Necesito… | Doc |
 |---|---|
+| Ubicarme rápido: glosario, conceptos, índice concepto→código | [`docs/ONTOLOGY.md`](docs/ONTOLOGY.md) |
 | Entender la arquitectura, eventos/outbox, tenancy | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | Un endpoint concreto y su gating | [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) |
 | Una tabla, columnas, enums, gotchas de esquema | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) |

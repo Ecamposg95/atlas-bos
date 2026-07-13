@@ -6,6 +6,7 @@
 
 | Doc | Qué cubre |
 |---|---|
+| [`ONTOLOGY.md`](ONTOLOGY.md) | **Ontología de conocimiento**: glosario canónico, grafos de conceptos (dominio/entidades/módulos/eventos/RBAC/presets) e índice concepto→código. Punto de partida para agentes. |
 | [`ARCHITECTURE.md`](ARCHITECTURE.md) | Arquitectura del sistema: capas, arquitectura modular, **eventos/outbox** (comunicación entre módulos), multi-tenancy. |
 | [`API_REFERENCE.md`](API_REFERENCE.md) | Catálogo de endpoints (core + platform + módulos) por dominio, con auth/rol/módulo. |
 | [`DATA_MODEL.md`](DATA_MODEL.md) | Catálogo de las 73 tablas por dominio, mixins, enums y *gotchas* de esquema. |
