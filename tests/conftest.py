@@ -40,6 +40,11 @@ TEST_ENGINE = create_engine(
 def _set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    # El DB en memoria es compartido (cache=shared) entre el TEST_ENGINE y el
+    # SessionLocal del app (startup/subscribers). Bajo carga esas conexiones
+    # contienden por el write-lock → "database is locked" espurio (flaky). Con
+    # busy_timeout la conexión ESPERA el lock en vez de fallar de inmediato.
+    cursor.execute("PRAGMA busy_timeout=30000")
     cursor.close()
 
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=TEST_ENGINE)

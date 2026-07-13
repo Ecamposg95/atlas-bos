@@ -36,10 +36,21 @@ def seeded_modules(db):
             },
         ),
     ]
+    # Idempotente: el startup del app (seed_global_modules) ya siembra estas keys
+    # en el SQLite compartido; get-or-create por `key` evita el UNIQUE constraint.
+    result = []
     for m in mods:
-        db.add(m)
+        existing = db.query(Module).filter(Module.key == m.key).first()
+        if existing:
+            existing.name = m.name
+            existing.description = m.description
+            existing.upsell_metadata = m.upsell_metadata
+            result.append(existing)
+        else:
+            db.add(m)
+            result.append(m)
     db.commit()
-    return mods
+    return result
 
 
 def test_upsell_returns_modules_not_enabled(client, auth_superadmin, db, org, seeded_modules):

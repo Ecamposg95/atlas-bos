@@ -2,11 +2,19 @@
 Integration tests for POST /api/cash/sessions/{id}/close-guided.
 Run with backend up: python3 tests/test_cash_close_guided.py
 """
+import pytest
 import requests
 
 BASE = "http://127.0.0.1:8000"
 USER = "cajero_qa1"
 PASS = "123"
+
+# Tests de INTEGRACIÓN: requieren el backend vivo en :8000. En CI (sin servidor)
+# se saltan en vez de fallar. Correr manualmente: python3 tests/test_cash_close_guided.py
+try:
+    requests.get(f"{BASE}/health", timeout=1)
+except Exception:
+    pytest.skip("requiere backend vivo en :8000", allow_module_level=True)
 
 
 def login() -> dict:

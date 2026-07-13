@@ -490,7 +490,7 @@ def _cleanup_legacy_dataxpos(db: Session) -> None:
 
     migrated = db.execute(text(
         "UPDATE organization SET industry_type = 'ATLAS_POS' "
-        "WHERE industry_type::text = 'DATAXPOS'"
+        "WHERE CAST(industry_type AS TEXT) = 'DATAXPOS'"
     )).rowcount
     deleted = db.execute(text(
         "DELETE FROM industry_presets WHERE industry_type = 'DATAXPOS'"

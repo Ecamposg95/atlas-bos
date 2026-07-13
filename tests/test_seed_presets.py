@@ -53,5 +53,11 @@ def test_seed_enterprise_includes_all_modules(db):
         .filter(IndustryPreset.industry_type == "ATLAS_ONE_ENTERPRISE")
         .first()
     )
-    all_modules = [m.key for m in db.query(Module).all()]
-    assert set(enterprise.modules) == set(all_modules)
+    # El preset enterprise = TODO el catálogo que define init_presets_v2
+    # (MODULES_CATALOG). Comparamos contra ESA fuente, no contra la tabla
+    # `modules` global, que en la suite completa también contiene los módulos
+    # sembrados por seed_global_modules (customer_portal/kds/invoicing/…) —
+    # un segundo catálogo divergente que no gobierna este test.
+    from scripts.init_presets_v2 import MODULES_CATALOG
+    catalog_keys = {k for k, *_ in MODULES_CATALOG}
+    assert set(enterprise.modules) == catalog_keys

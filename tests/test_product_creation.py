@@ -88,6 +88,24 @@ def auth_cajero_no_branch(cajero_no_branch):
 
 
 @pytest.fixture()
+def department(db, org):
+    """A catalog department in the test org (required for CAJERO/GERENTE creates)."""
+    from app.models.products import Department
+    d = Department(name="Abarrotes", organization_id=org.id)
+    db.add(d); db.flush()
+    return d
+
+
+@pytest.fixture()
+def brand(db, org):
+    """A brand in the test org (required for CAJERO/GERENTE creates)."""
+    from app.models.products import Brand
+    b = Brand(name="Marca Test", organization_id=org.id)
+    db.add(b); db.flush()
+    return b
+
+
+@pytest.fixture()
 def other_org_branch(db):
     """A branch in a different organization — used to test cross-tenant rejection."""
     other = Organization(name="Other Org", status="ACTIVE")
@@ -119,11 +137,15 @@ def _with_org(auth_headers, org):
 class TestProductCreationRBAC:
     def test_cajero_creates_for_own_branch(
         self, client, db, catalog_module_enabled, org, branch_a,
-        cajero_a, auth_cajero_a,
+        cajero_a, auth_cajero_a, department, brand,
     ):
         """CAJERO → product auto-scoped, stock + kardex + PBS all on branch A."""
         r = client.post(
-            "/api/products/", json=_payload(sku="C-1", initial_stock=10),
+            "/api/products/",
+            json=_payload(
+                sku="C-1", initial_stock=10,
+                department_id=department.id, brand_id=brand.id,
+            ),
             headers=_with_org(auth_cajero_a, org),
         )
         assert r.status_code == 200, r.text
@@ -152,12 +174,15 @@ class TestProductCreationRBAC:
 
     def test_cajero_cannot_target_other_branch(
         self, client, catalog_module_enabled, org, branch_b,
-        cajero_a, auth_cajero_a,
+        cajero_a, auth_cajero_a, department, brand,
     ):
         """CAJERO branch=A sending target_branch_ids=[B] → 403."""
         r = client.post(
             "/api/products/",
-            json=_payload(sku="C-2", target_branch_ids=[branch_b.id]),
+            json=_payload(
+                sku="C-2", target_branch_ids=[branch_b.id],
+                department_id=department.id, brand_id=brand.id,
+            ),
             headers=_with_org(auth_cajero_a, org),
         )
         assert r.status_code == 403
@@ -197,14 +222,17 @@ class TestProductCreationValidation:
 
     def test_duplicate_sku_within_org_rejected(
         self, client, catalog_module_enabled, org, cajero_a, auth_cajero_a,
+        department, brand,
     ):
         r1 = client.post(
-            "/api/products/", json=_payload(sku="DUP-1"),
+            "/api/products/",
+            json=_payload(sku="DUP-1", department_id=department.id, brand_id=brand.id),
             headers=_with_org(auth_cajero_a, org),
         )
         assert r1.status_code == 200
         r2 = client.post(
-            "/api/products/", json=_payload(sku="DUP-1"),
+            "/api/products/",
+            json=_payload(sku="DUP-1", department_id=department.id, brand_id=brand.id),
             headers=_with_org(auth_cajero_a, org),
         )
         assert r2.status_code == 409
@@ -259,11 +287,12 @@ class TestProductCreationScope:
 
     def test_product_visible_in_own_branch_pos_search(
         self, client, catalog_module_enabled, org,
-        cajero_a, auth_cajero_a,
+        cajero_a, auth_cajero_a, department, brand,
     ):
         """End-to-end: CAJERO creates → POS search of same CAJERO finds it."""
         r = client.post(
-            "/api/products/", json=_payload(sku="VIS-1"),
+            "/api/products/",
+            json=_payload(sku="VIS-1", department_id=department.id, brand_id=brand.id),
             headers=_with_org(auth_cajero_a, org),
         )
         assert r.status_code == 200

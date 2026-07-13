@@ -138,15 +138,18 @@ class TestDuplicateProduct:
         ).all()
         assert len(stock_rows) == 0, "Duplicate should not copy stock"
 
-    def test_cajero_rejected(
+    def test_cajero_allowed(
         self, client, products_setup, cajero_a, auth_cajero_a, org,
     ):
+        # Track 3: CAJERO is an advanced catalog role and may duplicate a
+        # product visible in its branch. (Was 403 pre-Track-3.)
         product, _ = products_setup["product_a"]
         r = client.post(
             f"/api/products/{product.id}/duplicate",
             headers=_with_org(auth_cajero_a, org),
         )
-        assert r.status_code == 403
+        assert r.status_code == 200, r.text
+        assert r.json()["name"] == f"{product.name} (copia)"
 
 
 # ── A5 Reject ────────────────────────────────────────────────────────────────
@@ -204,15 +207,18 @@ class TestRestoreProduct:
         assert refreshed.is_active is True
         assert refreshed.deleted_at is None
 
-    def test_cajero_rejected(
+    def test_cajero_allowed(
         self, client, products_setup, cajero_a, auth_cajero_a, org,
     ):
+        # Track 3: CAJERO is an advanced catalog role and may restore a
+        # product in its branch. (Was 403 pre-Track-3.) product_a is not
+        # archived here, so restore is a no-op that still returns 200.
         product, _ = products_setup["product_a"]
         r = client.post(
             f"/api/products/{product.id}/restore",
             headers=_with_org(auth_cajero_a, org),
         )
-        assert r.status_code == 403
+        assert r.status_code == 200, r.text
 
 
 # ── A7 Export with filters ───────────────────────────────────────────────────
@@ -280,12 +286,15 @@ class TestAuditLog:
         items = r_log.json()["items"]
         assert any(i["action"] == "PBS_UPDATE" for i in items)
 
-    def test_cajero_rejected(
+    def test_cajero_allowed(
         self, client, products_setup, cajero_a, auth_cajero_a, org,
     ):
+        # Track 3: CAJERO may read the audit log of a product visible in its
+        # branch (governance — see who changed what). Was 403 pre-Track-3.
         product, _ = products_setup["product_a"]
         r = client.get(
             f"/api/products/{product.id}/audit-log",
             headers=_with_org(auth_cajero_a, org),
         )
-        assert r.status_code == 403
+        assert r.status_code == 200, r.text
+        assert isinstance(r.json()["items"], list)

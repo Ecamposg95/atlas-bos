@@ -189,10 +189,18 @@ def get_availability(
     return out
 
 
+def _as_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    """Normalize to tz-aware UTC. DB-loaded datetimes may be naive (SQLite
+    drops tzinfo) or aware (Postgres); coerce so comparisons never mix the two."""
+    if dt is not None and dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 def _overlaps_any(start: datetime, end: datetime, items) -> bool:
     for it in items:
-        it_start = getattr(it, "starts_at", None)
-        it_end = getattr(it, "ends_at", None)
+        it_start = _as_utc(getattr(it, "starts_at", None))
+        it_end = _as_utc(getattr(it, "ends_at", None))
         if it_start is None or it_end is None:
             continue
         if it_start < end and it_end > start:

@@ -232,14 +232,43 @@ def create_product(
                     detail="Solo administradores pueden habilitar productos en múltiples sucursales"
                 )
 
-        # [SECURITY] Branch-scoped users can ONLY create for their own branch
-        if current_user.branch_id and prod_in.target_branch_ids:
+        # [SECURITY] Branch-scoped (non-admin) users can ONLY create for their
+        # own branch. Admins (ADMINISTRADOR/DUEÑO) are exempt: even when they
+        # carry an HQ branch_id they may target any branch in the org — this is
+        # the multi-branch capability already granted a few lines above.
+        if not is_caller_admin and current_user.branch_id and prod_in.target_branch_ids:
             for bid in prod_in.target_branch_ids:
                 if bid != current_user.branch_id:
                     raise HTTPException(
                         status_code=403,
                         detail="Solo puedes crear productos para tu sucursal asignada."
                     )
+
+        # [SECURITY] Cross-tenant guard — every target branch must belong to
+        # this org. Without this, target_branch_ids could inject StockOnHand /
+        # ProductBranchStatus rows into another tenant's branch.
+        if prod_in.target_branch_ids:
+            distinct_targets = set(prod_in.target_branch_ids)
+            valid_count = db.query(Branch).filter(
+                Branch.id.in_(distinct_targets),
+                Branch.organization_id == org_id,
+            ).count()
+            if valid_count != len(distinct_targets):
+                raise HTTPException(
+                    status_code=422,
+                    detail="Una o más sucursales objetivo no pertenecen a tu organización."
+                )
+
+        # [SEMANTICS] A single `initial_stock` value cannot be split
+        # unambiguously across multiple branches. Reject the combination so the
+        # caller sets stock per-branch explicitly instead.
+        if (prod_in.initial_stock and prod_in.initial_stock > 0
+                and prod_in.target_branch_ids
+                and len(set(prod_in.target_branch_ids)) > 1):
+            raise HTTPException(
+                status_code=422,
+                detail="No se puede asignar stock inicial a múltiples sucursales en una sola creación."
+            )
 
         # [MODIFIED] Branch Assignment Logic
         # Determine strict effective branches
