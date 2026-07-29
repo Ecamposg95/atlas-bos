@@ -131,6 +131,20 @@ def run_migrations():
     # --- Index migrations (idempotent via CREATE INDEX IF NOT EXISTS) ---
     index_migrations = [
         # (name, ddl)
+        # Folio race fix 2026-07-29 — garantía dura contra folios fiscales
+        # duplicados. get_next_folio hace MAX(folio)+1 sin bloqueo; dos ventas
+        # concurrentes de la misma sucursal podían compartir folio. El advisory
+        # lock en app/utils/folios.py lo previene; este índice lo hace imposible.
+        # Verificado 0 duplicados en prod antes de crearlo. Parcial: los folios
+        # son permanentes una vez asignados (soft-delete incluido).
+        (
+            "uq_sales_documents_branch_series_folio",
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_sales_documents_branch_series_folio
+                ON sales_documents (branch_id, series, folio)
+                WHERE folio IS NOT NULL;
+            """,
+        ),
         (
             "ix_pbs_branch_active_pos",
             """
