@@ -13,7 +13,7 @@
 1. Ir a [railway.app/new](https://railway.app/new)
 2. Seleccionar **"Deploy from GitHub Repo"**
 3. Conectar el repositorio `Atlas-API`
-4. Railway detecta automáticamente el builder (Nixpacks)
+4. Railway detecta automáticamente el builder (hoy **Railpack**, antes Nixpacks)
 
 ---
 
@@ -41,15 +41,32 @@ En el servicio de Atlas-API → **Variables**, agregar:
 | Variable | Obligatoria | Valor | Descripción |
 |----------|-------------|-------|-------------|
 | `DATABASE_URL` | Sí | `postgresql://...` | Conexión a PostgreSQL |
+| `SECRET_KEY` | **Sí en producción** | `openssl rand -hex 32` | Firma los JWT. Ver la advertencia abajo |
+| `LOG_LEVEL` | No | `INFO` | **En MAYÚSCULAS.** Con `info` uvicorn muere con `ValueError: Unknown level` |
 | `INIT_USERS_ON_BOOT` | No | `true` | Solo primera vez: crea datos de prueba (QA org, usuarios, productos) |
+| `CLOUDINARY_URL` | No | `cloudinary://...` | Sin ella las imágenes van a disco local en `app/static/` |
 | `CLOUDINARY_CLOUD_NAME` | No | `tu_cloud_name` | Para subir imágenes de productos |
 | `CLOUDINARY_UPLOAD_PRESET` | No | `tu_preset` | Preset de Cloudinary (unsigned) |
+
+> ### ⚠️ `SECRET_KEY` sin definir en producción
+>
+> `app/core/security/config.py` cae a
+> `_DEFAULT_SECRET = "atlas_erp_secret_key_change_me_in_prod"` cuando la variable
+> no existe. **Producción hoy no la define**, así que los JWT de un negocio real
+> se firman con un secreto que está en este repositorio: cualquiera con acceso al
+> código puede falsificar una sesión válida.
+>
+> Se corrige agregando la variable en Railway. Al hacerlo se invalidan las
+> sesiones abiertas y los usuarios tendrán que volver a entrar, así que conviene
+> fuera del horario de la tienda.
 
 ---
 
 ## 4. Proceso de Build
 
-Railway usa **Nixpacks** con la configuración en `nixpacks.toml`:
+Railway usa **Railpack** (sucesor de Nixpacks). `nixpacks.toml` se conserva como
+referencia del toolchain; el `Dockerfile` de la raíz es para el VPS y **no debe
+llegar a `main`**, porque Railway lo prioriza sobre Railpack:
 
 ```
 Python 3.11
@@ -163,7 +180,7 @@ Si configuraste `INIT_USERS_ON_BOOT=true`, al arrancar se crearon:
 
 ### Build falla con `ModuleNotFoundError`
 - Verificar que el paquete esté en `requirements.txt`
-- Revisar `nixpacks.toml` por paquetes del sistema faltantes
+- Revisar `nixpacks.toml` por paquetes del sistema faltantes (referencia del toolchain)
 
 ### `NameError` o `ImportError` al arrancar
 - Revisar logs de deploy en Railway
@@ -224,7 +241,7 @@ DATABASE_URL="sqlite:///file::memory:?cache=shared" pytest tests/ -v
 ```
 GitHub Push
     ↓
-Railway Build (Nixpacks)
+Railway Build (Railpack)
     ↓
 Python 3.11 + System Deps
     ↓
@@ -239,12 +256,16 @@ Healthcheck → ✅ Deploy completo
 
 ### Ramas y Ambientes
 
-| Rama | Ambiente | Auto-deploy |
-|------|----------|-------------|
-| `production` | Producción | Sí |
-| `release/production` | Release candidate | Sí |
-| `release/qa` | QA/Staging | Sí |
-| `main` | Development | Sí |
+> Corregido 2026-07-28. La tabla anterior listaba `release/production` y
+> `release/qa`, ramas del repositorio **Data X POS** que nunca existieron aquí.
+
+| Rama | Destino | Auto-deploy |
+|------|---------|-------------|
+| `main` | Railway `atlas-bos` producción — **cliente real cobrando** | Sí |
+| `staging` | VPS IONOS (`app.atlasone.com.mx`) | No (rsync manual) |
+
+El entorno `staging` de Railway se eliminó el 2026-07-28; su contenido corre
+ahora en el VPS. Ver [`docs/infra/deployment-map.md`](docs/infra/deployment-map.md).
 
 ---
 
