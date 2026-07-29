@@ -60,15 +60,32 @@ async def startup_event():
 # ── Middleware ────────────────────────────────────────────────────────────────
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
+# El "*" comodín anulaba por completo TrustedHostMiddleware. Se listan los hosts
+# reales: Railway (healthcheck + subdominio del servicio) y los dominios propios
+# (incluye el destino del corte a app.atlasone.com.mx). Extensible por env sin
+# tocar código.
+_EXTRA_HOSTS = [h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()]
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["healthcheck.railway.app", "*.up.railway.app", "localhost", "127.0.0.1", "*"]
+    allowed_hosts=[
+        "healthcheck.railway.app",
+        "*.up.railway.app",
+        "atlasone.com.mx",
+        "*.atlasone.com.mx",
+        "localhost",
+        "127.0.0.1",
+        *_EXTRA_HOSTS,
+    ],
 )
 
+# allow_credentials=False: la sesión viaja en el header Authorization (token en
+# localStorage), no en cookies. Con credentials=True + allow_origins=["*"],
+# Starlette reflejaba cualquier Origin — superficie innecesaria para una API de
+# token en header servida en el mismo origen que su SPA.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
