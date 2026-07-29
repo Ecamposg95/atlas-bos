@@ -1,76 +1,64 @@
 # Branching Strategy
 
-> Effective: 2026-04-20
-> Default branch: `release/beta`
+> Actualizado: 2026-07-28
+> Rama por defecto: `main`
+
+> **Nota histórica:** hasta esta revisión, este archivo describía el esquema
+> `release/beta → release/qa → release/production`. Ese flujo pertenece al
+> repositorio **Data X POS**, no a este. En `atlas-one` solo existen `main` y
+> `staging`, y `main` no está congelada: **es producción en vivo.**
 
 ## Ramas activas
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  release/beta          [DEFAULT]                            │
-│  · Dev activo, target de todos los PRs nuevos               │
-│  · Deploya a Railway beta service (DB beta separada)        │
-│                                                             │
-│          │ promoción manual tras QA en beta                 │
-│          ▼                                                  │
-│                                                             │
-│  release/qa                                                 │
-│  · Rama de staging/QA                                       │
-│  · Deploya a Railway qa service (DB qa separada)            │
-│  · Sync desde release/beta por PR explícito                 │
-│                                                             │
-│          │ promoción manual tras QA aprobada                │
-│          ▼                                                  │
-│                                                             │
-│  release/production                                         │
-│  · Producción — clientes reales                             │
-│  · Deploya a Railway prod service (DB prod)                 │
-│  · NUNCA se tocan commits directos; sólo merges desde qa    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  main                                          [DEFAULT]     │
+│  · PRODUCCIÓN EN VIVO — Novedades Kaory vende aquí a diario  │
+│  · Railway despliega automáticamente en cada push            │
+│  · atlas-one.up.railway.app                                  │
+│                                                              │
+│  staging                                                     │
+│  · Desarrollo activo — 95 commits adelante de main           │
+│  · Se despliega en el VPS IONOS: app.atlasone.com.mx         │
+│  · Incluye Gastro Suite y ledger de barra, que main revirtió │
+└──────────────────────────────────────────────────────────────┘
 ```
-
-## Ramas congeladas / a deprecar
-
-| Rama | Estado | Acción futura |
-|------|--------|---------------|
-| `main` | Congelada (snapshot histórico, 169 commits detrás de release/beta) | Archivar o deprecar |
-| `refactor/frontend-v2` | Congelada (ex-default; mismo SHA que release/beta al momento del swap) | Renombrar a `archive/refactor-frontend-v2` o borrar tras confirmación |
-| `Beta-Stabilization-DM` | Obsoleta (según usuario) | Borrar |
-| `docs/admin-catalog-audit`, `security/tenant-isolation` | Mergeadas | Borrar (local + remoto) |
-| `fix/cajero-visibility-c1..c7`, `feat/sprint-1-quick-wins` | Mergeadas | Borrar |
 
 ## Reglas
 
-1. **Todos los PRs nuevos apuntan a `release/beta`.**
-2. **Ninguna rama de feature directa a `release/qa` o `release/production`.** Promoción es un PR `release/beta → release/qa → release/production`.
-3. **`release/production` es intocable** — sólo merges de `release/qa` post-QA firmado.
-4. **DBs son independientes** por entorno. No hay sync automático. Dumps manuales sólo para debugging.
-5. **Force-push prohibido** en `release/*`.
+1. **`main` es producción.** Un push la reconstruye y reemplaza el punto de venta
+   que Kaory usa para cobrar. No es una rama de integración.
+2. **Los PRs nuevos apuntan a `staging`.**
+3. **El `Dockerfile` de la raíz no debe llegar a `main`.** Railway lo prioriza por
+   encima de Railpack; existe para el despliegue del VPS y vive en `staging`.
+4. **Cambios a `main` fuera del horario de la tienda** (opera hasta cerca de las
+   20:00 hora de México).
+5. **Force-push prohibido** en `main` y `staging`.
+6. **Las bases son independientes** por destino. Sin sincronización automática.
 
-## Convenciones de naming de ramas
+## Convenciones de nombres
 
-- `feat/<scope>-<descripcion>` — nueva funcionalidad (ej. `feat/cajero-write-mvp`)
-- `fix/<scope>-<descripcion>` — bug fix (ej. `fix/cajero-visibility-c1`)
-- `chore/<descripcion>` — mantenimiento (docs, deps, config)
-- `security/<scope>` — hardening (ej. `security/tenant-isolation`)
-- `docs/<scope>` — sólo documentación
-- `archive/<nombre-original>` — snapshot congelado
+- `feat/<scope>-<descripcion>` — nueva funcionalidad
+- `fix/<scope>-<descripcion>` — corrección
+- `chore/<descripcion>` — mantenimiento (docs, dependencias, configuración)
+- `security/<scope>` — endurecimiento
+- `docs/<scope>` — solo documentación
 
 ## Despliegue
 
-| Rama | Railway service | DB | Variables críticas |
-|------|-----------------|-----|---------------------|
-| `release/beta` | beta | beta-db | `SECRET_KEY`, `CORS_ALLOWED_ORIGINS`, `COOKIE_SECURE=true`, `DATABASE_URL` |
-| `release/qa` | qa | qa-db | ídem con valores propios de qa |
-| `release/production` | prod | prod-db | ídem con valores propios de prod |
+| Rama | Destino | Base | Builder |
+|---|---|---|---|
+| `main` | Railway `atlas-bos` producción | Postgres de Railway | RAILPACK |
+| `staging` | VPS `atlas-prod-01` | `atlas_one_beta` (demo) | Dockerfile |
 
-Cada entorno debe tener su propio `SECRET_KEY` (tokens JWT no deben ser válidos cross-env).
+El entorno `staging` de Railway se eliminó el 2026-07-28; su contenido corre
+ahora en el VPS. Detalle en [`infra/deployment-map.md`](./infra/deployment-map.md).
 
-## Pendientes de esta transición
+## Deuda abierta
 
-- [ ] Railway beta service: configurar deploy branch = `release/beta` + env vars (ver Phase 2 §5 del plan)
-- [ ] Sincronizar `release/qa` con `release/beta` (estrategia TBD por usuario)
-- [ ] Archivar o borrar `refactor/frontend-v2`
-- [ ] Borrar `Beta-Stabilization-DM` remoto
-- [ ] Limpieza de ramas mergeadas locales (`docs/admin-catalog-audit`, `security/tenant-isolation`, `fix/cajero-visibility-*`)
+- [ ] **`SECRET_KEY` en Railway producción** — sin definir, así que los JWT se
+      firman con el default público del repositorio (`app/core/security/config.py`)
+- [ ] Cada destino debe tener su propio `SECRET_KEY` para que un token no sea
+      válido entre entornos
+- [ ] Decidir el destino de `main` tras el corte de producción al VPS
+- [ ] Llave de despliegue de GitHub en el VPS para sustituir `rsync` por `git pull`
