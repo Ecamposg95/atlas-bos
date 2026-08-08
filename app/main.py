@@ -149,7 +149,8 @@ app.include_router(quotes.router,           prefix="/api/quotes",           tags
 app.include_router(customers.router,        prefix="/api/customers",        tags=["Clientes"])
 # documents.router eliminado en Sprint 4: estaba broken (template pdf/statement.html
 # nunca existió + import faltante de datetime). PDF de estados de cuenta se genera
-# via customers.py:523 → app/utils/pdf_generator.generate_account_statement_pdf (FPDF).
+# via app/modules/customers/router.py (GET /{customer_id}/pdf-statement) →
+# app/modules/customers/statement_pdf.generate_account_statement_pdf (fpdf2).
 app.include_router(reports.router,          prefix="/api/reports",          tags=["Reportes"])
 app.include_router(printer.router,          prefix="/api/printer",          tags=["Impresora"])
 app.include_router(hr.router,               prefix="/api/hr",               tags=["RRHH"])
