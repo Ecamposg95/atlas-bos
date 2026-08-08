@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
+import app.modules.customers.statement_pdf as statement_pdf_module
 from app.modules.customers.statement_pdf import (
     build_statement_context,
     generate_account_statement_pdf,
@@ -42,4 +43,14 @@ def test_render_empty_statement():
     customer = SimpleNamespace(name="Nuevo", tax_id=None, phone=None, email=None)
     ctx = build_statement_context(customer, [])
     out = generate_account_statement_pdf(ctx)
+    assert out.startswith(b"%PDF")
+
+
+def test_render_falls_back_to_helvetica_without_ttf(tmp_path, monkeypatch):
+    # Sin los TTF de Source Sans 3, el renderer cae a la core font
+    # "helvetica" (latin-1 only). _ctx() usa "Ñoño Pérez & Cía." — dentro
+    # de latin-1 — así que debe renderizar sin lanzar
+    # FPDFUnicodeEncodingException (regresión del placeholder em-dash).
+    monkeypatch.setattr(statement_pdf_module, "_FONTS_DIR", tmp_path / "no-fonts")
+    out = generate_account_statement_pdf(_ctx())
     assert out.startswith(b"%PDF")

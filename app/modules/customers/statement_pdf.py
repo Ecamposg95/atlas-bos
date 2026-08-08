@@ -172,8 +172,8 @@ def generate_account_statement_pdf(context) -> bytes:
         pdf.set_fill_color(*(_ROW_ALT if fill else (255, 255, 255)))
         pdf.cell(24, 6, f" {row['fecha']}", fill=True)
         pdf.cell(86, 6, f" {row['descripcion'][:52]}", fill=True)
-        pdf.cell(26, 6, f"{_money(row['cargo'])} " if row["cargo"] else "—  ", align="R", fill=True)
-        pdf.cell(26, 6, f"{_money(row['abono'])} " if row["abono"] else "—  ", align="R", fill=True)
+        pdf.cell(26, 6, f"{_money(row['cargo'])} " if row["cargo"] else "-  ", align="R", fill=True)
+        pdf.cell(26, 6, f"{_money(row['abono'])} " if row["abono"] else "-  ", align="R", fill=True)
         pdf.cell(28, 6, f"{_money(row['saldo'])} ", align="R", fill=True)
         pdf.ln()
         fill = not fill
