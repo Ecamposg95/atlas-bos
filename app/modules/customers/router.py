@@ -491,7 +491,10 @@ def register_customer_payment(
     return new_entry
 
 from fastapi import Response
-from app.utils.pdf_generator import generate_account_statement_pdf
+from app.modules.customers.statement_pdf import (
+    build_statement_context,
+    generate_account_statement_pdf,
+)
 
 @router.get("/{customer_id}/pdf-statement")
 def get_customer_statement_pdf(
@@ -534,13 +537,14 @@ def get_customer_statement_pdf(
     # Ordenar por fecha ASCENDENTE para el estado de cuenta (linea de tiempo)
     entries = query.order_by(CustomerLedgerEntry.created_at.asc()).all()
         
-    pdf_content = generate_account_statement_pdf(
-        customer, 
-        entries, 
-        start_date=start_date, 
+    context = build_statement_context(
+        customer,
+        entries,
+        start_date=start_date,
         end_date=end_date,
-        previous_balance=previous_balance
+        previous_balance=previous_balance,
     )
+    pdf_content = generate_account_statement_pdf(context)
     
     return Response(
         content=pdf_content,
