@@ -198,7 +198,7 @@ export function Customers() {
                       <p className="text-slate-300">{e.description ?? '—'}</p>
                       <p className="text-slate-600">{new Date(e.created_at).toLocaleDateString('es-MX')}{e.sales_document_id && ` · ${e.sales_document_id}`}</p>
                     </div>
-                    <p className={`font-semibold tabular-nums ${e.amount >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <p className={`font-semibold tabular-nums ${e.amount >= 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                       {e.amount >= 0 ? '+' : ''}{formatCurrency(e.amount)}
                     </p>
                   </div>
