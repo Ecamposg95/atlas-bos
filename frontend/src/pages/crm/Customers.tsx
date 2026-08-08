@@ -65,7 +65,7 @@ export function Customers() {
   }
 
   const pages = Math.ceil(total / LIMIT)
-  const balanceColor = (b: number) => b < 0 ? 'text-red-400' : b > 0 ? 'text-emerald-400' : 'text-slate-400'
+  const balanceColor = (b: number) => b > 0 ? 'text-red-400' : b < 0 ? 'text-emerald-400' : 'text-slate-400'
 
   return (
     <div className="space-y-5">
@@ -81,7 +81,7 @@ export function Customers() {
             { label: 'Total clientes', value: String(stats.total), icon: 'fa-users', color: 'text-white' },
             { label: 'Con deuda', value: String(stats.with_debt), icon: 'fa-exclamation-circle', color: 'text-red-400' },
             { label: 'Deuda total', value: formatCurrency(stats.total_debt), icon: 'fa-coins', color: 'text-red-400' },
-            { label: 'Con crédito', value: String(stats.with_credit), icon: 'fa-circle-check', color: 'text-emerald-400' },
+            { label: 'Saldo a favor', value: String(stats.with_credit), icon: 'fa-circle-check', color: 'text-emerald-400' },
           ].map((k) => (
             <DaxCard key={k.label}>
               <div className="flex items-center gap-2 mb-1">
@@ -131,7 +131,7 @@ export function Customers() {
                       <button onClick={() => openDetail(c)} className="text-slate-500 hover:text-white text-xs mr-2">
                         <i className="fa-solid fa-eye" />
                       </button>
-                      {c.current_balance < 0 && (
+                      {c.current_balance > 0 && (
                         <button onClick={() => setPayModal({ id: c.id, name: c.name })} className="text-emerald-500 hover:text-emerald-400 text-xs">
                           <i className="fa-solid fa-money-bill-wave" />
                         </button>
@@ -180,7 +180,7 @@ export function Customers() {
               </div>
             </div>
 
-            {selected.current_balance < 0 && (
+            {selected.current_balance > 0 && (
               <button onClick={() => setPayModal({ id: selected.id, name: selected.name })}
                 className="dax-btn-primary w-full justify-center mb-4 text-sm">
                 <i className="fa-solid fa-money-bill-wave" /> Registrar Pago
