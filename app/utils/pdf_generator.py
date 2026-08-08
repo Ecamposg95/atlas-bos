@@ -132,7 +132,7 @@ def generate_quote_pdf(quote):
         "4. Tiempos de entrega sujetos a disponibilidad de stock."
     )
 
-    return pdf.output(dest='S').encode('latin-1')
+    return bytes(pdf.output())
 
 def generate_cash_cut_pdf(audit_data):
     """
@@ -341,9 +341,7 @@ def generate_cash_cut_pdf(audit_data):
     pdf.set_x(20)
     pdf.cell(65, 5, session['user_name'].upper(), 0, 0, 'C')
 
-    return pdf.output(dest='S').encode('latin-1')
-
-    return pdf.output(dest='S').encode('latin-1')
+    return bytes(pdf.output())
 
 def generate_account_statement_pdf(customer, entries, start_date=None, end_date=None, previous_balance=None):
     pdf = PDFQuote()
@@ -456,4 +454,4 @@ def generate_account_statement_pdf(customer, entries, start_date=None, end_date=
     pdf.set_text_color(*color)
     pdf.cell(40, 8, f"${final_balance_period:,.2f}", 1, 1, 'R', True)
 
-    return pdf.output()
+    return bytes(pdf.output())
