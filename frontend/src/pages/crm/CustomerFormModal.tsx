@@ -46,7 +46,8 @@ export function CustomerFormModal({ customer, onClose, onSaved }: Props) {
         : await customersApi.create(payload)
       onSaved(saved)
     } catch (e: any) {
-      setError(e?.response?.data?.detail ?? 'Error al guardar el cliente')
+      const detail = e?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : 'Error al guardar el cliente')
     } finally { setSaving(false) }
   }
 
