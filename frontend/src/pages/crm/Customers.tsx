@@ -4,6 +4,7 @@ import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { Badge } from '../../components/ui/Badge'
 import { formatCurrency } from '../../utils/currency'
+import { toWaPhone } from '../../utils/phone'
 import { CustomerFormModal } from './CustomerFormModal'
 
 interface PayModal { id: number; name: string }
@@ -23,6 +24,7 @@ export function Customers() {
   const [payLoading, setPayLoading] = useState(false)
   const [formModal, setFormModal] = useState<{ open: boolean; customer: Customer | null }>({ open: false, customer: null })
   const [deleting, setDeleting] = useState(false)
+  const [sharing, setSharing] = useState(false)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const LIMIT = 50
 
@@ -69,6 +71,42 @@ export function Customers() {
 
   const pages = Math.ceil(total / LIMIT)
   const balanceColor = (b: number) => b > 0 ? 'text-red-400' : b < 0 ? 'text-emerald-400' : 'text-slate-400'
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = filename; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handlePdf = async (c: Customer) => {
+    setSharing(true)
+    try {
+      const blob = await customersApi.getStatementPdf(c.id)
+      downloadBlob(blob, `EdoCuenta_${c.name.replace(/[^\w-]+/g, '_')}.pdf`)
+    } catch { alert('No se pudo generar el PDF') } finally { setSharing(false) }
+  }
+
+  const handleWhatsApp = async (c: Customer) => {
+    setSharing(true)
+    try {
+      const blob = await customersApi.getStatementPdf(c.id)
+      const file = new File([blob], `EdoCuenta_${c.name.replace(/[^\w-]+/g, '_')}.pdf`, { type: 'application/pdf' })
+      const shareData = { files: [file], title: 'Estado de cuenta', text: `Estado de cuenta de ${c.name}` }
+      if (typeof navigator.canShare === 'function' && navigator.canShare(shareData)) {
+        // Móvil: share sheet nativo — el usuario elige WhatsApp y el PDF va adjunto
+        try { await navigator.share(shareData) } catch { /* usuario canceló: no es error */ }
+      } else {
+        // Escritorio: descarga + chat de WhatsApp con mensaje; el PDF se adjunta a mano
+        downloadBlob(blob, file.name)
+        const tel = toWaPhone(c.phone)
+        if (tel) {
+          const msg = `Hola ${c.name}, te comparto tu estado de cuenta al ${new Date().toLocaleDateString('es-MX')}. Saldo: ${formatCurrency(c.current_balance)}.`
+          window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank')
+        }
+      }
+    } catch { alert('No se pudo generar el PDF') } finally { setSharing(false) }
+  }
 
   return (
     <div className="space-y-5">
@@ -214,6 +252,18 @@ export function Customers() {
                 <i className="fa-solid fa-money-bill-wave" /> Registrar Pago
               </button>
             )}
+
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <button onClick={() => handlePdf(selected)} disabled={sharing}
+                className="dax-btn-secondary justify-center text-sm disabled:opacity-40">
+                <i className="fa-solid fa-file-pdf text-red-400" /> Descargar PDF
+              </button>
+              <button onClick={() => handleWhatsApp(selected)} disabled={sharing || !toWaPhone(selected.phone)}
+                title={!toWaPhone(selected.phone) ? 'El cliente no tiene teléfono válido' : 'Enviar por WhatsApp'}
+                className="dax-btn-secondary justify-center text-sm disabled:opacity-40">
+                <i className="fa-brands fa-whatsapp text-emerald-400" /> WhatsApp
+              </button>
+            </div>
 
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Estado de Cuenta</p>
             {ledgerLoading ? <Spinner text="Cargando..." /> : ledger.length === 0 ? (

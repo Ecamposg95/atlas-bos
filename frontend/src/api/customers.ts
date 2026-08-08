@@ -98,4 +98,12 @@ export const customersApi = {
     const { data } = await client.delete<Customer>(`/customers/${id}`)
     return data
   },
+
+  getStatementPdf: async (id: number, params?: { start_date?: string; end_date?: string }): Promise<Blob> => {
+    const { data } = await client.get(`/customers/${id}/pdf-statement`, {
+      params,
+      responseType: 'blob',
+    })
+    return data
+  },
 }
