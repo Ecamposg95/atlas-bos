@@ -4,6 +4,7 @@ import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { Badge } from '../../components/ui/Badge'
 import { formatCurrency } from '../../utils/currency'
+import { CustomerFormModal } from './CustomerFormModal'
 
 interface PayModal { id: number; name: string }
 
@@ -20,6 +21,8 @@ export function Customers() {
   const [payModal, setPayModal] = useState<PayModal | null>(null)
   const [payAmount, setPayAmount] = useState('')
   const [payLoading, setPayLoading] = useState(false)
+  const [formModal, setFormModal] = useState<{ open: boolean; customer: Customer | null }>({ open: false, customer: null })
+  const [deleting, setDeleting] = useState(false)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const LIMIT = 50
 
@@ -100,6 +103,9 @@ export function Customers() {
           type="text" placeholder="Buscar por nombre, teléfono, RFC..."
           value={search} onChange={(e) => onSearch(e.target.value)}
           className="dax-input flex-1 text-sm" />
+        <button onClick={() => setFormModal({ open: true, customer: null })} className="dax-btn-primary text-sm whitespace-nowrap">
+          <i className="fa-solid fa-user-plus" /> Nuevo cliente
+        </button>
       </div>
 
       {/* Tabla */}
@@ -162,7 +168,29 @@ export function Customers() {
                 <p className="text-[10px] text-slate-500 uppercase tracking-widest">Cliente</p>
                 <p className="text-xl font-black text-white">{selected.name}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setFormModal({ open: true, customer: selected })}
+                  className="text-slate-500 hover:text-white" title="Editar">
+                  <i className="fa-solid fa-pen" />
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`¿Eliminar a ${selected.name}? El historial se conserva.`)) return
+                    setDeleting(true)
+                    try {
+                      await customersApi.delete(selected.id)
+                      setSelected(null)
+                      customersApi.getStats().then(setStats).catch(() => {})
+                      load(search, page)
+                    } catch (e: any) {
+                      alert(e?.response?.data?.detail ?? 'No se pudo eliminar')
+                    } finally { setDeleting(false) }
+                  }}
+                  className="text-slate-500 hover:text-red-400 disabled:opacity-40" title="Eliminar" disabled={deleting}>
+                  <i className="fa-solid fa-trash" />
+                </button>
+                <button onClick={() => setSelected(null)} className="text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-lg" /></button>
+              </div>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-4">
@@ -230,6 +258,19 @@ export function Customers() {
             </div>
           </div>
         </div>
+      )}
+
+      {formModal.open && (
+        <CustomerFormModal
+          customer={formModal.customer}
+          onClose={() => setFormModal({ open: false, customer: null })}
+          onSaved={(saved) => {
+            setFormModal({ open: false, customer: null })
+            customersApi.getStats().then(setStats).catch(() => {})
+            load(search, page)
+            if (selected && selected.id === saved.id) setSelected(saved)
+          }}
+        />
       )}
     </div>
   )

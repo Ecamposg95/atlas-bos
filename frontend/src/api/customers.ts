@@ -7,9 +7,26 @@ export interface Customer {
   email: string | null
   tax_id: string | null
   address: string | null
+  zip_code?: string | null
+  notes?: string | null
+  has_credit?: boolean
+  credit_days?: number | null
   current_balance: number
   credit_limit: number | null
   portal_active?: boolean
+}
+
+export interface CustomerPayload {
+  name: string
+  phone?: string | null
+  email?: string | null
+  tax_id?: string | null
+  address?: string | null
+  zip_code?: string | null
+  notes?: string | null
+  has_credit?: boolean
+  credit_limit?: number
+  credit_days?: number
 }
 
 export interface CustomerStats {
@@ -67,12 +84,12 @@ export const customersApi = {
     return data
   },
 
-  create: async (payload: { name: string; phone?: string; email?: string; tax_id?: string }): Promise<Customer> => {
+  create: async (payload: CustomerPayload): Promise<Customer> => {
     const { data } = await client.post<Customer>('/customers/', payload)
     return data
   },
 
-  update: async (id: number, payload: Partial<Customer>): Promise<Customer> => {
+  update: async (id: number, payload: Partial<CustomerPayload>): Promise<Customer> => {
     const { data } = await client.put<Customer>(`/customers/${id}`, payload)
     return data
   },
