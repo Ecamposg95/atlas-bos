@@ -140,7 +140,7 @@ class TestBrandsConsolidated:
 class TestOrgCapabilitiesConsolidated:
     @pytest.fixture()
     def org_with_industry(self, db, org):
-        org.industry_type = IndustryType.DATAXPOS
+        org.industry_type = IndustryType.ATLAS_POS
         db.flush()
         return org
 
@@ -175,7 +175,7 @@ class TestOrgCapabilitiesConsolidated:
         ):
             assert key in data
         assert data["organization_id"] == org_with_industry.id
-        assert data["industry_type"] == "DATAXPOS"
+        assert data["industry_type"] == "ATLAS_POS"
         assert isinstance(data["enabled_modules"], list)
         assert isinstance(data["nav_items"], list)
         # default_routes debe contener las 3 claves

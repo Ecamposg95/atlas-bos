@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -20,24 +21,24 @@
     --atlas-warning:  #fbbf24;
     --atlas-danger:   #fb7185;
 
-    /* ── MODO CLARO (default) — contraste reforzado para cajeras ── */
-    --dax-bg:          #f5f5f5;
-    --dax-surface:     #fafafa;
+    /* ── MODO CLARO (default) — paleta CÁLIDA Atlas One (prototipo) ── */
+    --dax-bg:          #f6f4ef;   /* lienzo cálido */
+    --dax-surface:     #f2efe7;   /* superficie cálida */
     --dax-card:        #ffffff;
     --dax-card-solid:  #ffffff;
-    --dax-accent:      #4f46e5;
-    --dax-accent-glow: rgba(79, 70, 229, 0.12);
-    --dax-violet-glow: rgba(139, 92, 246, 0.10);
-    --dax-border:      rgba(30, 27, 75, 0.28);
-    --dax-border-dim:  rgba(30, 27, 75, 0.18);
-    --dax-text:        #1e1b4b;
-    --dax-text-muted:  #475569;
-    --dax-text-faint:  #64748b;
-    --dax-shadow:      0 4px 24px rgba(99,102,241,0.10), 0 1px 3px rgba(30,27,75,0.06);
-    --dax-shadow-lg:   0 8px 32px rgba(99,102,241,0.14), 0 2px 8px rgba(30,27,75,0.08);
-    --dax-modal-backdrop:  rgba(30, 27, 75, 0.45);
-    --dax-row-border:      rgba(99, 102, 241, 0.15);
-    --dax-elevated:        rgba(99, 102, 241, 0.06);
+    --dax-accent:      var(--p-accent);            /* sigue el vertical */
+    --dax-accent-glow: var(--p-accent-soft);
+    --dax-violet-glow: rgba(160, 120, 80, 0.10);
+    --dax-border:      #e3dfd5;
+    --dax-border-dim:  #ece8df;
+    --dax-text:        #0b0b0b;   /* ink */
+    --dax-text-muted:  #6b6b66;
+    --dax-text-faint:  #9c9b95;
+    --dax-shadow:      0 1px 2px rgba(60,48,36,0.05), 0 6px 24px rgba(120,90,60,0.07);
+    --dax-shadow-lg:   0 10px 36px rgba(120,90,60,0.12);
+    --dax-modal-backdrop:  rgba(40, 32, 24, 0.42);
+    --dax-row-border:      rgba(120, 90, 60, 0.12);
+    --dax-elevated:        rgba(120, 90, 60, 0.05);
 
     /* ── PLATFORM (SUPERADMIN) — v2 mono-acento azul, dark profundo ── */
     --p-bg:        #0A0A0F;   /* página */
@@ -73,23 +74,26 @@
     /* ── v2 design pack additions (context/Atlas API UI) ── */
     --p-border-2:      #1B1B22;                    /* hairline interno */
     --p-accent-line:   rgba(59,130,246,0.35);
-    --font-sans:       "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Montserrat", sans-serif;
-    --font-display:    "Inter Tight", "Inter", "Montserrat", sans-serif;
-    --font-mono:       "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --font-sans:       "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-display:    "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --font-mono:       "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
     --r-sm: 6px;
     --r-md: 10px;
     --r-lg: 14px;
     --r-xl: 18px;
 
-    /* ── SIDEBAR (siempre negro — invariante, ignora tema) ── */
-    --sb-bg:          #08080d;
+    /* ── SIDEBAR (cálido oscuro — invariante; activo sigue el accent) ── */
+    --sb-bg:          #1a120b;
     --sb-border:      rgba(255, 255, 255, 0.07);
-    --sb-text:        rgba(255, 255, 255, 0.82);
-    --sb-text-hover:  #ffffff;
-    --sb-hover-bg:    rgba(255, 255, 255, 0.07);
-    --sb-active-bg:   rgba(139, 92, 246, 0.22);
-    --sb-active-text: #c4b5fd;
-    --sb-active-icon: #a78bfa;
+    --sb-text:        rgba(244, 233, 223, 0.82);
+    --sb-text-hover:  #fff7ef;
+    --sb-hover-bg:    rgba(255, 255, 255, 0.06);
+    --sb-active-bg:   color-mix(in srgb, var(--p-accent) 20%, transparent);
+    --sb-active-text: color-mix(in srgb, var(--p-accent) 55%, #ffffff);
+    --sb-active-icon: color-mix(in srgb, var(--p-accent) 62%, #ffffff);
+    --sb-active-line: color-mix(in srgb, var(--p-accent) 48%, transparent);
+    --sb-glow:        color-mix(in srgb, var(--p-accent) 42%, transparent);
+    --sb-logo-grad:   linear-gradient(135deg, var(--p-accent) 0%, var(--p-accent-hover) 100%);
   }
 
   /* ── PRESET THEMING (2026-05-14) ──
@@ -97,92 +101,92 @@
      globalmente. Sobrescribe --p-accent y sus aliases para que botones,
      activos del sidebar, badges y links cambien de color con el preset. */
   [data-preset="ATLAS_ONE_BEAUTY"] {
-    --p-accent:        #ec4899;
-    --p-accent-hover:  #db2777;
-    --p-accent-soft:   rgba(236, 72, 153, 0.12);
-    --p-accent-line:   rgba(236, 72, 153, 0.35);
+    --p-accent:        #B16E78;
+    --p-accent-hover:  #8E5862;
+    --p-accent-soft:   rgba(177, 110, 120, 0.14);
+    --p-accent-line:   rgba(177, 110, 120, 0.30);
     --p-teal:          #ec4899;
     --p-cyan:          #ec4899;
   }
   [data-preset="ATLAS_ONE_GASTRO"] {
-    --p-accent:        #f97316;
-    --p-accent-hover:  #ea580c;
-    --p-accent-soft:   rgba(249, 115, 22, 0.12);
-    --p-accent-line:   rgba(249, 115, 22, 0.35);
-    --p-teal:          #f97316;
-    --p-cyan:          #f97316;
+    --p-accent:        #e2531b;
+    --p-accent-hover:  #c2440f;
+    --p-accent-soft:   rgba(226, 83, 27, 0.12);
+    --p-accent-line:   rgba(226, 83, 27, 0.35);
+    --p-teal:          #e2531b;
+    --p-cyan:          #e2531b;
   }
   [data-preset="ATLAS_ONE_RETAIL"] {
-    --p-accent:        #2563eb;
-    --p-accent-hover:  #1d4ed8;
-    --p-accent-soft:   rgba(37, 99, 235, 0.12);
-    --p-accent-line:   rgba(37, 99, 235, 0.35);
-    --p-teal:          #2563eb;
-    --p-cyan:          #2563eb;
+    --p-accent:        #0B3A8F;
+    --p-accent-hover:  #082A6B;
+    --p-accent-soft:   rgba(11, 58, 143, 0.12);
+    --p-accent-line:   rgba(11, 58, 143, 0.28);
+    --p-teal:          #0B3A8F;   /* accent — reconciled T4 */
+    --p-cyan:          #06B6D4;   /* accent2 — unchanged */
   }
   [data-preset="ATLAS_ONE_SERVICES"] {
-    --p-accent:        #10b981;
-    --p-accent-hover:  #059669;
-    --p-accent-soft:   rgba(16, 185, 129, 0.12);
-    --p-accent-line:   rgba(16, 185, 129, 0.35);
+    --p-accent:        #0E7C5C;
+    --p-accent-hover:  #0B6049;
+    --p-accent-soft:   rgba(14, 124, 92, 0.12);
+    --p-accent-line:   rgba(14, 124, 92, 0.28);
     --p-teal:          #10b981;
     --p-cyan:          #10b981;
   }
   [data-preset="ATLAS_ONE_ENTERPRISE"] {
-    --p-accent:        #a855f7;
-    --p-accent-hover:  #9333ea;
-    --p-accent-soft:   rgba(168, 85, 247, 0.12);
-    --p-accent-line:   rgba(168, 85, 247, 0.35);
+    --p-accent:        #6D28D9;
+    --p-accent-hover:  #571FAA;
+    --p-accent-soft:   rgba(109, 40, 217, 0.14);
+    --p-accent-line:   rgba(109, 40, 217, 0.30);
     --p-teal:          #a855f7;
     --p-cyan:          #a855f7;
   }
 
   /* ── Taxonomy v2 (2026-05-15) ── */
   [data-preset="ATLAS_ONE_BARBER"] {
-    --p-accent:        #0891b2;
-    --p-accent-hover:  #0e7490;
-    --p-accent-soft:   rgba(8, 145, 178, 0.12);
-    --p-accent-line:   rgba(8, 145, 178, 0.35);
-    --p-teal:          #0891b2;
-    --p-cyan:          #0891b2;
+    --p-accent:        #0F766E;
+    --p-accent-hover:  #0B5F58;
+    --p-accent-soft:   rgba(15, 118, 110, 0.12);
+    --p-accent-line:   rgba(15, 118, 110, 0.28);
+    --p-teal:          #22D3B8;
+    --p-cyan:          #22D3B8;
   }
   [data-preset="ATLAS_ONE_BEAUTY_WELLNESS"] {
-    --p-accent:        #ec4899;
-    --p-accent-hover:  #db2777;
-    --p-accent-soft:   rgba(236, 72, 153, 0.12);
-    --p-accent-line:   rgba(236, 72, 153, 0.35);
+    --p-accent:        #B16E78;
+    --p-accent-hover:  #8E5862;
+    --p-accent-soft:   rgba(177, 110, 120, 0.14);
+    --p-accent-line:   rgba(177, 110, 120, 0.30);
     --p-teal:          #ec4899;
     --p-cyan:          #ec4899;
   }
   [data-preset="ATLAS_ONE_HEALTH"] {
-    --p-accent:        #06b6d4;
-    --p-accent-hover:  #0891b2;
-    --p-accent-soft:   rgba(6, 182, 212, 0.12);
-    --p-accent-line:   rgba(6, 182, 212, 0.35);
-    --p-teal:          #06b6d4;
-    --p-cyan:          #06b6d4;
+    --p-accent:        #0E9F9C;
+    --p-accent-hover:  #0B7E7B;
+    --p-accent-soft:   rgba(14, 159, 156, 0.12);
+    --p-accent-line:   rgba(14, 159, 156, 0.28);
+    --p-teal:          #0E9F9C;   /* accent — reconciled T4 */
+    --p-cyan:          #7DD3FC;   /* accent2 — reconciled T4 */
   }
   [data-preset="ATLAS_ONE_RESTAURANT"] {
-    --p-accent:        #f97316;
-    --p-accent-hover:  #ea580c;
-    --p-accent-soft:   rgba(249, 115, 22, 0.12);
-    --p-accent-line:   rgba(249, 115, 22, 0.35);
-    --p-teal:          #f97316;
-    --p-cyan:          #f97316;
+    --p-accent:        #e2531b;   /* terracota cálido (prototipo) */
+    --p-accent-hover:  #c2440f;
+    --p-accent-soft:   rgba(226, 83, 27, 0.12);
+    --p-accent-line:   rgba(226, 83, 27, 0.35);
+    --p-teal:          #e2531b;
+    --p-cyan:          #e2531b;
   }
   [data-preset="ATLAS_ONE_CAFE"] {
-    --p-accent:        #d97706;
-    --p-accent-hover:  #b45309;
-    --p-accent-soft:   rgba(217, 119, 6, 0.12);
-    --p-accent-line:   rgba(217, 119, 6, 0.35);
-    --p-teal:          #d97706;
-    --p-cyan:          #d97706;
+    --p-accent:        #8b4a2b;   /* espresso (prototipo) */
+    --p-accent-hover:  #6f3a22;
+    --p-accent-soft:   rgba(139, 74, 43, 0.12);
+    --p-accent-line:   rgba(139, 74, 43, 0.35);
+    --p-teal:          #8b4a2b;
+    --p-cyan:          #8b4a2b;
   }
   [data-preset="ATLAS_ONE_BAR"] {
-    --p-accent:        #7c3aed;
-    --p-accent-hover:  #6d28d9;
-    --p-accent-soft:   rgba(124, 58, 237, 0.12);
-    --p-accent-line:   rgba(124, 58, 237, 0.35);
+    --p-accent:        #7C3AED;
+    --p-accent-hover:  #6325C4;
+    --p-accent-soft:   rgba(124, 58, 237, 0.14);
+    --p-accent-line:   rgba(124, 58, 237, 0.30);
     --p-teal:          #7c3aed;
     --p-cyan:          #7c3aed;
   }
@@ -208,23 +212,26 @@
     --dax-row-border:      rgba(51, 65, 85, 0.7);
     --dax-elevated:        rgba(255, 255, 255, 0.04);
 
-    --sb-bg:          #08080d;
+    --sb-bg:          #1a120b;
     --sb-border:      rgba(255, 255, 255, 0.07);
-    --sb-text:        rgba(255, 255, 255, 0.82);
-    --sb-text-hover:  #ffffff;
-    --sb-hover-bg:    rgba(255, 255, 255, 0.07);
-    --sb-active-bg:   rgba(139, 92, 246, 0.22);
-    --sb-active-text: #c4b5fd;
-    --sb-active-icon: #a78bfa;
+    --sb-text:        rgba(244, 233, 223, 0.82);
+    --sb-text-hover:  #fff7ef;
+    --sb-hover-bg:    rgba(255, 255, 255, 0.06);
+    --sb-active-bg:   color-mix(in srgb, var(--p-accent) 20%, transparent);
+    --sb-active-text: color-mix(in srgb, var(--p-accent) 55%, #ffffff);
+    --sb-active-icon: color-mix(in srgb, var(--p-accent) 62%, #ffffff);
+    --sb-active-line: color-mix(in srgb, var(--p-accent) 48%, transparent);
+    --sb-glow:        color-mix(in srgb, var(--p-accent) 42%, transparent);
+    --sb-logo-grad:   linear-gradient(135deg, var(--p-accent) 0%, var(--p-accent-hover) 100%);
   }
 
   html {
-    font-family: 'Montserrat', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
   }
 
   body {
-    font-family: 'Montserrat', system-ui, sans-serif;
-    font-weight: 500;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-weight: 400;
     background: var(--dax-bg);
     color: var(--dax-text);
     min-height: 100vh;
@@ -242,12 +249,12 @@
      Arregla bg-slate-*, text-slate-* hardcoded en páginas
   ══════════════════════════════════════════════════════ */
 
-  /* Backgrounds oscuros → versiones claras */
+  /* Backgrounds oscuros → versiones CÁLIDAS claras */
   html.light .bg-slate-950,
   html.light .bg-slate-900  { background-color: #ffffff !important; }
-  html.light .bg-slate-800  { background-color: #f8fafc !important; }
-  html.light .bg-slate-700  { background-color: #f1f5f9 !important; }
-  html.light .bg-slate-600  { background-color: #e2e8f0 !important; }
+  html.light .bg-slate-800  { background-color: #fbfaf6 !important; }
+  html.light .bg-slate-700  { background-color: #f2efe7 !important; }
+  html.light .bg-slate-600  { background-color: #e8e5dd !important; }
 
   /* bg-slate-900 con opacidad — todos los slash variants */
   html.light .bg-slate-900\/80,
@@ -255,7 +262,7 @@
   html.light .bg-slate-900\/50,
   html.light .bg-slate-900\/40,
   html.light .bg-slate-900\/30,
-  html.light .bg-slate-900\/20 { background-color: rgba(248,250,252,0.97) !important; }
+  html.light .bg-slate-900\/20 { background-color: rgba(251,250,246,0.97) !important; }
 
   /* bg-slate-800 con opacidad */
   html.light .bg-slate-800\/80,
@@ -263,82 +270,82 @@
   html.light .bg-slate-800\/50,
   html.light .bg-slate-800\/40,
   html.light .bg-slate-800\/30,
-  html.light .bg-slate-800\/20 { background-color: rgba(241,245,249,0.9) !important; }
+  html.light .bg-slate-800\/20 { background-color: rgba(242,239,231,0.9) !important; }
 
   /* bg-slate-700 con opacidad */
   html.light .bg-slate-700\/80,
   html.light .bg-slate-700\/60,
   html.light .bg-slate-700\/50,
   html.light .bg-slate-700\/30,
-  html.light .bg-slate-700\/20 { background-color: rgba(226,232,240,0.8) !important; }
+  html.light .bg-slate-700\/20 { background-color: rgba(232,229,221,0.8) !important; }
 
-  /* Borders oscuros → claros */
+  /* Borders oscuros → cálidos claros */
   html.light .border-slate-700,
   html.light .border-slate-800,
-  html.light .border-slate-900  { border-color: rgba(196,181,253,0.4) !important; }
+  html.light .border-slate-900  { border-color: rgba(127,102,82,0.24) !important; }
 
   html.light .border-slate-700\/50,
   html.light .border-slate-700\/30,
   html.light .border-white\/10,
-  html.light .border-white\/5   { border-color: rgba(196,181,253,0.2) !important; }
+  html.light .border-white\/5   { border-color: rgba(127,102,82,0.14) !important; }
 
-  /* Textos claros (para fondos oscuros) → morado oscuro en modo claro */
+  /* Textos claros (para fondos oscuros) → ink cálido en modo claro */
   html.light .text-slate-100,
   html.light .text-slate-200,
-  html.light .text-white        { color: #1e1b4b !important; }
+  html.light .text-white        { color: #0b0b0b !important; }
 
-  html.light .text-slate-300    { color: #1e1b4b !important; }
-  html.light .text-slate-400    { color: #3730a3 !important; }
-  html.light .text-slate-500    { color: #4338ca !important; }
-  html.light .text-slate-600    { color: #3730a3 !important; }
-  html.light .text-slate-700    { color: #1e1b4b !important; }
+  html.light .text-slate-300    { color: #2a2a28 !important; }
+  html.light .text-slate-400    { color: #6b6b66 !important; }
+  html.light .text-slate-500    { color: #6b6b66 !important; }
+  html.light .text-slate-600    { color: #2a2a28 !important; }
+  html.light .text-slate-700    { color: #0b0b0b !important; }
 
   /* hover:text-* en modo claro */
-  html.light .hover\:text-white:hover     { color: #1e1b4b !important; }
-  html.light .hover\:text-slate-300:hover { color: #1e1b4b !important; }
-  html.light .hover\:text-slate-400:hover { color: #3730a3 !important; }
+  html.light .hover\:text-white:hover     { color: #0b0b0b !important; }
+  html.light .hover\:text-slate-300:hover { color: #0b0b0b !important; }
+  html.light .hover\:text-slate-400:hover { color: #6b6b66 !important; }
 
   /* Hover states de botones/tabs con fondo oscuro */
-  html.light .hover\:bg-slate-700:hover  { background-color: #e2e8f0 !important; }
-  html.light .hover\:bg-slate-800:hover  { background-color: #f1f5f9 !important; }
-  html.light .hover\:bg-slate-600:hover  { background-color: #e2e8f0 !important; }
-  html.light .hover\:bg-white\/5:hover   { background-color: rgba(99,102,241,0.06) !important; }
-  html.light .hover\:bg-white\/10:hover  { background-color: rgba(99,102,241,0.08) !important; }
+  html.light .hover\:bg-slate-700:hover  { background-color: #e8e5dd !important; }
+  html.light .hover\:bg-slate-800:hover  { background-color: #f2efe7 !important; }
+  html.light .hover\:bg-slate-600:hover  { background-color: #e8e5dd !important; }
+  html.light .hover\:bg-white\/5:hover   { background-color: rgba(160,120,80,0.06) !important; }
+  html.light .hover\:bg-white\/10:hover  { background-color: rgba(160,120,80,0.09) !important; }
 
   /* Ring/focus states */
   html.light .ring-slate-700,
-  html.light .ring-slate-800    { --tw-ring-color: rgba(196,181,253,0.5) !important; }
+  html.light .ring-slate-800    { --tw-ring-color: rgba(127,102,82,0.4) !important; }
 
   /* Divide lines */
   html.light .divide-slate-700 > * + *,
-  html.light .divide-slate-800 > * + * { border-color: rgba(196,181,253,0.3) !important; }
+  html.light .divide-slate-800 > * + * { border-color: rgba(127,102,82,0.18) !important; }
 
   /* Input/select dark backgrounds en páginas */
   html.light input.bg-slate-900,
   html.light select.bg-slate-900,
   html.light textarea.bg-slate-900 {
     background-color: #ffffff !important;
-    color: #0f172a !important;
-    border-color: rgba(196,181,253,0.4) !important;
+    color: #0b0b0b !important;
+    border-color: rgba(127,102,82,0.28) !important;
   }
 
   /* border-slate-700/30, /20, /40, /60 — divisores de filas y secciones */
   html.light .border-slate-700\/30,
   html.light .border-slate-700\/20,
   html.light .border-slate-700\/40,
-  html.light .border-slate-700\/60 { border-color: rgba(196,181,253,0.22) !important; }
+  html.light .border-slate-700\/60 { border-color: rgba(127,102,82,0.16) !important; }
 
   /* border-slate-600 y hover variant */
   html.light .border-slate-600,
-  html.light .hover\:border-slate-600:hover { border-color: rgba(139,92,246,0.35) !important; }
+  html.light .hover\:border-slate-600:hover { border-color: rgba(127,102,82,0.32) !important; }
 
   /* bg-slate-800/30 y /50 — secciones elevadas en modales */
-  html.light .bg-slate-800\/30  { background-color: rgba(99,102,241,0.06) !important; }
-  html.light .bg-slate-800\/50  { background-color: rgba(99,102,241,0.08) !important; }
+  html.light .bg-slate-800\/30  { background-color: rgba(160,120,80,0.06) !important; }
+  html.light .bg-slate-800\/50  { background-color: rgba(160,120,80,0.09) !important; }
 
-  /* bg-black — backdrop de modales (queda negro sin override) */
+  /* bg-black — backdrop de modales */
   html.light .bg-black\/70,
-  html.light .bg-black\/80 { background-color: rgba(30,27,75,0.40) !important; }
+  html.light .bg-black\/80 { background-color: rgba(40,32,24,0.42) !important; }
 
   /* hover:text-white en contexto light */
   html.light .hover\:text-white:hover { color: var(--dax-text) !important; }
@@ -441,7 +448,7 @@
     padding: 0.55rem 0.875rem;
     color: var(--dax-text);
     font-size: 0.875rem;
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
     font-weight: 400;
     transition: all 0.25s ease;
   }

@@ -6,21 +6,20 @@
 **A modular suite powered by Atlas BOS to operate, sell, control, and scale your business.**
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)](#)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.127-009688?logo=fastapi)](#)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi)](#)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](#)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](#)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)](#)
 [![Railway](https://img.shields.io/badge/Deploy-Railway-0B0D0E?logo=railway)](#)
 [![PWA](https://img.shields.io/badge/PWA-Instalable-5A0FC8?logo=pwa)](#)
-[![Status](https://img.shields.io/badge/Status-Active%20Development-blue)](#)
 
 </div>
 
 ---
 
-Atlas One is a modular all-in-one business suite for physical businesses in Mexico and Latin America.
+Atlas One es una suite modular todo-en-uno para negocios físicos en México y Latinoamérica. El cliente arranca con **Atlas POS** (preset ligero) y activa progresivamente módulos avanzados: inventario, compras, CRM, citas, operación de restaurante (mesas/cocina/recetas/bar), reportes, IA y enterprise.
 
-It allows businesses to start with **Atlas POS** and progressively activate advanced modules such as inventory, purchasing, CRM, appointments, kitchen operations, reports, AI and enterprise integrations.
+> **📚 ¿Buscas documentación técnica?** Empieza por **[`docs/README.md`](docs/README.md)** — el índice de toda la documentación (arquitectura, referencia de API, modelo de datos, RBAC, guías de módulos).
 
 ---
 
@@ -44,8 +43,9 @@ Detalle completo en [`docs/infra/deployment-map.md`](docs/infra/deployment-map.m
 | `app.atlasone.com.mx` | `staging` | `atlas_one_beta` en el VPS — datos demo |
 | `atlasone.com.mx` | — | Landing estática |
 
-`staging` va ~95 commits adelante de `main` e incluye la Gastro Suite (mesas,
-comandas, KDS, recetas) y el ledger de barra.
+La Gastro Suite (mesas, comandas, KDS, recetas, ledger de barra) y el módulo de
+clientes POS (CRUD + estado de cuenta PDF + WhatsApp) se promovieron de `staging`
+a `main` el 2026-08-09.
 
 ## 🛠️ Desarrollo local
 
@@ -104,29 +104,20 @@ con acceso al código puede falsificar una sesión válida. Se corrige definiend
 
 ## ⚙️ Powered by Atlas BOS
 
-**Atlas BOS** stands for *Business Operating System*.
+**Atlas BOS** (*Business Operating System*) es el core técnico detrás de Atlas One: una arquitectura **API-first, multi-tenant y modular** en FastAPI + SQLAlchemy + PostgreSQL en el backend, y React + Vite + TypeScript en el frontend (SPA/PWA).
 
-It is the technical core behind Atlas One: an API-first, multi-tenant and modular architecture built with FastAPI, SQLAlchemy, PostgreSQL, React, Vite and TypeScript.
-
----
-
-## 🚀 First Preset: Atlas POS
-
-**Atlas POS** is the lightweight entry-level preset of Atlas One. It includes sales, payments, products, basic inventory, cash sessions, tickets and basic reports.
+Una sola base de código sirve a todos los verticales. Un **preset de industria** decide qué módulos se activan para cada organización; el mismo motor opera un abarrotes, un restaurante o un salón de belleza.
 
 ---
 
-## 🏗️ Product Architecture
+## 🏗️ Arquitectura de producto
 
-| Producto / Capa | Rol | Descripción |
+| Capa | Rol | Descripción |
 |---|---|---|
-| **Atlas One** | Suite Comercial | La marca comercial todo-en-uno que el cliente utiliza. |
-| **Atlas BOS** | Core Técnico | Motor técnico (API, Multi-tenant, RBAC, Módulos). |
-| **Atlas POS** | Preset Ligero | Punto de venta ligero, rápido y el modelo de entrada base. |
-| **Atlas One Retail** | Preset Avanzado | Inventario robusto, proveedores, stock min/max, compras. |
-| **Atlas One Beauty** | Preset Servicios | Sistema de citas, servicios, comisiones y control de cabinas. |
-| **Atlas One Gastro** | Preset Alimentos | KDS, recetas, comandas, control de mermas y delivery. |
-| **Atlas One Enterprise**| Preset Custom | Implementaciones a la medida, IA avanzada y dashboards ejecutivos. |
+| **Atlas One** | Marca comercial | La suite todo-en-uno que ve el cliente. |
+| **Atlas BOS** | Core técnico | Motor: API, multi-tenant, RBAC, catálogo de módulos, eventos. |
+| **Atlas POS** | Preset ligero | Punto de venta de entrada: ventas, pagos, productos, inventario básico, caja, tickets, reportes. |
+| **Presets verticales** | Configuraciones | Retail, Gastro (Restaurant/Café/Bar), Beauty/Services (citas), Enterprise… — cada uno activa un set de módulos. |
 
 ## 📚 Documentación
 

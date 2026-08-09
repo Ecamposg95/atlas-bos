@@ -30,6 +30,20 @@ export interface DashboardData {
   recent_sales: { folio: string; total: number; time: string; customer: string }[]
 }
 
+export interface WaiterSales {
+  user_id: number
+  name: string
+  tickets: number
+  revenue: number
+  tips: number
+  avg_ticket: number
+}
+export interface WaiterSalesResponse {
+  start_date: string
+  end_date: string
+  waiters: WaiterSales[]
+}
+
 export interface SalesByHourResponse {
   date: string
   current_hour: number
@@ -94,6 +108,11 @@ export const reportsApi = {
 
   salesByHour: async (params: { date: string; branch_id?: number }): Promise<SalesByHourResponse> => {
     const { data } = await client.get<SalesByHourResponse>('/reports/sales-by-hour', { params })
+    return data
+  },
+
+  byWaiter: async (params: { start_date: string; end_date: string; branch_id?: number }): Promise<WaiterSalesResponse> => {
+    const { data } = await client.get<WaiterSalesResponse>('/reports/by-waiter', { params })
     return data
   },
 

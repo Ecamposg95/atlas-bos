@@ -55,6 +55,16 @@ async def startup_event():
         seed_global_modules(db)
     finally:
         db.close()
+    # Worker del outbox transaccional: reintenta la entrega de eventos que la
+    # entrega inmediata no cerró (fallo de handler, caída del proceso). No-op en SQLite.
+    from app.core.outbox import start_outbox_worker
+    start_outbox_worker()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    from app.core.outbox import stop_outbox_worker
+    await stop_outbox_worker()
 
 
 # ── Middleware ────────────────────────────────────────────────────────────────
@@ -152,7 +162,8 @@ app.include_router(quotes.router,           prefix="/api/quotes",           tags
 app.include_router(customers.router,        prefix="/api/customers",        tags=["Clientes"])
 # documents.router eliminado en Sprint 4: estaba broken (template pdf/statement.html
 # nunca existió + import faltante de datetime). PDF de estados de cuenta se genera
-# via customers.py:523 → app/utils/pdf_generator.generate_account_statement_pdf (FPDF).
+# via app/modules/customers/router.py (GET /{customer_id}/pdf-statement) →
+# app/modules/customers/statement_pdf.generate_account_statement_pdf (fpdf2).
 app.include_router(reports.router,          prefix="/api/reports",          tags=["Reportes"])
 app.include_router(printer.router,          prefix="/api/printer",          tags=["Impresora"])
 app.include_router(hr.router,               prefix="/api/hr",               tags=["RRHH"])
@@ -179,6 +190,10 @@ from app.modules.memberships.router  import router as memberships_router
 from app.modules.recipes.router      import router as recipes_router
 from app.modules.ai.router           import router as ai_router
 from app.modules.purchasing.router   import router as purchasing_router
+# Gastro modules (2026-06-22) — Mesas, Cocina/KDS, Recetas
+from app.modules.tables.router       import router as tables_router
+from app.modules.bar.router          import router as bar_router
+from app.modules.kitchen.router      import router as kitchen_router
 
 app.include_router(appointments_router, prefix="/api/appointments", tags=["Agenda"])
 
@@ -194,6 +209,9 @@ app.include_router(memberships_router,  prefix="/api/memberships",  tags=["Membr
 app.include_router(recipes_router,      prefix="/api/recipes",      tags=["Recetas (Beta)"])
 app.include_router(ai_router,           prefix="/api/ai",           tags=["IA (Beta)"])
 app.include_router(purchasing_router,   prefix="/api/purchasing",   tags=["Compras (Beta)"])
+app.include_router(tables_router,       prefix="/api/tables",       tags=["Mesas"])
+app.include_router(bar_router,          prefix="/api/bar",          tags=["Bar líquido"])
+app.include_router(kitchen_router,      prefix="/api/kitchen",      tags=["Cocina / KDS"])
 # daxpos.router eliminado en Sprint 3 (tech-debt roadmap).
 # Sus 15 rutas SSR fueron desactivadas: las que coinciden con rutas React
 # caen al catch-all de la SPA; las que necesitan cambio de destino están

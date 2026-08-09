@@ -160,9 +160,10 @@ async def get_org_caps(
     request: _CapabilitiesRequest,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
+    org_id: int = Depends(get_current_active_organization),  # [HARDENING] User no tiene .organization_id
 ):
     """Returns the capabilities (enabled modules + nav) for the current user's organization."""
-    org = db.query(Organization).get(current_user.organization_id)
+    org = db.get(Organization, org_id)
     enabled_mods = _get_org_caps(db, org.id)
 
     ctx_type = getattr(request.state, "ctx_type", "HQ")

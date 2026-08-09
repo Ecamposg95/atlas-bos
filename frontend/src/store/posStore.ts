@@ -15,6 +15,7 @@ interface POSStore {
   requiresInvoice: boolean
   isProcessing: boolean
   globalDiscount: number // % aplicado a todo el ticket, además del descuento por línea
+  tip: number // propina en pesos (gastro)
 
   // Sesión de caja
   activeSession: CashSession | null
@@ -42,6 +43,7 @@ interface POSStore {
   setRequiresInvoice: (val: boolean) => void
   setIsProcessing: (val: boolean) => void
   setGlobalDiscount: (pct: number) => void
+  setTip: (amount: number) => void
 
   // Sesión
   setSession: (session: CashSession | null) => void
@@ -93,6 +95,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
   requiresInvoice: false,
   isProcessing: false,
   globalDiscount: 0,
+  tip: 0,
   activeSession: null,
   customerName: null,
   customerId: null,
@@ -197,7 +200,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
     })),
 
   clearCart: () =>
-    set({ cart: [], customerName: null, customerId: null, requiresInvoice: false, currentParkedId: null, globalDiscount: 0 }),
+    set({ cart: [], customerName: null, customerId: null, requiresInvoice: false, currentParkedId: null, globalDiscount: 0, tip: 0 }),
 
   applyCajaToAll: (sources: Map<string, ProductWithCajaInfo>) => {
     let applied = 0
@@ -263,6 +266,7 @@ export const usePOSStore = create<POSStore>((set, get) => ({
     const clamped = Math.max(0, Math.min(100, Number.isFinite(pct) ? pct : 0))
     set({ globalDiscount: clamped })
   },
+  setTip: (amount: number) => set({ tip: Math.max(0, Number.isFinite(amount) ? amount : 0) }),
   setSession: (session: CashSession | null) => set({ activeSession: session }),
   setCustomer: (id: number | null, name: string | null) => set({ customerId: id, customerName: name }),
   setParkedTickets: (tickets: ParkedTicket[]) => set({ parkedTickets: tickets }),
@@ -294,7 +298,8 @@ export const usePOSStore = create<POSStore>((set, get) => ({
     const sub = get().cart.reduce((acc: number, c: CartItem) => acc + c.subtotal, 0)
     const gd = get().globalDiscount || 0
     const discounted = sub * (1 - gd / 100)
-    return get().requiresInvoice ? discounted * 1.16 : discounted
+    const goods = get().requiresInvoice ? discounted * 1.16 : discounted
+    return goods + (get().tip || 0)
   },
   itemCount: () => get().cart.reduce((acc: number, c: CartItem) => acc + c.quantity, 0),
 }))

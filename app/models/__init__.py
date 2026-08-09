@@ -78,6 +78,9 @@ from .logistics import (
 # 11. Abasto
 from .abasto import PurchaseRecommendation, RecommendationStatus
 
+# 12. Outbox de eventos (entrega transaccional; create_all crea event_outbox)
+from .event_outbox import EventOutbox, OutboxStatus
+
 # 12. Plataforma (SaaS)
 from .platform import (
     PlatformAuditLog,
@@ -91,3 +94,10 @@ from .platform import (
 
 # 13. Appointments (registered on Base.metadata for create_all)
 from app.modules.appointments import models as _appointments_models  # noqa: F401
+
+# 14. Gastro modules — Mesas, Cocina/KDS, Recetas
+#     (registered on Base.metadata for create_all)
+from app.modules.tables import models as _tables_models  # noqa: F401
+from app.modules.kitchen import models as _kitchen_models  # noqa: F401
+from app.modules.recipes import models as _recipes_models  # noqa: F401
+from app.modules.bar import models as _bar_models  # noqa: F401

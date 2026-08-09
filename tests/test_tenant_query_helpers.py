@@ -66,7 +66,10 @@ def test_get_tenant_scoped_finds_row_in_user_org(db, org, cajero_a):
 
 
 def test_get_tenant_scoped_404_when_row_in_other_org(db, org, cajero_a):
-    other = Product(name="Other-org product", organization_id=99999, unit="pza")
+    other_org = Organization(name="Other Org", status="ACTIVE")
+    db.add(other_org)
+    db.flush()
+    other = Product(name="Other-org product", organization_id=other_org.id, unit="pza")
     db.add(other)
     db.commit()
 
@@ -89,10 +92,13 @@ def test_get_tenant_scoped_rejects_tenantless_model(db, cajero_a):
 
 
 def test_scoped_query_filters_to_user_org(db, org, cajero_a):
+    other_org = Organization(name="Other Org", status="ACTIVE")
+    db.add(other_org)
+    db.flush()
     db.add_all([
         Product(name="P1", organization_id=org.id, unit="pza"),
         Product(name="P2", organization_id=org.id, unit="pza"),
-        Product(name="P3-OTHER", organization_id=99999, unit="pza"),
+        Product(name="P3-OTHER", organization_id=other_org.id, unit="pza"),
     ])
     db.commit()
 

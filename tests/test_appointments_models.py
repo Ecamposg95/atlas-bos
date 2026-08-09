@@ -85,11 +85,32 @@ def test_appointment_status_default_is_pending(db, org, branch_a, cajero_a):
     assert appt.booking_channel == BookingChannel.STAFF
 
 
-def test_appointment_event_records_lifecycle(db, org):
-    # AppointmentEvent is just a log row — confirm it persists
+def test_appointment_event_records_lifecycle(db, org, branch_a, cajero_a):
+    # AppointmentEvent is just a log row — confirm it persists.
+    # FK constraints are enforced (conftest sets PRAGMA foreign_keys=ON), so
+    # build a real parent Appointment for appointment_id.
+    pro = Professional(organization_id=org.id, user_id=cajero_a.id, branch_id=branch_a.id)
+    db.add(pro)
+    db.flush()
+    from app.modules.customers.models import Customer
+    cust = Customer(organization_id=org.id, name="Test Client")
+    db.add(cust)
+    db.flush()
+    now = datetime.now(timezone.utc)
+    appt = Appointment(
+        organization_id=org.id,
+        branch_id=branch_a.id,
+        customer_id=cust.id,
+        professional_id=pro.id,
+        starts_at=now,
+        ends_at=now + timedelta(minutes=30),
+    )
+    db.add(appt)
+    db.flush()
+
     ev = AppointmentEvent(
         organization_id=org.id,
-        appointment_id=1,  # FK not enforced for this isolated unit test in SQLite
+        appointment_id=appt.id,
         event_type=AppointmentEventType.CREATED,
         payload={"by": "staff"},
     )

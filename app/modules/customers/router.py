@@ -491,28 +491,34 @@ def register_customer_payment(
     return new_entry
 
 from fastapi import Response
-from app.utils.pdf_generator import generate_account_statement_pdf
+from app.modules.customers.statement_pdf import (
+    build_statement_context,
+    generate_account_statement_pdf,
+)
 
 @router.get("/{customer_id}/pdf-statement")
 def get_customer_statement_pdf(
-    customer_id: int, 
+    customer_id: int,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization)
 ):
+    from app.modules.tenants.models import Organization
+
     customer = db.query(Customer).filter(
         Customer.id == customer_id,
         Customer.organization_id == org_id
     ).first()
     if not customer:
         raise HTTPException(404, "Cliente no encontrado")
-    
+
     query = db.query(CustomerLedgerEntry).filter(
         CustomerLedgerEntry.customer_id == customer_id,
         CustomerLedgerEntry.organization_id == org_id
     )
-    
+
     # 1. Calcular Saldo Anterior (si hay start_date)
     previous_balance = Decimal("0.00")
     if start_date:
@@ -530,18 +536,23 @@ def get_customer_statement_pdf(
         query = query.filter(CustomerLedgerEntry.created_at >= f"{start_date} 00:00:00")
     if end_date:
         query = query.filter(CustomerLedgerEntry.created_at <= f"{end_date} 23:59:59")
-        
+
     # Ordenar por fecha ASCENDENTE para el estado de cuenta (linea de tiempo)
     entries = query.order_by(CustomerLedgerEntry.created_at.asc()).all()
-        
-    pdf_content = generate_account_statement_pdf(
-        customer, 
-        entries, 
-        start_date=start_date, 
+
+    # Recuperar Organization del tenant
+    organization = db.query(Organization).filter(Organization.id == org_id).first()
+
+    context = build_statement_context(
+        customer,
+        entries,
+        organization=organization,
+        start_date=start_date,
         end_date=end_date,
-        previous_balance=previous_balance
+        previous_balance=previous_balance,
     )
-    
+    pdf_content = generate_account_statement_pdf(context)
+
     return Response(
         content=pdf_content,
         media_type="application/pdf",

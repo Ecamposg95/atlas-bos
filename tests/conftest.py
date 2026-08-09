@@ -10,6 +10,11 @@ from datetime import datetime, timezone
 # Force SQLite before any app imports
 os.environ["DATABASE_URL"] = "sqlite:///file::memory:?cache=shared"
 
+# TrustedHostMiddleware (app/main.py) valida el header Host; el TestClient de
+# Starlette manda "testserver". Se permite vía la misma env var extensible que
+# usa producción — sin ella toda la suite responde 400 "Invalid host header".
+os.environ.setdefault("ALLOWED_HOSTS", "testserver")
+
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import JSONB
@@ -40,6 +45,11 @@ TEST_ENGINE = create_engine(
 def _set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    # El DB en memoria es compartido (cache=shared) entre el TEST_ENGINE y el
+    # SessionLocal del app (startup/subscribers). Bajo carga esas conexiones
+    # contienden por el write-lock → "database is locked" espurio (flaky). Con
+    # busy_timeout la conexión ESPERA el lock en vez de fallar de inmediato.
+    cursor.execute("PRAGMA busy_timeout=30000")
     cursor.close()
 
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=TEST_ENGINE)

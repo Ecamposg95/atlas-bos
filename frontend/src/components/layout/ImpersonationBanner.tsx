@@ -52,7 +52,7 @@ export function ImpersonationBanner() {
         fontSize: '0.75rem',
         fontWeight: 700,
         letterSpacing: '0.05em',
-        fontFamily: "'Montserrat', sans-serif",
+        fontFamily: "'IBM Plex Sans', sans-serif",
       }}
     >
       <i className="fa-solid fa-eye" />

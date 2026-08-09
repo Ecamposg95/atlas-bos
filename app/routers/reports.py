@@ -530,6 +530,82 @@ def get_sales_by_hour(
     }
 
 
+@router.get("/by-waiter")
+def get_sales_by_waiter(
+    start_date: date = None,
+    end_date: date = None,
+    branch_id: int = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    org_id: int = Depends(get_current_active_organization),
+):
+    """
+    Ventas por mesero en el rango [start_date, end_date] (default: hoy MX).
+
+    Atribuye cada venta al mesero de la mesa (SalesDocument.server_user_id);
+    si la venta no vino de una mesa (mostrador), cae al cajero (seller_id).
+    Incluye propinas acumuladas por mesero.
+    """
+    if not start_date:
+        start_date = _today_mx()
+    if not end_date:
+        end_date = start_date
+
+    is_hq_user = current_user.role in ["ADMINISTRADOR", "GERENTE", "DUEÑO"]
+    target_branch_id = current_user.branch_id
+    if is_hq_user:
+        if branch_id == 0:
+            target_branch_id = None
+        elif branch_id:
+            target_branch_id = branch_id
+
+    key = func.coalesce(SalesDocument.server_user_id, SalesDocument.seller_id)
+    filters = [
+        SalesDocument.organization_id == org_id,
+        func.date(_mx(SalesDocument.created_at)) >= start_date,
+        func.date(_mx(SalesDocument.created_at)) <= end_date,
+        SalesDocument.status == DocumentStatus.PAID,
+    ]
+    if target_branch_id:
+        filters.append(SalesDocument.branch_id == target_branch_id)
+
+    rows = db.query(
+        key.label("uid"),
+        func.count(SalesDocument.id).label("tickets"),
+        func.sum(SalesDocument.total_amount).label("revenue"),
+        func.coalesce(func.sum(SalesDocument.tip_amount), 0).label("tips"),
+    ).filter(*filters).group_by(key).all()
+
+    uids = [int(r.uid) for r in rows if r.uid is not None]
+    names: Dict[int, str] = {}
+    if uids:
+        for u in db.query(User).filter(User.id.in_(uids)).all():
+            names[u.id] = getattr(u, "full_name", None) or u.username
+
+    waiters = []
+    for r in rows:
+        if r.uid is None:
+            continue
+        uid = int(r.uid)
+        tickets = int(r.tickets or 0)
+        revenue = float(r.revenue or 0)
+        waiters.append({
+            "user_id": uid,
+            "name": names.get(uid, f"Usuario {uid}"),
+            "tickets": tickets,
+            "revenue": revenue,
+            "tips": float(r.tips or 0),
+            "avg_ticket": revenue / tickets if tickets else 0.0,
+        })
+    waiters.sort(key=lambda w: w["revenue"], reverse=True)
+
+    return {
+        "start_date": str(start_date),
+        "end_date": str(end_date),
+        "waiters": waiters,
+    }
+
+
 @router.get("/command-center/stats")
 def get_command_center_stats(
     start_date: date = None, 

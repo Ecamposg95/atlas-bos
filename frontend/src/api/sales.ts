@@ -114,6 +114,18 @@ export const parkedTicketsApi = {
     return data
   },
 
+  update: async (
+    id: string,
+    cartJson: Record<string, unknown>,
+    notes?: string,
+  ): Promise<ParkedTicket> => {
+    const { data } = await client.patch<ParkedTicket>(`/sales/parked/${id}`, {
+      cart_json: cartJson,
+      notes: notes ?? null,
+    })
+    return data
+  },
+
   remove: async (id: string): Promise<void> => {
     await client.delete(`/sales/parked/${id}`)
   },

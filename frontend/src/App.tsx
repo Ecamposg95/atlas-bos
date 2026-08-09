@@ -81,12 +81,25 @@ const PresetHome = lazy(() => import('./pages/home/PresetHome').then(m => ({ def
 const AppointmentsComingSoon = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AppointmentsComingSoon })))
 const CommissionsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.CommissionsComingSoon })))
 const MembershipsComingSoon  = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.MembershipsComingSoon })))
-const RecipesComingSoon      = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.RecipesComingSoon })))
 const AIComingSoon           = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.AIComingSoon })))
 const PurchasingComingSoon   = lazy(() => import('./pages/coming-soon').then(m => ({ default: m.PurchasingComingSoon })))
 
+// Gastro modules (2026-06-22) — Mesas, Cocina/KDS, Recetas
+const FloorPlan       = lazy(() => import('./pages/tables/FloorPlan').then(m => ({ default: m.FloorPlan })))
+const KDS             = lazy(() => import('./pages/kitchen/KDS').then(m => ({ default: m.KDS })))
+const Recipes         = lazy(() => import('./pages/recipes/Recipes').then(m => ({ default: m.Recipes })))
+const RecipeForm      = lazy(() => import('./pages/recipes/RecipeForm').then(m => ({ default: m.RecipeForm })))
+const ComandaTables   = lazy(() => import('./pages/mobile/ComandaTables').then(m => ({ default: m.ComandaTables })))
+const ComandaOrder    = lazy(() => import('./pages/mobile/ComandaOrder').then(m => ({ default: m.ComandaOrder })))
+const Meseros         = lazy(() => import('./pages/reports/Meseros').then(m => ({ default: m.Meseros })))
+const Botellas        = lazy(() => import('./pages/bar/Botellas').then(m => ({ default: m.Botellas })))
+const MenuVisual      = lazy(() => import('./pages/menu/MenuVisual').then(m => ({ default: m.MenuVisual })))
+
 // Portal (CLIENTE)
 const Portal          = lazy(() => import('./pages/portal/Portal').then(m => ({ default: m.Portal })))
+
+// Dev-only preview (never included in production bundle)
+const AtlasOnePreview = lazy(() => import('./pages/__dev__/AtlasOnePreview'))
 
 // Platform (SUPERADMIN)
 const PlatformLayout       = lazy(() => import('./pages/platform/PlatformLayout').then(m => ({ default: m.PlatformLayout })))
@@ -227,6 +240,18 @@ export default function App() {
         {/* Público */}
         <Route path="/login" element={<LoginPage />} />
 
+        {/* Dev-only — gated by Vite's import.meta.env.DEV (stripped in prod builds) */}
+        {import.meta.env.DEV && (
+          <Route
+            path="/__dev__/atlas-one-preview"
+            element={
+              <Suspense fallback={<div style={{ padding: 40 }}>Loading…</div>}>
+                <AtlasOnePreview />
+              </Suspense>
+            }
+          />
+        )}
+
         {/* Rutas protegidas — bajo Layout */}
         <Route
           path="/"
@@ -317,7 +342,15 @@ export default function App() {
           <Route path="appointments" element={<Suspense fallback={<PageLoader />}><AppointmentsComingSoon /></Suspense>} />
           <Route path="commissions"  element={<Suspense fallback={<PageLoader />}><CommissionsComingSoon /></Suspense>} />
           <Route path="memberships"  element={<Suspense fallback={<PageLoader />}><MembershipsComingSoon /></Suspense>} />
-          <Route path="recipes"      element={<Suspense fallback={<PageLoader />}><RecipesComingSoon /></Suspense>} />
+          {/* Gastro — Recetas (real), Mesas, Cocina/KDS */}
+          <Route path="recipes"      element={<Suspense fallback={<PageLoader />}><Recipes /></Suspense>} />
+          <Route path="recipes/new"  element={<Suspense fallback={<PageLoader />}><RecipeForm /></Suspense>} />
+          <Route path="recipes/:id/edit" element={<Suspense fallback={<PageLoader />}><RecipeForm /></Suspense>} />
+          <Route path="tables"       element={<Suspense fallback={<PageLoader />}><FloorPlan /></Suspense>} />
+          <Route path="kitchen"      element={<Suspense fallback={<PageLoader />}><KDS /></Suspense>} />
+          <Route path="meseros"      element={<Suspense fallback={<PageLoader />}><Meseros /></Suspense>} />
+          <Route path="bar/bottles"  element={<Suspense fallback={<PageLoader />}><Botellas /></Suspense>} />
+          <Route path="menu"         element={<Suspense fallback={<PageLoader />}><MenuVisual /></Suspense>} />
           <Route path="ai"           element={<Suspense fallback={<PageLoader />}><AIComingSoon /></Suspense>} />
           <Route path="purchasing"   element={<Suspense fallback={<PageLoader />}><PurchasingComingSoon /></Suspense>} />
 
@@ -334,6 +367,8 @@ export default function App() {
             <Route path="query"     element={<Suspense fallback={<PageLoader />}><MobileQuery /></Suspense>} />
             <Route path="sales"     element={<Suspense fallback={<PageLoader />}><MobileSales /></Suspense>} />
             <Route path="profile"   element={<Suspense fallback={<PageLoader />}><MobileProfile /></Suspense>} />
+            <Route path="comanda"          element={<Suspense fallback={<PageLoader />}><ComandaTables /></Suspense>} />
+            <Route path="comanda/:tableId" element={<Suspense fallback={<PageLoader />}><ComandaOrder /></Suspense>} />
             <Route path="owner"     element={
               <RequireRole roles={['DUEÑO', 'ADMINISTRADOR']}>
                 <Suspense fallback={<PageLoader />}><MobileOwnerDashboard /></Suspense>

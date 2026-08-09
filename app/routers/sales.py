@@ -28,6 +28,29 @@ from app.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_sale_items(doc) -> "List[Dict[str, Any]]":
+    """Build the SalesDocumentCreated payload without ever raising.
+
+    Previously this was an inline comprehension using ``l.variant.sku``; a single
+    line whose variant relationship was null threw AttributeError, the publish was
+    swallowed by ``except: pass``, and NEITHER ingredient consumption NOR the
+    table-free ran — silently. Defensive access removes that landmine.
+    """
+    items: "List[Dict[str, Any]]" = []
+    for l in (getattr(doc, "lines", None) or []):
+        variant = getattr(l, "variant", None)
+        vid = getattr(l, "variant_id", None)
+        qty = getattr(l, "quantity", None)
+        items.append({
+            "variant_id": str(vid) if vid else None,
+            "quantity": float(qty) if qty is not None else 0.0,
+            "sku": getattr(variant, "sku", None),
+        })
+    return items
+
+
 from app.models.returns import SaleReturn, SaleReturnItem
 from app.schemas.sales import SaleCreate, SaleRead
 from app.core.security import get_current_user
@@ -565,6 +588,14 @@ def create_sale(
                 organization_id=org_id
             ))
 
+    # --- Gastro: propina ---
+    # La propina se suma al total a cobrar (los pagos deben cubrir bienes + propina).
+    # Se persiste por separado en tip_amount para el reporte de propinas por mesero.
+    tip_amount = Decimal(str(sale_in.tip_amount or 0))
+    if tip_amount < 0:
+        raise HTTPException(status_code=400, detail="La propina no puede ser negativa")
+    total_sale += tip_amount
+
     # --- 2. Análisis Financiero ---
     # Guard 0: Montos negativos en pagos nunca son válidos. Devoluciones van por /api/returns.
     if any(Decimal(str(p.amount)) < 0 for p in sale_in.payments):
@@ -659,6 +690,7 @@ def create_sale(
         sales_doc.tax_amount = accumulated_tax
         sales_doc.requires_invoice = sale_in.requires_invoice
         sales_doc.change_given = change_given
+        sales_doc.tip_amount = tip_amount
     else:
         current_series = "A"
         next_folio = get_next_folio(db, branch_id=current_user.branch_id, series=current_series)
@@ -680,6 +712,7 @@ def create_sale(
             series=current_series, folio=next_folio, organization_id=org_id,
             cash_session_id=cash_session_id_value,
             change_given=change_given,
+            tip_amount=tip_amount,
         )
         db.add(sales_doc)
     
@@ -692,6 +725,21 @@ def create_sale(
     if global_disc_pct > 0:
         try:
             setattr(sales_doc, 'global_discount_pct', global_disc_pct)
+        except Exception:
+            pass
+
+    # --- Gastro: atribuir la venta al mesero de la mesa (ventas por mesero) ---
+    # Al cobrar una mesa, la venta viene de un parked ticket; la mesa que apunta
+    # a ese ticket guarda el mesero asignado. Lo copiamos a la venta.
+    if sale_in.parked_ticket_id:
+        try:
+            from app.modules.tables.models import DiningTable
+            row = db.query(DiningTable.server_user_id).filter(
+                DiningTable.current_ticket_id == sale_in.parked_ticket_id,
+                DiningTable.organization_id == org_id,
+            ).first()
+            if row and row[0]:
+                sales_doc.server_user_id = row[0]
         except Exception:
             pass
 
@@ -741,7 +789,19 @@ def create_sale(
             # Si las columnas aún no existen, fallback a soft-delete.
             pt.deleted_at = datetime.now(timezone.utc)
 
-    # ATS-4: commit atómico — si falla, revertir todo (stock, pagos, documento)
+    # Outbox transaccional: encolamos el evento DENTRO de la misma transacción que
+    # la venta, así los efectos (consumo de insumos, liberar mesa, reorden de abasto)
+    # nunca se pierden en silencio. Si el enqueue falla, la venta NO se bloquea.
+    outbox_id = None
+    try:
+        outbox_id = EventBus.enqueue(db, SalesDocumentCreated(
+            sales_document_id=str(sales_doc.id),
+            items=_safe_sale_items(sales_doc),
+        ))
+    except Exception:
+        logger.exception("OUTBOX_ENQUEUE_FAILED sale=%s", getattr(sales_doc, "id", None))
+
+    # ATS-4: commit atómico — si falla, revertir todo (stock, pagos, documento, evento)
     try:
         db.commit()
         db.refresh(sales_doc)
@@ -757,13 +817,14 @@ def create_sale(
         )
 
     # --- 4. Eventos y Respuesta ---
-    try:
-        EventBus.publish(SalesDocumentCreated(
-            sales_document_id=str(sales_doc.id),
-            items=[{"variant_id": str(l.variant_id), "quantity": float(l.quantity), "sku": l.variant.sku} for l in sales_doc.lines]
-        ))
-    except Exception:
-        pass
+    # Entrega inmediata (baja latencia) del evento recién commiteado; el worker del
+    # outbox reintenta cualquier cosa que quede pendiente. No lanza al request.
+    if outbox_id:
+        try:
+            from app.core.outbox import drain_now
+            drain_now([outbox_id])
+        except Exception:
+            logger.exception("OUTBOX_DRAIN_FAILED sale=%s", sales_doc.id)
 
     # Fase 1.4: redondeo explícito a 2 decimales antes de serializar a float.
     # Antes `float(max(0, total_paid - total_sale))` podía devolver 0.009999...
@@ -835,7 +896,7 @@ def get_my_last_sale(
 # Hand-off entre PCs de la misma sucursal: cualquier cajero puede reanudar.
 # Routes deben ir ANTES de "/{sale_id}" para que /parked no sea capturado.
 # ─────────────────────────────────────────────────────────────────────────────
-from app.schemas.sales import ParkedTicketCreate, ParkedTicketRead
+from app.schemas.sales import ParkedTicketCreate, ParkedTicketRead, ParkedTicketUpdate
 
 
 def _parked_to_read(p: ParkedTicket) -> ParkedTicketRead:
@@ -943,6 +1004,51 @@ def resume_parked_ticket(
             status_code=410,
             detail=f"Ticket pausado en estado {pt_status}; no se puede reanudar."
         )
+    return _parked_to_read(pt)
+
+
+@router.patch("/parked/{parked_id}", response_model=ParkedTicketRead)
+def update_parked_ticket(
+    parked_id: str,
+    payload: ParkedTicketUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    org_id: int = Depends(get_current_active_organization),
+):
+    """Actualiza el carrito de una cuenta abierta (usado por la comanda para
+    acumular platillos enviados a cocina). No consume folio ni descuenta stock.
+
+    Contrato: last-write-wins sobre las llaves que trae `payload.cart_json`
+    (típicamente `items`, que el cliente manda ya mergeado = existentes + nuevos).
+    Se hace un shallow-merge de nivel superior para NO perder llaves hermanas que
+    el POS guarda junto a `items` (p.ej. `requires_invoice`, `global_discount`).
+    Asume un solo escritor por cuenta; si dos clientes editan la misma cuenta en
+    paralelo, gana el último PATCH (los `items` no fusionados del otro se pierden)."""
+    if not payload.cart_json:
+        raise HTTPException(status_code=422, detail="cart_json no puede estar vacío.")
+    pt = db.query(ParkedTicket).filter(
+        ParkedTicket.id == parked_id,
+        ParkedTicket.organization_id == org_id,
+        ParkedTicket.branch_id == current_user.branch_id,
+        ParkedTicket.deleted_at == None,
+    ).first()
+    if not pt:
+        raise HTTPException(status_code=404, detail="Ticket pausado no encontrado.")
+    pt_status = getattr(pt, 'status', None) or 'ACTIVE'
+    if pt_status != 'ACTIVE':
+        raise HTTPException(
+            status_code=410,
+            detail=f"Ticket pausado en estado {pt_status}; no se puede modificar."
+        )
+    # Shallow-merge: conserva llaves top-level existentes (requires_invoice,
+    # global_discount…) y sobrescribe solo las que el payload trae.
+    base = dict(pt.cart_json) if isinstance(pt.cart_json, dict) else {}
+    base.update(payload.cart_json)
+    pt.cart_json = base
+    if payload.notes is not None:
+        pt.notes = payload.notes
+    db.commit()
+    db.refresh(pt)
     return _parked_to_read(pt)
 
 

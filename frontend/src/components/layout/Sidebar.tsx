@@ -11,13 +11,36 @@ const APPROVER_ROLES: Role[] = ['ADMINISTRADOR', 'DUEÑO', 'GERENTE']
 const BRANCH_ROLES: Role[] = ['CAJERO', 'GERENTE']
 const RETURNS_URLS = new Set(['/returns', '/hq/returns'])
 
+// Presets gastronómicos (valor de `preset` = industry_type de la org). En estos
+// verticales ocultamos los ítems marcados `hideForGastro` (lenguaje retail que
+// no aplica a una cocina). Incluye taxonomía v2 (ATLAS_ONE_*) y v1 legacy.
+const GASTRO_PRESETS = new Set([
+  'ATLAS_ONE_RESTAURANT', 'ATLAS_ONE_CAFE', 'ATLAS_ONE_BAR', 'ATLAS_ONE_GASTRO',
+  'RESTAURANT_FULL', 'RESTAURANT_QSR', 'CAFE_BAKERY',
+])
+
 // Branch nav group labels — keyed by URL, defines section header shown above each group
 const BRANCH_NAV_GROUPS: { header: string; urls: string[] }[] = [
   { header: 'Mi día',        urls: ['/atlas-pos', '/pos'] },
+  { header: 'Restaurante',   urls: ['/menu', '/tables', '/mobile/comanda', '/kitchen', '/bar/bottles'] },
   { header: 'Mi turno',      urls: ['/cash-history', '/sales'] },
   { header: 'Inventario',    urls: ['/products'] },
-  { header: 'Reportes',      urls: ['/reports'] },
+  { header: 'Reportes',      urls: ['/reports', '/meseros'] },
   { header: 'Configuración', urls: ['/printer-settings'] },
+]
+
+// HQ/admin nav groups — lista agrupada y etiquetada (más legible que el grid de
+// códigos crípticos). Los items no listados caen en "Más" (no se ocultan).
+const HQ_NAV_GROUPS: { header: string; urls: string[] }[] = [
+  { header: 'Restaurante',  urls: ['/menu', '/tables', '/mobile/comanda', '/kitchen', '/recipes', '/meseros', '/bar/bottles'] },
+  { header: 'Operación',    urls: ['/hq/operations', '/hq/reports-hub', '/hq/control'] },
+  { header: 'Catálogo',     urls: ['/admin/catalog', '/departments', '/brands'] },
+  { header: 'Inventario',   urls: ['/inventory', '/hq/inventory', '/boxes', '/logistics'] },
+  { header: 'Ventas',       urls: ['/hq/sales', '/hq/returns', '/quotes', '/quotes/new', '/seguimiento'] },
+  { header: 'Compras',      urls: ['/purchases', '/expenses', '/purchasing'] },
+  { header: 'Clientes',     urls: ['/customers', '/appointments', '/commissions', '/memberships'] },
+  { header: 'Organización', urls: ['/organization', '/hq/branches', '/users', '/hr'] },
+  { header: 'Inteligencia', urls: ['/ai'] },
 ]
 
 /** Hook que polea el conteo de devoluciones pendientes cada 60s para roles aprobadores. */
@@ -44,27 +67,29 @@ interface NavItem {
    *  this module enabled (`OrganizationModule.is_enabled=true`). Items without
    *  this field are always visible (subject to ROLE_ROUTES). */
   module?: string
+  /** Hide this item for gastro presets (retail-only concept). See GASTRO_PRESETS. */
+  hideForGastro?: boolean
 }
 
 const ALL_NAV: NavItem[] = [
   { label: 'Operaciones',       short: 'OPS', icon: 'fa-gauge-high',          url: '/hq/operations',    group: 'hq',   sort: 0  },
   { label: 'Reportes',          short: 'REP', icon: 'fa-chart-line',          url: '/hq/reports-hub',   group: 'hq',   sort: 1  },
   { label: 'Control HQ',        short: 'HQ',  icon: 'fa-sliders',             url: '/hq/control',       group: 'hq',   sort: 2  },
-  { label: 'Catálogo',          short: 'CAT', icon: 'fa-book',                url: '/admin/catalog',    group: 'hq',   sort: 3  },
-  { label: 'Deptos.',           short: 'DEP', icon: 'fa-layer-group',         url: '/departments',      group: 'hq',   sort: 4  },
-  { label: 'Marcas',            short: 'MRC', icon: 'fa-tags',                url: '/brands',           group: 'hq',   sort: 5  },
-  { label: 'Ventas HQ',         short: 'VTA', icon: 'fa-receipt',             url: '/hq/sales',         group: 'hq',   sort: 6  },
-  { label: 'Devoluc. HQ',       short: 'DEV', icon: 'fa-undo',                url: '/hq/returns',       group: 'hq',   sort: 7  },
-  { label: 'Cotizaciones',      short: 'COT', icon: 'fa-file-invoice',        url: '/quotes',           group: 'hq',   sort: 8  },
-  { label: 'Nueva Cot.',        short: 'NEW', icon: 'fa-file-invoice-dollar', url: '/quotes/new',       group: 'hq',   sort: 9  },
-  { label: 'Pedidos',           short: 'PED', icon: 'fa-clipboard-check',     url: '/seguimiento',      group: 'hq',   sort: 10 },
+  { label: 'Catálogo',          short: 'CAT', icon: 'fa-book',                url: '/admin/catalog',    group: 'hq',   sort: 3,  module: 'catalog' },
+  { label: 'Deptos.',           short: 'DEP', icon: 'fa-layer-group',         url: '/departments',      group: 'hq',   sort: 4,  module: 'catalog', hideForGastro: true },
+  { label: 'Marcas',            short: 'MRC', icon: 'fa-tags',                url: '/brands',           group: 'hq',   sort: 5,  module: 'catalog', hideForGastro: true },
+  { label: 'Ventas HQ',         short: 'VTA', icon: 'fa-receipt',             url: '/hq/sales',         group: 'hq',   sort: 6,  module: 'pos' },
+  { label: 'Devoluc. HQ',       short: 'DEV', icon: 'fa-undo',                url: '/hq/returns',       group: 'hq',   sort: 7,  module: 'returns' },
+  { label: 'Cotizaciones',      short: 'COT', icon: 'fa-file-invoice',        url: '/quotes',           group: 'hq',   sort: 8,  module: 'quotes' },
+  { label: 'Nueva Cot.',        short: 'NEW', icon: 'fa-file-invoice-dollar', url: '/quotes/new',       group: 'hq',   sort: 9,  module: 'quotes' },
+  { label: 'Pedidos',           short: 'PED', icon: 'fa-clipboard-check',     url: '/seguimiento',      group: 'hq',   sort: 10, module: 'quotes' },
   { label: 'Compras',           short: 'CMP', icon: 'fa-shopping-cart',       url: '/purchases',        group: 'hq',   sort: 11 },
   { label: 'Gastos',            short: 'GST', icon: 'fa-money-bill-wave',     url: '/expenses',         group: 'hq',   sort: 12 },
-  { label: 'Inventario',        short: 'INV', icon: 'fa-boxes',               url: '/inventory',        group: 'hq',   sort: 13 },
-  { label: 'Inv. Global',       short: 'GLB', icon: 'fa-globe',               url: '/hq/inventory',     group: 'hq',   sort: 14 },
-  { label: 'Logística',         short: 'LOG', icon: 'fa-truck-loading',       url: '/logistics',        group: 'hq',   sort: 15 },
-  { label: 'Cajas',             short: 'CJA', icon: 'fa-box-open',            url: '/boxes',            group: 'hq',   sort: 16 },
-  { label: 'Clientes',          short: 'CRM', icon: 'fa-address-book',        url: '/customers',        group: 'hq',   sort: 17 },
+  { label: 'Inventario',        short: 'INV', icon: 'fa-boxes',               url: '/inventory',        group: 'hq',   sort: 13, module: 'inventory' },
+  { label: 'Inv. Global',       short: 'GLB', icon: 'fa-globe',               url: '/hq/inventory',     group: 'hq',   sort: 14, module: 'inventory', hideForGastro: true },
+  { label: 'Logística',         short: 'LOG', icon: 'fa-truck-loading',       url: '/logistics',        group: 'hq',   sort: 15, module: 'logistics' },
+  { label: 'Cajas',             short: 'CJA', icon: 'fa-box-open',            url: '/boxes',            group: 'hq',   sort: 16, module: 'logistics' },
+  { label: 'Clientes',          short: 'CRM', icon: 'fa-address-book',        url: '/customers',        group: 'hq',   sort: 17, module: 'crm' },
   { label: 'Empresa',           short: 'EMP', icon: 'fa-building',            url: '/organization',     group: 'hq',   sort: 18 },
   { label: 'Sucursales',        short: 'SCR', icon: 'fa-store',               url: '/hq/branches',      group: 'hq',   sort: 19 },
   { label: 'Usuarios',          short: 'USR', icon: 'fa-users-cog',           url: '/users',            group: 'hq',   sort: 20 },
@@ -76,6 +101,12 @@ const ALL_NAV: NavItem[] = [
   { label: 'Recetas',           short: 'REC', icon: 'fa-book',                url: '/recipes',          group: 'hq',   sort: 25, module: 'recipes' },
   { label: 'IA',                short: 'IA',  icon: 'fa-microchip',           url: '/ai',               group: 'hq',   sort: 26, module: 'ai' },
   { label: 'Pedidos compras',   short: 'OC',  icon: 'fa-truck',               url: '/purchasing',       group: 'hq',   sort: 27, module: 'purchasing' },
+  { label: 'Mesas',             short: 'MSA', icon: 'fa-chair',               url: '/tables',           group: 'hq',   sort: 28, module: 'tables' },
+  { label: 'Cocina (KDS)',      short: 'KDS', icon: 'fa-fire-burner',         url: '/kitchen',          group: 'hq',   sort: 29, module: 'kitchen' },
+  { label: 'Meseros',           short: 'MSR', icon: 'fa-user-tie',            url: '/meseros',          group: 'hq',   sort: 30, module: 'tables' },
+  { label: 'Botellas',          short: 'BTL', icon: 'fa-wine-bottle',         url: '/bar/bottles',      group: 'hq',   sort: 31, module: 'bar' },
+  { label: 'Menú',              short: 'MNU', icon: 'fa-book-open',           url: '/menu',             group: 'hq',   sort: 32, module: 'menu' },
+  { label: 'Comanda',           short: 'CMD', icon: 'fa-clipboard-list',      url: '/mobile/comanda',   group: 'hq',   sort: 33, module: 'tables' },
   { label: 'Mi día',            short: 'INI', icon: 'fa-house',               url: '/atlas-pos',         group: 'pos',  sort: 0  },
   { label: 'Cobrar',            short: 'POS', icon: 'fa-cash-register',       url: '/pos',              group: 'pos',  sort: 1  },
   { label: 'Mis ventas',        short: 'HST', icon: 'fa-history',             url: '/sales',            group: 'pos',  sort: 2  },
@@ -92,10 +123,10 @@ const ALL_NAV: NavItem[] = [
 ]
 
 const ROLE_ROUTES: Record<Role, string[]> = {
-  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing'],
-  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing'],
-  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos'],
-  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos'],
+  ADMINISTRADOR:    ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/departments','/organization','/users','/customers','/hq/branches','/hq/inventory','/hq/sales','/hq/returns','/brands','/hr','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles','/menu','/mobile/comanda'],
+  DUEÑO:            ['/hq/operations','/hq/reports-hub','/hq/control','/admin/catalog','/customers','/hq/sales','/hq/returns','/hr/me','/logistics','/boxes','/quotes','/quotes/new','/seguimiento','/purchases','/expenses','/appointments','/commissions','/memberships','/recipes','/ai','/purchasing','/tables','/kitchen','/meseros','/bar/bottles','/menu','/mobile/comanda'],
+  GERENTE:          ['/cash-history','/reports','/hr/me','/products','/pos','/sales','/returns','/atlas-pos','/tables','/kitchen','/recipes','/meseros','/bar/bottles','/menu','/mobile/comanda'],
+  CAJERO:           ['/pos','/cash-history','/hr/me','/products','/printer-settings','/sales','/returns','/atlas-pos','/tables','/kitchen','/bar/bottles','/menu','/mobile/comanda'],
   VENDEDOR:         ['/mobile/dashboard','/mobile/query','/mobile/sales','/mobile/profile','/hr/me','/atlas-pos'],
   SOPORTE_OPERATIVO:['/mobile/dashboard','/mobile/query','/mobile/profile','/hr/me','/atlas-pos'],
   CLIENTE:          ['/portal'],
@@ -149,26 +180,26 @@ function BranchNav({ items, pendingReturns }: { items: NavItem[]; pendingReturns
                       borderRadius: '14px',
                       textDecoration: 'none', transition: 'all 0.15s ease',
                       background: active
-                        ? 'rgba(139,92,246,0.18)'
+                        ? 'var(--sb-active-bg)'
                         : 'rgba(255,255,255,0.055)',
-                      border: `1px solid ${active ? 'rgba(167,139,250,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                      border: `1px solid ${active ? 'var(--sb-active-line)' : 'rgba(255,255,255,0.07)'}`,
                       borderLeft: active
-                        ? '4px solid #9333ea'
+                        ? '4px solid var(--p-accent)'
                         : '4px solid transparent',
-                      boxShadow: active ? '0 0 12px rgba(139,92,246,0.18)' : 'none',
+                      boxShadow: active ? '0 0 12px var(--sb-glow)' : 'none',
                     }}
                   >
                     <i
                       className={`fa-solid ${item.icon}`}
                       style={{
                         fontSize: '18px', flexShrink: 0,
-                        color: active ? '#c4b5fd' : 'rgba(255,255,255,0.78)',
+                        color: active ? 'var(--sb-active-icon)' : 'rgba(255,255,255,0.78)',
                       }}
                     />
                     <span style={{
                       fontSize: '13px',
                       fontWeight: active ? 700 : 500,
-                      color: active ? '#e9d5ff' : 'rgba(255,255,255,0.82)',
+                      color: active ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.82)',
                       letterSpacing: '-0.01em',
                       flex: 1,
                     }}>
@@ -182,6 +213,91 @@ function BranchNav({ items, pendingReturns }: { items: NavItem[]; pendingReturns
                         fontSize: '10px', fontWeight: 900,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: '0 0 8px rgba(245,158,11,0.5)',
+                      }}>
+                        {pendingReturns > 99 ? '99+' : pendingReturns}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </nav>
+  )
+}
+
+// ── HQ NAV — lista agrupada + etiquetada (admin/dueño), más legible ──
+function HQNav({ items, pendingReturns }: { items: NavItem[]; pendingReturns: number }) {
+  const { pathname } = useLocation()
+  const grouped: { header: string; items: NavItem[] }[] = []
+  const placed = new Set<string>()
+
+  for (const g of HQ_NAV_GROUPS) {
+    const gItems = g.urls
+      .map((u) => items.find((it) => it.url === u))
+      .filter((it): it is NavItem => !!it)
+    if (gItems.length > 0) {
+      grouped.push({ header: g.header, items: gItems })
+      gItems.forEach((it) => placed.add(it.url))
+    }
+  }
+  const leftover = items.filter((it) => !placed.has(it.url))
+  if (leftover.length > 0) grouped.push({ header: 'Más', items: leftover })
+
+  return (
+    <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        {grouped.map((section) => (
+          <div key={section.header}>
+            <p style={{
+              fontSize: '9px', fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.12em', color: 'rgba(255,255,255,0.42)',
+              marginBottom: '6px', paddingLeft: '6px',
+            }}>
+              {section.header}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              {section.items.map((item) => {
+                const active = pathname === item.url || pathname.startsWith(item.url + '/')
+                const showReturnsBadge = RETURNS_URLS.has(item.url) && pendingReturns > 0
+                return (
+                  <Link
+                    key={item.url}
+                    to={item.url}
+                    style={{
+                      position: 'relative',
+                      display: 'flex', alignItems: 'center', gap: '11px',
+                      padding: '9px 11px', borderRadius: '10px',
+                      textDecoration: 'none', transition: 'all 0.15s ease',
+                      background: active ? 'var(--sb-active-bg)' : 'transparent',
+                      borderLeft: `3px solid ${active ? 'var(--p-accent)' : 'transparent'}`,
+                    }}
+                    onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.06)' }}
+                    onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                  >
+                    <i
+                      className={`fa-solid ${item.icon}`}
+                      style={{
+                        fontSize: '15px', width: '18px', textAlign: 'center', flexShrink: 0,
+                        color: active ? 'var(--sb-active-icon)' : 'rgba(255,255,255,0.75)',
+                      }}
+                    />
+                    <span style={{
+                      fontSize: '12.5px',
+                      fontWeight: active ? 700 : 500,
+                      color: active ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.9)',
+                      letterSpacing: '-0.01em', flex: 1,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {item.label}
+                    </span>
+                    {showReturnsBadge && (
+                      <span style={{
+                        minWidth: '18px', height: '18px', padding: '0 5px', borderRadius: '9px', flexShrink: 0,
+                        background: '#f59e0b', color: '#1c1917', fontSize: '10px', fontWeight: 900,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}>
                         {pendingReturns > 99 ? '99+' : pendingReturns}
                       </span>
@@ -225,8 +341,8 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
           <div style={{
             width: '34px', height: '34px', borderRadius: '10px', flexShrink: 0,
-            background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-            boxShadow: '0 0 16px rgba(139,92,246,0.45)',
+            background: 'var(--sb-logo-grad)',
+            boxShadow: '0 0 16px var(--sb-glow)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <i className="fa fa-bolt" style={{ color: 'white', fontSize: '13px' }} />
@@ -318,56 +434,7 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
       {isBranchRole ? (
         <BranchNav items={items} pendingReturns={pendingReturns} />
       ) : (
-        <nav style={{ flex: 1, overflowY: 'auto', padding: '10px 12px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-            {items.map((item) => {
-              const active = pathname === item.url || pathname.startsWith(item.url + '/')
-              const showReturnsBadge = RETURNS_URLS.has(item.url) && pendingReturns > 0
-              return (
-                <Link
-                  key={item.url}
-                  to={item.url}
-                  title={item.label}
-                  style={{
-                    position: 'relative',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center',
-                    gap: '5px', height: '68px', borderRadius: '10px',
-                    textDecoration: 'none', transition: 'all 0.15s ease',
-                    background: active ? 'var(--sb-active-bg)' : 'rgba(255,255,255,0.05)',
-                    border: `1px solid ${active ? 'rgba(167,139,250,0.45)' : 'rgba(255,255,255,0.08)'}`,
-                    boxShadow: active ? '0 0 14px rgba(139,92,246,0.25), inset 0 1px 0 rgba(255,255,255,0.08)' : 'none',
-                  }}
-                >
-                  <i
-                    className={`fa-solid ${item.icon}`}
-                    style={{ fontSize: '16px', color: active ? 'var(--sb-active-icon)' : 'rgba(255,255,255,0.80)' }}
-                  />
-                  <span style={{
-                    fontSize: '0.53rem', fontWeight: 800,
-                    textTransform: 'uppercase', letterSpacing: '0.06em',
-                    color: active ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.72)',
-                  }}>
-                    {item.short}
-                  </span>
-                  {showReturnsBadge && (
-                    <span style={{
-                      position: 'absolute', top: '4px', right: '4px',
-                      minWidth: '18px', height: '18px', padding: '0 5px',
-                      borderRadius: '9px',
-                      background: '#f59e0b', color: '#1c1917',
-                      fontSize: '10px', fontWeight: 900,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 0 8px rgba(245,158,11,0.5)',
-                    }}>
-                      {pendingReturns > 99 ? '99+' : pendingReturns}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
-          </div>
-        </nav>
+        <HQNav items={items} pendingReturns={pendingReturns} />
       )}
 
       {/* ── Footer: user card + logout ── */}
@@ -381,7 +448,7 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
         }}>
           <div style={{
             width: '30px', height: '30px', borderRadius: '9px', flexShrink: 0,
-            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            background: 'var(--sb-logo-grad)',
             boxShadow: `0 0 10px ${ROLE_COLOR[role]}55`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '12px', fontWeight: 900, color: 'white',
@@ -406,12 +473,12 @@ function MatrixSidebar({ items, logout, isBranchRole }: { items: NavItem[]; logo
               width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
               padding: '8px 10px', borderRadius: '9px', cursor: 'pointer', transition: 'all 0.15s',
               fontSize: '11px', fontWeight: 600,
-              color: pathname === '/hr/me' ? '#c4b5fd' : 'rgba(255,255,255,0.65)',
-              background: pathname === '/hr/me' ? 'rgba(139,92,246,0.18)' : 'transparent',
-              border: `1px solid ${pathname === '/hr/me' ? 'rgba(167,139,250,0.35)' : 'rgba(255,255,255,0.08)'}`,
+              color: pathname === '/hr/me' ? 'var(--sb-active-text)' : 'rgba(255,255,255,0.65)',
+              background: pathname === '/hr/me' ? 'var(--sb-active-bg)' : 'transparent',
+              border: `1px solid ${pathname === '/hr/me' ? 'var(--sb-active-line)' : 'rgba(255,255,255,0.08)'}`,
               marginBottom: '6px',
             }}
-            onMouseEnter={e => { if (pathname !== '/hr/me') { const el = e.currentTarget as HTMLElement; el.style.color = '#c4b5fd'; el.style.background = 'rgba(139,92,246,0.1)'; } }}
+            onMouseEnter={e => { if (pathname !== '/hr/me') { const el = e.currentTarget as HTMLElement; el.style.color = 'var(--sb-active-text)'; el.style.background = 'var(--sb-active-bg)'; } }}
             onMouseLeave={e => { if (pathname !== '/hr/me') { const el = e.currentTarget as HTMLElement; el.style.color = 'rgba(255,255,255,0.65)'; el.style.background = 'transparent'; } }}
           >
             <i className="fa-solid fa-id-card" style={{ fontSize: '11px', flexShrink: 0 }} />
@@ -485,8 +552,8 @@ function IconRail({ items, logout }: { items: NavItem[]; logout: () => void }) {
       }}>
         <div style={{
           width: '34px', height: '34px', borderRadius: '10px',
-          background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-          boxShadow: '0 0 12px rgba(139,92,246,0.4)',
+          background: 'var(--sb-logo-grad)',
+          boxShadow: '0 0 12px var(--sb-glow)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <i className="fa fa-bolt" style={{ color: 'white', fontSize: '12px' }} />
@@ -574,7 +641,7 @@ function IconRail({ items, logout }: { items: NavItem[]; logout: () => void }) {
           title={`${user?.full_name || user?.username} · ${user?.role}`}
           style={{
             width: '34px', height: '34px', borderRadius: '9px',
-            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+            background: 'var(--sb-logo-grad)',
             boxShadow: `0 0 8px ${ROLE_COLOR[role]}55`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '13px', fontWeight: 900, color: 'white',
@@ -609,14 +676,20 @@ export function Sidebar({ collapsed = false }: { collapsed?: boolean }) {
 
   // Module gating: items with `module` declared only appear when the org has
   // that module enabled. Items without `module` are always shown.
-  const { enabledModules, loaded, load } = useEnabledModulesStore()
+  const { enabledModules, preset, loaded, load } = useEnabledModulesStore()
   useEffect(() => {
     if (isAuthenticated && !loaded) load()
   }, [isAuthenticated, loaded, load])
 
+  // Fail-open: enabledModules is empty only while context hasn't loaded (or the
+  // fetch failed). In that state we skip module gating and show every allowed
+  // item rather than lock the user out. On success the backend always returns
+  // at least ['core'], so a non-empty list means the preset is authoritative.
+  const isGastro = !!preset && GASTRO_PRESETS.has(preset)
   const items = ALL_NAV
     .filter((n) => allowed.includes(n.url))
-    .filter((n) => !n.module || enabledModules.includes(n.module))
+    .filter((n) => !n.module || enabledModules.length === 0 || enabledModules.includes(n.module))
+    .filter((n) => !(n.hideForGastro && isGastro))
     .sort((a, b) => a.sort - b.sort)
 
   const handleLogout = async () => {

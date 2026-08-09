@@ -88,6 +88,9 @@ def run_migrations():
         ("organization", "slug", "ALTER TABLE organization ADD COLUMN slug VARCHAR(64);"),
         # Preset deprecation 2026-06-09 — hide legacy presets from selectors
         ("industry_presets", "is_deprecated", "ALTER TABLE industry_presets ADD COLUMN is_deprecated BOOLEAN NOT NULL DEFAULT FALSE;"),
+        # Gastro 2026-07-09 — propina cobrada y atribución al mesero (ventas por mesero)
+        ("sales_documents", "tip_amount",     "ALTER TABLE sales_documents ADD COLUMN tip_amount NUMERIC(10,2) DEFAULT 0;"),
+        ("sales_documents", "server_user_id", "ALTER TABLE sales_documents ADD COLUMN server_user_id INTEGER REFERENCES users(id);"),
     ]
 
     # Track 1 — Audit + cleanup de Payment huérfanos antes de NOT NULL.

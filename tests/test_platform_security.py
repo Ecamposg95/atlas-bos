@@ -41,13 +41,25 @@ class TestPlatformSecurity:
         assert resp.status_code == 400, f"Should block delete, got {resp.status_code}"
         assert "sucursal" in resp.json().get("detail", "").lower()
 
-    def test_branch_delete_blocked_with_users(
+    def test_branch_delete_detaches_users_not_cascade_deletes(
         self, client, auth_superadmin, db, org, branch_a, cajero_a
     ):
-        """Cannot delete a branch that has users assigned."""
+        """Deleting a branch with users must DETACH them (branch_id=None),
+        never cascade-delete the user rows. Blocking is reserved for
+        destructive data (sales/cash sessions), which is covered separately.
+        """
+        from app.models.users import User
+
+        user_id = cajero_a.id
         resp = client.delete(
             f"/api/platform/branches/{branch_a.id}",
             headers=auth_superadmin,
         )
-        assert resp.status_code == 400, f"Should block delete, got {resp.status_code}"
-        assert "usuario" in resp.json().get("detail", "").lower()
+        assert resp.status_code == 200, f"Delete should succeed, got {resp.status_code}: {resp.text}"
+        assert resp.json().get("detached_users", 0) >= 1
+
+        # The user must still exist, just detached from the deleted branch.
+        db.expire_all()
+        survivor = db.query(User).filter(User.id == user_id).first()
+        assert survivor is not None, "User must NOT be cascade-deleted with the branch"
+        assert survivor.branch_id is None

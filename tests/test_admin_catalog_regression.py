@@ -75,17 +75,23 @@ def foreign_org_setup(db):
 
 # ── DELETE cascade & RBAC — PR #43 ────────────────────────────────────────────
 class TestDeleteProductCascade:
-    def test_cajero_cannot_delete_product(
-        self, client, products_setup, cajero_a, auth_cajero_a, org,
+    def test_cajero_can_soft_delete_product(
+        self, client, db, products_setup, cajero_a, auth_cajero_a, org,
     ):
-        """Regression: pre-PR #43 a CAJERO could physically delete via the
-        duplicate non-RBAC handler. Now must be 403."""
+        """PR #43 removed the duplicate non-RBAC handler that let a CAJERO
+        *physically* delete a product. Track 3 then made CAJERO an advanced
+        catalog role: it may now *soft*-delete (archive) a product visible in
+        its branch through the single RBAC + tenancy-guarded handler."""
         product, _ = products_setup["product_a"]
         r = client.delete(
             f"/api/products/{product.id}",
             headers=_with_org(auth_cajero_a, org),
         )
-        assert r.status_code == 403
+        assert r.status_code == 200, r.text
+        db.expire_all()
+        p = db.query(Product).filter(Product.id == product.id).first()
+        assert p.is_active is False
+        assert p.deleted_at is not None
 
     def test_admin_delete_cascades_to_pbs_and_stock(
         self, client, db, products_setup, admin_user, auth_admin, org,
@@ -295,16 +301,25 @@ class TestApprovalStatusExplicit:
         assert prod.approval_status == "APPROVED"
         assert prod.created_by_user_id == admin_user.id
 
-    def test_cajero_create_is_pending(
+    def test_cajero_create_is_approved(
         self, client, db, catalog_module_enabled,
         cajero_a, auth_cajero_a, org,
     ):
+        # D4: a non-admin creator (CAJERO/GERENTE) must supply department_id
+        # and brand_id, else the endpoint answers 422.
+        from app.models.products import Department, Brand
+        dept = Department(name="Abarrotes", organization_id=org.id)
+        brand = Brand(name="Marca X", organization_id=org.id)
+        db.add(dept); db.add(brand); db.flush()
+
         r = client.post(
             "/api/products/",
             json={
                 "name": "Cajero Product",
                 "sku": "CAJ-P-1",
                 "price": 50, "cost": 20,
+                "department_id": dept.id,
+                "brand_id": brand.id,
                 "initial_stock": 1,
             },
             headers=_with_org(auth_cajero_a, org),
@@ -314,5 +329,8 @@ class TestApprovalStatusExplicit:
             ProductVariant.sku == "CAJ-P-1",
         ).join(ProductVariant).first()
         assert prod is not None
-        assert prod.approval_status == "PENDING"
+        # Track 3 / PR #42 revision: products are created APPROVED regardless of
+        # role — CAJERO/GERENTE see their product live immediately; the approval
+        # gate is intentionally out of scope (see create_product docstring).
+        assert prod.approval_status == "APPROVED"
         assert prod.created_by_user_id == cajero_a.id
