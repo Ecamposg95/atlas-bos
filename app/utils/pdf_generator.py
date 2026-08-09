@@ -132,7 +132,7 @@ def generate_quote_pdf(quote):
         "4. Tiempos de entrega sujetos a disponibilidad de stock."
     )
 
-    return pdf.output(dest='S').encode('latin-1')
+    return bytes(pdf.output())
 
 def generate_cash_cut_pdf(audit_data):
     """
@@ -341,119 +341,4 @@ def generate_cash_cut_pdf(audit_data):
     pdf.set_x(20)
     pdf.cell(65, 5, session['user_name'].upper(), 0, 0, 'C')
 
-    return pdf.output(dest='S').encode('latin-1')
-
-    return pdf.output(dest='S').encode('latin-1')
-
-def generate_account_statement_pdf(customer, entries, start_date=None, end_date=None, previous_balance=None):
-    pdf = PDFQuote()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-
-    # Header de Estado de Cuenta
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "ESTADO DE CUENTA", 0, 1, 'R')
-    pdf.set_font("Arial", "", 10)
-    
-    period_str = f"Periodo: {start_date or 'Inicio'} al {end_date or 'Presente'}"
-    pdf.cell(0, 5, period_str, 0, 1, 'R')
-    pdf.cell(0, 5, f"Fecha de emisión: {datetime.now().strftime('%d/%m/%Y %H:%M')}", 0, 1, 'R')
-    pdf.ln(5)
-
-    # Info Cliente
-    pdf.set_fill_color(240, 245, 250)
-    pdf.rect(10, pdf.get_y(), 190, 25, 'F')
-    pdf.set_xy(15, pdf.get_y() + 5)
-    
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(100, 5, customer.name.upper(), 0, 1)
-    pdf.set_font("Arial", "", 9)
-    pdf.set_x(15)
-    pdf.cell(100, 5, f"RFC: {customer.tax_id or 'N/A'}", 0, 1)
-    pdf.set_x(15)
-    pdf.cell(100, 5, f"Dirección: {customer.address[:80] if customer.address else 'N/A'}", 0, 1)
-    
-    pdf.ln(20)
-
-    # Resumen Financiero
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(100, 10, "DETALLE DE MOVIMIENTOS", 0, 1)
-
-    # Table Header
-    pdf.set_fill_color(50, 60, 70)
-    pdf.set_text_color(255, 255, 255)
-    pdf.cell(30, 8, "Fecha", 1, 0, 'C', True)
-    pdf.cell(90, 8, "Descripción / Concepto", 1, 0, 'L', True)
-    pdf.cell(35, 8, "Cargo", 1, 0, 'R', True)
-    pdf.cell(35, 8, "Abono", 1, 1, 'R', True)
-
-    # Body
-    pdf.set_text_color(0, 0, 0)
-    pdf.set_font("Arial", "", 8)
-    
-    total_cargos = 0
-    total_abonos = 0
-    
-    # 1. Row Saldo Anterior
-    if previous_balance is not None:
-        bal = previous_balance
-        is_charge = bal > 0
-        charge_val = bal if is_charge else 0
-        pay_val = abs(bal) if not is_charge else 0
-        
-        pdf.set_fill_color(240, 240, 240)
-        pdf.cell(30, 8, (start_date or ""), 1, 0, 'C', True)
-        pdf.cell(90, 8, "SALDO ANTERIOR", 1, 0, 'L', True)
-        pdf.cell(35, 8, f"${charge_val:,.2f}" if charge_val != 0 else "-", 1, 0, 'R', True)
-        pdf.cell(35, 8, f"${pay_val:,.2f}" if pay_val != 0 else "-", 1, 1, 'R', True)
-    
-    # 2. Entries
-    for entry in entries:
-        is_charge = entry.amount > 0
-        charge = entry.amount if is_charge else 0
-        payment = abs(entry.amount) if not is_charge else 0
-        
-        total_cargos += charge
-        total_abonos += payment
-
-        pdf.cell(30, 6, entry.created_at.strftime('%d/%m/%Y'), 'B', 0, 'C')
-        desc = entry.description if entry.description else "Sin descripción"
-        pdf.cell(90, 6, desc[:55], 'B', 0, 'L')
-        pdf.cell(35, 6, f"${charge:,.2f}" if charge > 0 else "-", 'B', 0, 'R')
-        pdf.cell(35, 6, f"${payment:,.2f}" if payment > 0 else "-", 'B', 1, 'R')
-
-    pdf.ln(5)
-    
-    # Footer Totals
-    # Calcular Saldo Final del Periodo
-    # Saldo Final = Saldo Anterior + Cargos Periodo - Abonos Periodo
-    start_bal = previous_balance if previous_balance else 0
-    final_balance_period = start_balance_period = start_bal + total_cargos - total_abonos
-    
-    # Show Totals Box
-    x_start = 110
-    pdf.set_x(x_start)
-    
-    # Totals Table
-    pdf.set_font("Arial", "", 9)
-    pdf.cell(50, 6, "Saldo Anterior:", 0, 0, 'R')
-    pdf.cell(40, 6, f"${start_bal:,.2f}", 1, 1, 'R')
-    
-    pdf.set_x(x_start)
-    pdf.cell(50, 6, "(+) Cargos del Periodo:", 0, 0, 'R')
-    pdf.cell(40, 6, f"${total_cargos:,.2f}", 1, 1, 'R')
-    
-    pdf.set_x(x_start)
-    pdf.cell(50, 6, "(-) Abonos del Periodo:", 0, 0, 'R')
-    pdf.cell(40, 6, f"${total_abonos:,.2f}", 1, 1, 'R')
-    
-    pdf.set_x(x_start)
-    pdf.set_font("Arial", "B", 10)
-    pdf.set_fill_color(220, 230, 240)
-    pdf.cell(50, 8, "SALDO AL CORTE:", 0, 0, 'R', True)
-    
-    color = (200, 50, 50) if final_balance_period > 0 else (50, 150, 100)
-    pdf.set_text_color(*color)
-    pdf.cell(40, 8, f"${final_balance_period:,.2f}", 1, 1, 'R', True)
-
-    return pdf.output()
+    return bytes(pdf.output())
