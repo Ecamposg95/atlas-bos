@@ -46,7 +46,12 @@ const QUICK_ACCESS = [
 export function AtlasPOS() {
   const isBranch = useIsBranchUser()
   if (isBranch) return <Cockpit />
+  return <AtlasPOSHome />
+}
 
+// Separado para no romper Rules of Hooks: el return condicional de arriba
+// no puede convivir con hooks en el mismo componente.
+function AtlasPOSHome() {
   const { user, org } = useAuthStore()
   const [sales, setSales] = useState<SalesDocument[]>([])
   const [kpiTotal, setKpiTotal] = useState(0)

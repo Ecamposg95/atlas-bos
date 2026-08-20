@@ -81,8 +81,9 @@ export function QuoteMaker() {
       const res = await quotesApi.create({
         doc_type: 'QUOTE',
         customer_id: customer?.id ?? null,
-        items: cart.map((i) => ({ sku: i.sku, quantity: i.quantity })),
+        items: cart.map((i) => ({ sku: i.sku, quantity: i.quantity, discount: i.discount || 0 })),
         payments: [],
+        notes: notes.trim() || null,
       })
       alert(`Cotización creada: ${res.folio}`)
       navigate('/quotes')

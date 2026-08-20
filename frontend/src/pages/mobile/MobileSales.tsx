@@ -75,6 +75,7 @@ export function MobileSales() {
         customer_id: customer?.id ?? null,
         items: cart.map((i) => ({ sku: i.sku, quantity: i.quantity })),
         payments: [],
+        notes: notes.trim() || null,
       })
       setSuccess(res.folio)
       setCart([]); setCustomer(null); setNotes(''); setCustomerSearch('')

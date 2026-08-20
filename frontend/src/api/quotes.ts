@@ -37,8 +37,10 @@ export interface QuoteItem {
 export interface QuoteCreate {
   doc_type?: string
   customer_id?: number | null
-  items: { sku: string; quantity: number; unit_price?: number }[]
+  items: { sku: string; quantity: number; unit_price?: number; discount?: number }[]
   payments: { method: string; amount: number; reference?: string }[]
+  /** Observaciones del vendedor; se guardan en el documento. */
+  notes?: string | null
 }
 
 export const quotesApi = {

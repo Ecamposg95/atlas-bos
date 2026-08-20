@@ -357,7 +357,20 @@ export function PlatformFlags() {
     setPreview(null)
   }
 
+  const [killConfirmOpen, setKillConfirmOpen] = useState(false)
+
   const saveFlag = async () => {
+    if (!editing || !draft) return
+    // Encender el kill-switch apaga el flag para TODAS las orgs ignorando
+    // overrides: exige confirmación explícita antes de guardar.
+    if (draft.is_killed && !editing.is_killed) {
+      setKillConfirmOpen(true)
+      return
+    }
+    await doSaveFlag()
+  }
+
+  const doSaveFlag = async () => {
     if (!editing || !draft) return
     setSaving(true)
     try {
@@ -1122,6 +1135,21 @@ export function PlatformFlags() {
         onClose={() => !deleting && setToDelete(null)}
         onConfirm={confirmDelete}
         busy={deleting}
+      />
+
+      <ConfirmModal
+        open={killConfirmOpen}
+        title="Activar kill-switch global"
+        message={
+          'Vas a forzar ' + (editing?.key ?? '') +
+          ' en OFF para TODAS las organizaciones, ignorando sus overrides. ' +
+          'Los clientes que dependan de esta capacidad la perderán al instante.'
+        }
+        resourceName={editing?.key ?? ''}
+        destructive
+        onClose={() => !saving && setKillConfirmOpen(false)}
+        onConfirm={async () => { setKillConfirmOpen(false); await doSaveFlag() }}
+        busy={saving}
       />
     </>
   )

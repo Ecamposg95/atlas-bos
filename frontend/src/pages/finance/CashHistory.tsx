@@ -8,6 +8,14 @@ import type { CashSession } from '../../types/cash'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { formatCurrency } from '../../utils/currency'
+import { toast } from '../../store/toastStore'
+
+// Surface FastAPI `detail` so 409/422 messages reach the user.
+function serverDetail(err: unknown, fallback: string): string {
+  const detail = (err as any)?.response?.data?.detail
+  if (typeof detail === 'string' && detail.trim()) return detail
+  return fallback
+}
 
 function MovementModal({ type, onClose, onConfirm }: { type: 'IN' | 'OUT'; onClose: () => void; onConfirm: (amount: number, concept: string) => Promise<void> }) {
   const [amount, setAmount] = useState('')
@@ -100,6 +108,12 @@ function CloseModal({ summary, onClose, onConfirm }: { summary: CashSummary; onC
 
 export function CashHistory() {
   if (useIsBranchUser()) return <CashBranchView />
+  return <CashHistoryHQView />
+}
+
+// Separado para no romper Rules of Hooks: el return condicional de arriba
+// no puede convivir con hooks en el mismo componente.
+function CashHistoryHQView() {
   const printerName = usePOSStore(s => s.printerName)
   const [session, setSession] = useState<CashSession | null>(null)
   const [summary, setSummary] = useState<CashSummary | null>(null)
@@ -131,15 +145,29 @@ export function CashHistory() {
   useEffect(() => { load() }, [load])
 
   const handleMovement = async (amount: number, concept: string) => {
-    if (modal === 'IN') await cashApi.inflow(amount, concept)
-    else await cashApi.outflow(amount, concept)
+    try {
+      if (modal === 'IN') await cashApi.inflow(amount, concept)
+      else await cashApi.outflow(amount, concept)
+    } catch (err) {
+      // El modal queda abierto para reintentar; el movimiento NO se registró.
+      toast.error(serverDetail(err, 'No se pudo registrar el movimiento. Verifica tu conexión e intenta de nuevo.'))
+      return
+    }
     setModal(null)
+    toast.success(modal === 'IN' ? 'Entrada registrada' : 'Salida registrada')
     load()
   }
 
   const handleClose = async (closingAmount: number) => {
-    await cashApi.close(closingAmount)
+    try {
+      await cashApi.close(closingAmount)
+    } catch (err) {
+      // El turno sigue ABIERTO en el servidor; no se cierra la UI en falso.
+      toast.error(serverDetail(err, 'No se pudo cerrar el turno. El turno sigue abierto; intenta de nuevo.'))
+      return
+    }
     setModal(null)
+    toast.success('Turno cerrado')
     load()
   }
 

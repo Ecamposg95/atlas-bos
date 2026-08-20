@@ -160,7 +160,11 @@ export function POS() {
   }
 
   // ----- Sale submission -----
-  const submitSale = async (payments: { method: string; amount: number; reference?: string }[]) => {
+  const submitSale = async (
+    payments: { method: string; amount: number; reference?: string }[],
+    opts: { print?: boolean } = {}
+  ) => {
+    const shouldPrint = opts.print ?? true
     if (store.isProcessing || store.cart.length === 0) return
     store.setIsProcessing(true)
     const payload = {
@@ -191,8 +195,9 @@ export function POS() {
       const change = sale.change ?? 0
       const changeStr = change > 0 ? ` · Cambio: ${formatCurrency(change)}` : ''
       showToast(`Venta ${folio} registrada${changeStr}`)
-      // Auto-imprimir vía agente local si hay impresora configurada
-      if (saleId) printViaAgent(saleId)
+      // Auto-imprimir vía agente local si hay impresora configurada,
+      // salvo que el cajero haya apagado "Imprimir Ticket" en el modal.
+      if (saleId && shouldPrint) printViaAgent(saleId)
     } catch (err: unknown) {
       // Red caída: encolar en IndexedDB y liberar el carrito para seguir operando.
       if (isNetworkError(err)) {
@@ -292,8 +297,8 @@ export function POS() {
   }
 
   // ----- Payment handlers -----
-  const handleCashPay = async (received: number, _printTicket: boolean) => {
-    await submitSale([{ method: 'CASH', amount: received }])
+  const handleCashPay = async (received: number, printTicket: boolean) => {
+    await submitSale([{ method: 'CASH', amount: received }], { print: printTicket })
   }
 
   const handleCardPay = async (reference: string) => {
@@ -620,21 +625,33 @@ export function POS() {
         <CloseSessionModal
           onClose={() => setClosingSession(false)}
           onConfirm={async (amount, notes) => {
+            let closed
             try {
-              const closed = await cashApi.close(amount, notes || 'Cierre desde POS')
-              if (closed?.id) {
-                if (savedPrinterName) {
-                  showToast('Imprimiendo corte de caja...')
-                  printerApi.getCashCutBase64(closed.id)
-                    .then(b64 => b64 ? printerApi.printViaAgent(savedPrinterName, b64) : undefined)
-                    .catch(() => {
-                      showToast('Turno cerrado, pero no pude imprimir el corte. Verifica que el agente esté corriendo.', 'error')
-                    })
-                } else {
-                  showToast('Configura tu impresora local para imprimir el corte.', 'error')
-                }
+              closed = await cashApi.close(amount, notes || 'Cierre desde POS')
+            } catch (err: any) {
+              // El turno sigue ABIERTO en el servidor: no marcar la caja
+              // como cerrada en la UI ni cerrar el modal en falso.
+              const detail = err?.response?.data?.detail
+              showToast(
+                typeof detail === 'string' && detail.trim()
+                  ? detail
+                  : 'No se pudo cerrar el turno. Sigue abierto; verifica tu conexión e intenta de nuevo.',
+                'error'
+              )
+              return
+            }
+            if (closed?.id) {
+              if (savedPrinterName) {
+                showToast('Imprimiendo corte de caja...')
+                printerApi.getCashCutBase64(closed.id)
+                  .then(b64 => b64 ? printerApi.printViaAgent(savedPrinterName, b64) : undefined)
+                  .catch(() => {
+                    showToast('Turno cerrado, pero no pude imprimir el corte. Verifica que el agente esté corriendo.', 'error')
+                  })
+              } else {
+                showToast('Configura tu impresora local para imprimir el corte.', 'error')
               }
-            } catch {}
+            }
             store.setSession(null)
             setClosingSession(false)
           }}

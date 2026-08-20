@@ -41,6 +41,8 @@ class SaleCreate(BaseModel):
     # M-3: si la venta proviene de un ticket pausado, lo marcamos CONVERTED al
     # crear (o lo soft-deleteamos) para evitar doble cobro por reanudar dos veces.
     parked_ticket_id: Optional[str] = None
+    # Notas libres del documento (cotizaciones: observaciones del vendedor).
+    notes: Optional[str] = None
 
 # --- Models for Reading (History) ---
 
