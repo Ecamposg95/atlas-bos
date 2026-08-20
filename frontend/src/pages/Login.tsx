@@ -136,11 +136,17 @@ export function LoginPage() {
 
   return (
     <div className={sceneClass} onClick={handleSceneClick}>
+      {/* Auroras de fondo — deriva lenta detrás de todo */}
+      <div className="aurora-field" aria-hidden="true">
+        <div className="aurora au-1" />
+        <div className="aurora au-2" />
+        <div className="aurora au-3" />
+      </div>
       <HairlineArc />
 
       <header className="scene-top">
         <div className="scene-brand">
-          <AtlasMark size={26} color="#101022" accent="#3F3FD6" />
+          <AtlasMark size={26} color="#EDEDF8" accent="#6C6CFF" />
           <span className="scene-brand-name">Atlas One</span>
         </div>
         <span className="scene-tag">Suite comercial · v2.5</span>
