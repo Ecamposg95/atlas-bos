@@ -4,6 +4,7 @@ import { organizationApi } from '../../api/organization'
 import { productsApi } from '../../api/products'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
 import type { Branch } from '../../types/auth'
 import type { Product } from '../../types/products'
 
@@ -107,7 +108,7 @@ export function Logistics() {
       })
       setShowModal(false)
       load()
-    } catch { alert('Error al crear la solicitud de transferencia') } finally { setSaving(false) }
+    } catch { toast.error('Error al crear la solicitud de transferencia') } finally { setSaving(false) }
   }
 
   const branchName = (id: number) => branches.find((b) => b.id === id)?.name ?? `Sucursal ${id}`

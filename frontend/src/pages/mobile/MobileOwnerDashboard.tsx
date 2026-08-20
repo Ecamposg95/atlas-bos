@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { reportsApi, type DashboardData } from '../../api/reports'
 import { useAuthStore } from '../../store/authStore'
+import { ErrorState } from '../../components/ui/ErrorState'
 import { formatCurrency } from '../../utils/currency'
 import { todayStr, daysAgoStr } from '../../utils/dates'
 
@@ -9,24 +10,30 @@ export function MobileOwnerDashboard() {
   const org = useAuthStore((s) => s.org)
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState(false)
+  // Período realmente mostrado: hoy, o el fallback de últimos 7 días.
+  const [period, setPeriod] = useState<'today' | 'last7'>('today')
 
-  useEffect(() => {
+  const load = useCallback(() => {
     setLoading(true)
+    setLoadError(false)
+    setPeriod('today')
     reportsApi.dashboard({ start_date: todayStr(), end_date: todayStr() })
       .then((d) => setData(d))
-      .catch(() => setError('No pude cargar el resumen'))
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { load() }, [load])
 
   // Last-7-days fallback if today has no data yet.
   useEffect(() => {
     if (!data) return
     const k = data.kpis
     const empty = !k || (Number(k.sales ?? 0) === 0 && Number(k.orders ?? 0) === 0)
-    if (empty) {
+    if (empty && period === 'today') {
       reportsApi.dashboard({ start_date: daysAgoStr(7), end_date: todayStr() })
-        .then((d) => setData(d))
+        .then((d) => { setData(d); setPeriod('last7') })
         .catch(() => {})
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -39,10 +46,10 @@ export function MobileOwnerDashboard() {
       </div>
     )
   }
-  if (error) {
+  if (loadError) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-rose-500 px-6 text-center text-sm">
-        {error}
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <ErrorState message="No se pudo cargar el resumen del negocio. Verifica tu conexión." onRetry={load} />
       </div>
     )
   }
@@ -57,6 +64,22 @@ export function MobileOwnerDashboard() {
         <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">Mi negocio</p>
         <h1 className="text-2xl font-bold">{org?.name ?? 'Organización'}</h1>
         <p className="text-white/80 text-sm mt-1">{user?.full_name ?? user?.username}</p>
+      </div>
+
+      {/* Período mostrado — el fallback de 7 días NUNCA debe pasar por datos de hoy */}
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+          Resumen
+        </p>
+        <span
+          className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full ${
+            period === 'last7'
+              ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
+              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
+          }`}
+        >
+          {period === 'last7' ? 'Últimos 7 días' : 'Hoy'}
+        </span>
       </div>
 
       {/* KPI grid */}

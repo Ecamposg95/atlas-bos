@@ -1,23 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { reportsApi, type DailySummary } from '../../api/reports'
 import { Link } from 'react-router-dom'
 import { Spinner } from '../../components/ui/Spinner'
+import { ErrorState } from '../../components/ui/ErrorState'
 import { formatCurrency } from '../../utils/currency'
 import { todayStr } from '../../utils/dates'
 
 export function MobileDashboard() {
   const [summary, setSummary] = useState<DailySummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [now, setNow] = useState(new Date())
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true)
+    setLoadError(false)
     reportsApi.dailySummary(todayStr())
       .then(setSummary)
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    load()
     const tick = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(tick)
-  }, [])
+  }, [load])
 
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches'
@@ -37,7 +45,11 @@ export function MobileDashboard() {
         </div>
       </div>
 
-      {loading ? <Spinner text="Cargando..." /> : summary ? (
+      {loading ? <Spinner text="Cargando..." /> : loadError ? (
+        <div className="dax-card">
+          <ErrorState onRetry={load} compact />
+        </div>
+      ) : summary ? (
         <div className="space-y-3">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hoy</p>
           <div className="grid grid-cols-2 gap-3">

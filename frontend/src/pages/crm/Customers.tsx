@@ -6,8 +6,16 @@ import { Badge } from '../../components/ui/Badge'
 import { formatCurrency } from '../../utils/currency'
 import { toWaPhone } from '../../utils/phone'
 import { CustomerFormModal } from './CustomerFormModal'
+import { toast } from '../../store/toastStore'
+import { confirm as confirmDialog } from '../../components/ui/ConfirmDialog'
+import { ErrorState } from '../../components/ui/ErrorState'
 
 interface PayModal { id: number; name: string }
+
+const apiErrorMessage = (err: unknown, fallback: string) => {
+  const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+  return typeof detail === 'string' && detail.trim() ? detail : fallback
+}
 
 export function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([])
@@ -26,15 +34,17 @@ export function Customers() {
   const [deleting, setDeleting] = useState(false)
   const [sharing, setSharing] = useState(false)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const LIMIT = 50
 
   const load = useCallback(async (q: string, pg: number) => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = await customersApi.getAll({ search: q || undefined, skip: pg * LIMIT, limit: LIMIT })
       setCustomers(res.items ?? [])
       setTotal(res.total ?? 0)
-    } catch { setCustomers([]) } finally { setLoading(false) }
+    } catch { setLoadError(true) } finally { setLoading(false) }
   }, [])
 
   useEffect(() => {
@@ -66,7 +76,9 @@ export function Customers() {
       await customersApi.getStats().then(setStats).catch(() => {})
       load(search, page)
       if (selected?.id === payModal.id) openDetail({ ...selected })
-    } catch { alert('Error al registrar pago') } finally { setPayLoading(false) }
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'No se pudo registrar el pago'))
+    } finally { setPayLoading(false) }
   }
 
   const pages = Math.ceil(total / LIMIT)
@@ -84,7 +96,7 @@ export function Customers() {
     try {
       const blob = await customersApi.getStatementPdf(c.id)
       downloadBlob(blob, `EdoCuenta_${c.name.replace(/[^\w-]+/g, '_')}.pdf`)
-    } catch { alert('No se pudo generar el PDF') } finally { setSharing(false) }
+    } catch { toast.error('No se pudo generar el PDF del estado de cuenta') } finally { setSharing(false) }
   }
 
   const handleWhatsApp = async (c: Customer) => {
@@ -105,7 +117,7 @@ export function Customers() {
           window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, '_blank')
         }
       }
-    } catch { alert('No se pudo generar el PDF') } finally { setSharing(false) }
+    } catch { toast.error('No se pudo generar el PDF del estado de cuenta') } finally { setSharing(false) }
   }
 
   return (
@@ -148,7 +160,9 @@ export function Customers() {
 
       {/* Tabla */}
       <DaxCard padding={false}>
-        {loading ? <Spinner text="Cargando clientes..." /> : customers.length === 0 ? (
+        {loading ? <Spinner text="Cargando clientes..." /> : loadError ? (
+          <ErrorState onRetry={() => load(search, page)} />
+        ) : customers.length === 0 ? (
           <div className="p-12 text-center text-slate-600">Sin clientes encontrados</div>
         ) : (
           <div className="overflow-x-auto">
@@ -213,15 +227,21 @@ export function Customers() {
                 </button>
                 <button
                   onClick={async () => {
-                    if (!confirm(`¿Eliminar a ${selected.name}? El historial se conserva.`)) return
+                    const ok = await confirmDialog({
+                      title: `Eliminar a ${selected.name}`,
+                      message: 'El cliente se eliminará; su historial de movimientos se conserva.',
+                      variant: 'danger',
+                      confirmText: 'Eliminar',
+                    })
+                    if (!ok) return
                     setDeleting(true)
                     try {
                       await customersApi.delete(selected.id)
                       setSelected(null)
                       customersApi.getStats().then(setStats).catch(() => {})
                       load(search, page)
-                    } catch (e: any) {
-                      alert(e?.response?.data?.detail ?? 'No se pudo eliminar')
+                    } catch (e) {
+                      toast.error(apiErrorMessage(e, 'No se pudo eliminar el cliente'))
                     } finally { setDeleting(false) }
                   }}
                   className="text-slate-500 hover:text-red-400 disabled:opacity-40" title="Eliminar" disabled={deleting}>

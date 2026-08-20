@@ -21,24 +21,24 @@
     --atlas-warning:  #fbbf24;
     --atlas-danger:   #fb7185;
 
-    /* ── MODO CLARO (default) — paleta CÁLIDA Atlas One (prototipo) ── */
-    --dax-bg:          #f6f4ef;   /* lienzo cálido */
-    --dax-surface:     #f2efe7;   /* superficie cálida */
+    /* ── MODO CLARO (default) — papel cálido + tinta índigo (login v1) ── */
+    --dax-bg:          #f6f5f1;   /* papel */
+    --dax-surface:     #f1f0ea;
     --dax-card:        #ffffff;
     --dax-card-solid:  #ffffff;
     --dax-accent:      var(--p-accent);            /* sigue el vertical */
     --dax-accent-glow: var(--p-accent-soft);
-    --dax-violet-glow: rgba(160, 120, 80, 0.10);
-    --dax-border:      #e3dfd5;
-    --dax-border-dim:  #ece8df;
-    --dax-text:        #0b0b0b;   /* ink */
-    --dax-text-muted:  #6b6b66;
-    --dax-text-faint:  #9c9b95;
-    --dax-shadow:      0 1px 2px rgba(60,48,36,0.05), 0 6px 24px rgba(120,90,60,0.07);
-    --dax-shadow-lg:   0 10px 36px rgba(120,90,60,0.12);
-    --dax-modal-backdrop:  rgba(40, 32, 24, 0.42);
-    --dax-row-border:      rgba(120, 90, 60, 0.12);
-    --dax-elevated:        rgba(120, 90, 60, 0.05);
+    --dax-violet-glow: rgba(63, 63, 214, 0.08);
+    --dax-border:      #e2e1e6;   /* neutro con sesgo índigo */
+    --dax-border-dim:  #ebeaee;
+    --dax-text:        #101022;   /* tinta índigo */
+    --dax-text-muted:  #62627a;
+    --dax-text-faint:  #8f8fa3;
+    --dax-shadow:      0 1px 2px rgba(16,16,34,0.05), 0 6px 24px rgba(16,16,34,0.07);
+    --dax-shadow-lg:   0 10px 36px rgba(16,16,34,0.12);
+    --dax-modal-backdrop:  rgba(16, 16, 34, 0.45);
+    --dax-row-border:      rgba(16, 16, 34, 0.10);
+    --dax-elevated:        rgba(16, 16, 34, 0.04);
 
     /* ── PLATFORM (SUPERADMIN) — v2 mono-acento azul, dark profundo ── */
     --p-bg:        #0A0A0F;   /* página */
@@ -50,10 +50,11 @@
     --p-muted:     #6B6B78;
     --p-hint:      #44444E;
 
-    /* Accent ÚNICO — azul */
-    --p-accent:        #3B82F6;
-    --p-accent-hover:  #2563EB;
-    --p-accent-soft:   rgba(59,130,246,0.12);
+    /* Accent ÚNICO default — índigo de marca (login/atlastech).
+       Los presets por vertical lo sobreescriben más abajo. */
+    --p-accent:        #4F46E5;
+    --p-accent-hover:  #4338CA;
+    --p-accent-soft:   rgba(79,70,229,0.12);
 
     /* Semánticos (estado, NO decorativos) */
     --p-success:   #22C55E;
@@ -82,11 +83,11 @@
     --r-lg: 14px;
     --r-xl: 18px;
 
-    /* ── SIDEBAR (cálido oscuro — invariante; activo sigue el accent) ── */
-    --sb-bg:          #1a120b;
-    --sb-border:      rgba(255, 255, 255, 0.07);
-    --sb-text:        rgba(244, 233, 223, 0.82);
-    --sb-text-hover:  #fff7ef;
+    /* ── SIDEBAR (tinta índigo — invariante; activo sigue el accent) ── */
+    --sb-bg:          #101022;
+    --sb-border:      rgba(237, 237, 248, 0.10);
+    --sb-text:        rgba(237, 237, 248, 0.85);
+    --sb-text-hover:  #ffffff;
     --sb-hover-bg:    rgba(255, 255, 255, 0.06);
     --sb-active-bg:   color-mix(in srgb, var(--p-accent) 20%, transparent);
     --sb-active-text: color-mix(in srgb, var(--p-accent) 55%, #ffffff);
@@ -192,30 +193,31 @@
   }
   /* ATLAS_POS y CUSTOM mantienen el azul default. */
 
-  /* ── MODO OSCURO (override) ── */
+  /* ── MODO OSCURO (override) — void índigo (login v2) ── */
   .dark {
-    --dax-bg:          #050508;
-    --dax-surface:     #0c0f1a;
-    --dax-card:        rgba(15, 23, 42, 0.75);
-    --dax-card-solid:  #0f172a;
-    --dax-accent:      #818cf8;
-    --dax-accent-glow: rgba(99, 102, 241, 0.35);
-    --dax-violet-glow: rgba(139, 92, 246, 0.28);
-    --dax-border:      rgba(99, 102, 241, 0.22);
-    --dax-border-dim:  rgba(99, 102, 241, 0.12);
-    --dax-text:        #ffffff;
-    --dax-text-muted:  rgba(203, 213, 225, 0.90);
-    --dax-text-faint:  rgba(148, 163, 184, 0.70);
-    --dax-shadow:      0 4px 24px rgba(0,0,0,0.3);
-    --dax-shadow-lg:   0 8px 32px rgba(0,0,0,0.4);
-    --dax-modal-backdrop:  rgba(0, 0, 0, 0.72);
-    --dax-row-border:      rgba(51, 65, 85, 0.7);
-    --dax-elevated:        rgba(255, 255, 255, 0.04);
+    --dax-bg:          #0b0b22;
+    --dax-surface:     #10102a;
+    --dax-card:        rgba(255, 255, 255, 0.05);
+    --dax-card-solid:  #14142e;
+    /* Acento aclarado sobre fondo oscuro, siguiendo el vertical */
+    --dax-accent:      color-mix(in srgb, var(--p-accent) 62%, #ffffff);
+    --dax-accent-glow: color-mix(in srgb, var(--p-accent) 35%, transparent);
+    --dax-violet-glow: rgba(108, 108, 255, 0.22);
+    --dax-border:      rgba(237, 237, 248, 0.14);
+    --dax-border-dim:  rgba(237, 237, 248, 0.08);
+    --dax-text:        #ededf8;
+    --dax-text-muted:  #b9b9d0;
+    --dax-text-faint:  #8c8cab;
+    --dax-shadow:      0 4px 24px rgba(4,4,14,0.4);
+    --dax-shadow-lg:   0 8px 32px rgba(4,4,14,0.55);
+    --dax-modal-backdrop:  rgba(4, 4, 14, 0.72);
+    --dax-row-border:      rgba(237, 237, 248, 0.10);
+    --dax-elevated:        rgba(255, 255, 255, 0.05);
 
-    --sb-bg:          #1a120b;
-    --sb-border:      rgba(255, 255, 255, 0.07);
-    --sb-text:        rgba(244, 233, 223, 0.82);
-    --sb-text-hover:  #fff7ef;
+    --sb-bg:          #0e0e28;
+    --sb-border:      rgba(237, 237, 248, 0.10);
+    --sb-text:        rgba(237, 237, 248, 0.85);
+    --sb-text-hover:  #ffffff;
     --sb-hover-bg:    rgba(255, 255, 255, 0.06);
     --sb-active-bg:   color-mix(in srgb, var(--p-accent) 20%, transparent);
     --sb-active-text: color-mix(in srgb, var(--p-accent) 55%, #ffffff);

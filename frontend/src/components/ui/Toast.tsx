@@ -20,6 +20,9 @@ function ToastItemView({ toast }: { toast: ToastItem }) {
   const s = STYLES[toast.type]
   return (
     <div
+      // Los errores se anuncian de inmediato al lector de pantalla;
+      // el resto entra por el aria-live del contenedor.
+      role={toast.type === 'error' ? 'alert' : undefined}
       onClick={() => dismiss(toast.id)}
       style={{
         background: s.bg,
@@ -50,7 +53,7 @@ function ToastItemView({ toast }: { toast: ToastItem }) {
 export function Toaster() {
   const toasts = useToastStore(s => s.toasts)
   return (
-    <div style={{
+    <div role="status" aria-live="polite" style={{
       position: 'fixed', bottom: '1.5rem', right: '1.5rem',
       zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '0.5rem',
       alignItems: 'flex-end',

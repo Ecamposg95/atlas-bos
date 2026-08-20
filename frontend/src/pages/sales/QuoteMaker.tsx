@@ -6,6 +6,7 @@ import { quotesApi } from '../../api/quotes'
 import { DaxCard } from '../../components/ui/DaxCard'
 import type { Product } from '../../types/products'
 import { formatCurrency } from '../../utils/currency'
+import { toast } from '../../store/toastStore'
 
 interface CartItem {
   product_id: string; sku: string; name: string
@@ -85,9 +86,12 @@ export function QuoteMaker() {
         payments: [],
         notes: notes.trim() || null,
       })
-      alert(`Cotización creada: ${res.folio}`)
+      toast.success(`Cotización creada: ${res.folio}`)
       navigate('/quotes')
-    } catch { alert('Error al crear cotización') } finally { setSaving(false) }
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+      toast.error(typeof detail === 'string' && detail.trim() ? detail : 'No se pudo crear la cotización')
+    } finally { setSaving(false) }
   }
 
   return (

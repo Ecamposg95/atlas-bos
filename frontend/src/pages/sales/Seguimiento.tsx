@@ -6,18 +6,21 @@ import { Badge } from '../../components/ui/Badge'
 import type { SalesDocument } from '../../types/sales'
 import { saleLabel } from '../../types/sales'
 import { formatCurrency } from '../../utils/currency'
+import { ErrorState } from '../../components/ui/ErrorState'
 
 export function Seguimiento() {
   const [orders, setOrders] = useState<SalesDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<SalesDocument | null>(null)
+  const [loadError, setLoadError] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = await salesApi.list({ status: 'PENDING', limit: 100 })
       setOrders(res.items ?? [])
-    } catch { setOrders([]) } finally { setLoading(false) }
+    } catch { setLoadError(true) } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { load() }, [])
@@ -38,7 +41,9 @@ export function Seguimiento() {
       </div>
 
       <DaxCard padding={false}>
-        {loading ? <Spinner text="Cargando pedidos..." /> : orders.length === 0 ? (
+        {loading ? <Spinner text="Cargando pedidos..." /> : loadError ? (
+          <ErrorState onRetry={load} />
+        ) : orders.length === 0 ? (
           <div className="p-12 text-center">
             <i className="fa-solid fa-circle-check text-emerald-600 text-3xl mb-3 block" />
             <p className="text-slate-600">Sin pedidos abiertos</p>

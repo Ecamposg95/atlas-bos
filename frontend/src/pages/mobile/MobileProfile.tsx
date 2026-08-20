@@ -3,6 +3,7 @@ import { hrApi, type Employee, employeeFullName } from '../../api/hr'
 import { useAuthStore } from '../../store/authStore'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
 
 const EMPLOYEE_TYPE_LABEL: Record<string, string> = {
   FULL_TIME: 'Tiempo completo',
@@ -41,7 +42,10 @@ export function MobileProfile() {
       setEmployee(updated)
       setForm({ phone: updated.phone ?? '', email_personal: updated.email_personal ?? '' })
       setEditing(false)
-    } catch { alert('Error al guardar') } finally { setSaving(false) }
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail
+      toast.error(typeof detail === 'string' && detail.trim() ? detail : 'No se pudieron guardar los cambios del perfil')
+    } finally { setSaving(false) }
   }
 
   return (

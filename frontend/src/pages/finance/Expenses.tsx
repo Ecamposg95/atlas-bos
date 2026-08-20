@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { expensesApi, type Expense, type ExpenseStats, type ExpenseCreate } from '../../api/expenses'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
+import { confirm as confirmDialog } from '../../components/ui/ConfirmDialog'
 import { formatCurrency } from '../../utils/currency'
 import { todayStr, daysAgoStr } from '../../utils/dates'
 
@@ -44,16 +46,22 @@ export function Expenses() {
       await expensesApi.create(form)
       setModal(false); setForm(EMPTY_FORM)
       loadStats(); load(startDate, endDate, filterCat)
-    } catch { alert('Error al registrar gasto') } finally { setSaving(false) }
+    } catch { toast.error('Error al registrar el gasto') } finally { setSaving(false) }
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar este gasto?')) return
+  const handleDelete = async (expense: Expense) => {
+    const ok = await confirmDialog({
+      title: 'Eliminar gasto',
+      message: `¿Eliminar el gasto de ${formatCurrency(expense.amount)} (${expense.category})?`,
+      variant: 'danger',
+      confirmText: 'Eliminar',
+    })
+    if (!ok) return
     try {
-      await expensesApi.delete(id)
-      setExpenses((prev) => prev.filter((e) => e.id !== id))
+      await expensesApi.delete(expense.id)
+      setExpenses((prev) => prev.filter((e) => e.id !== expense.id))
       loadStats()
-    } catch { alert('Error al eliminar') }
+    } catch { toast.error('Error al eliminar el gasto') }
   }
 
   return (
@@ -156,7 +164,7 @@ export function Expenses() {
                     <td className="text-slate-500 text-xs">{e.user_name ?? '—'}</td>
                     <td className="text-right font-semibold text-red-400 tabular-nums">{formatCurrency(e.amount)}</td>
                     <td>
-                      <button onClick={() => handleDelete(e.id)} className="text-slate-600 hover:text-red-400 text-xs">
+                      <button onClick={() => handleDelete(e)} className="text-slate-600 hover:text-red-400 text-xs">
                         <i className="fa-solid fa-trash" />
                       </button>
                     </td>

@@ -4,6 +4,7 @@ import { inventoryApi } from '../../api/inventory'
 import { organizationApi, type Branch } from '../../api/organization'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
 import type { Product } from '../../types/products'
 import { useEffect } from 'react'
 import { formatCurrency } from '../../utils/currency'
@@ -59,7 +60,7 @@ export function HQInventory() {
       setAdjustModal(false); setAdjQty(''); setAdjReason(''); setAdjBranch('')
       const data = await inventoryApi.getKardex(variantId(selected))
       setKardex(data)
-    } catch { alert('Error al ajustar') } finally { setAdjSaving(false) }
+    } catch { toast.error('Error al ajustar el inventario') } finally { setAdjSaving(false) }
   }
 
   const movementColor = (type: string) =>

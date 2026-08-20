@@ -4,6 +4,7 @@ import { inventoryApi } from '../../api/inventory'
 import { organizationApi, type Branch } from '../../api/organization'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
 import type { Product } from '../../types/products'
 import { formatCurrency } from '../../utils/currency'
 
@@ -53,7 +54,7 @@ export function Inventory() {
       })
       setModal(false); setAdjQty(''); setAdjReason(''); setAdjBranch('')
       setKardex(await inventoryApi.getKardex(variantId(selected)))
-    } catch { alert('Error al ajustar') } finally { setAdjSaving(false) }
+    } catch { toast.error('Error al ajustar el inventario') } finally { setAdjSaving(false) }
   }
 
   const movColor = (type: string) => type.includes('IN') || type === 'ADJUSTMENT_IN' ? 'text-emerald-400' : 'text-red-400'

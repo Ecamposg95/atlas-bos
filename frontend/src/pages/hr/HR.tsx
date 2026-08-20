@@ -4,6 +4,7 @@ import { organizationApi, type Branch } from '../../api/organization'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { Badge } from '../../components/ui/Badge'
+import { toast } from '../../store/toastStore'
 
 const EMPLOYEE_TYPES: Employee['employee_type'][] = ['FULL_TIME', 'PART_TIME', 'CONTRACTOR', 'INTERN']
 const typeLabel = (t: string) =>
@@ -72,7 +73,7 @@ export function HR() {
       if (modal === 'create') await hrApi.create(payload)
       else if (editing) await hrApi.update(editing.id, payload)
       setModal(null); load()
-    } catch { alert('Error al guardar') } finally { setSaving(false) }
+    } catch { toast.error('Error al guardar el empleado') } finally { setSaving(false) }
   }
 
   const f = (field: keyof EmpForm, val: string) => setForm((prev) => ({ ...prev, [field]: val }))
