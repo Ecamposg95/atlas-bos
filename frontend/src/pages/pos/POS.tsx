@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState, useCallback, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { cashApi } from '../../api/cash'
 import { salesApi, parkedTicketsApi } from '../../api/sales'
 import type { CartItem } from '../../types/sales'
@@ -348,6 +348,20 @@ export function POS() {
       showToast(detail ?? 'Error al reanudar el ticket', 'error')
     }
   }, [store])
+
+  // Mesa → cobro: el plano de mesas navega a /pos?parked=<ticket> y aquí se
+  // carga la cuenta directo al carrito (una sola vez; luego se limpia la URL).
+  const [searchParams, setSearchParams] = useSearchParams()
+  const parkedParamHandled = useRef(false)
+  useEffect(() => {
+    const pid = searchParams.get('parked')
+    if (!pid || parkedParamHandled.current) return
+    parkedParamHandled.current = true
+    loadOrder(pid)
+    const next = new URLSearchParams(searchParams)
+    next.delete('parked')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams, loadOrder])
 
   // ----- No session / loading -----
   if (checkingSession) {

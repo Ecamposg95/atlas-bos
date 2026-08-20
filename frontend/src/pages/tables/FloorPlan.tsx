@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { tablesApi } from '../../api/tables'
 import { parkedTicketsApi } from '../../api/sales'
 import { kitchenApi } from '../../api/kitchen'
@@ -8,6 +9,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import { TableFormModal } from '../../components/tables/TableFormModal'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
+import { confirm as confirmDialog } from '../../components/ui/ConfirmDialog'
 import { formatCurrency } from '../../utils/currency'
 import { ticketTotal, minutesOpen, cartItemCount } from './tableUtils'
 import type { DiningArea, DiningTable } from '../../types/tables'
@@ -20,6 +22,7 @@ interface Enriched {
 }
 
 export function FloorPlan() {
+  const nav = useNavigate()
   const user = useAuthStore((s) => s.user)
   const branchId = user?.branch_id ?? undefined
 
@@ -37,8 +40,14 @@ export function FloorPlan() {
     return () => clearInterval(t)
   }, [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const loadingRef = useRef(false)
+
+  // `background: true` = refresco silencioso del polling — sin spinner que
+  // reemplace todo el salón, y sin solaparse si el anterior sigue corriendo.
+  const load = useCallback(async (background = false) => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+    if (!background) setLoading(true)
     try {
       const [a, t] = await Promise.all([
         tablesApi.listAreas(branchId),
@@ -72,13 +81,23 @@ export function FloorPlan() {
       )
       setMeta(enriched)
     } catch (e: any) {
-      toast.error(e?.response?.data?.detail ?? 'Error al cargar el salón')
+      if (!background) toast.error(e?.response?.data?.detail ?? 'Error al cargar el salón')
     } finally {
-      setLoading(false)
+      loadingRef.current = false
+      if (!background) setLoading(false)
     }
   }, [branchId])
 
   useEffect(() => { load() }, [load])
+
+  // Auto-refresh: la tablet de piso debe reflejar lo que hacen los meseros
+  // desde el teléfono sin tocar nada. Pausa cuando la pestaña está oculta.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!document.hidden) load(true)
+    }, 15000)
+    return () => clearInterval(id)
+  }, [load])
 
   const requireBranch = (): number | null => {
     if (!branchId) { toast.warning('Tu usuario no tiene sucursal asignada para gestionar mesas.'); return null }
@@ -103,6 +122,25 @@ export function FloorPlan() {
     try { await fn(); await load() }
     catch (e: any) { toast.error(e?.response?.data?.detail ?? 'Acción no permitida') }
     finally { setBusy(null) }
+  }
+
+  // Liberar una mesa con cuenta abierta merece confirmación: un toque
+  // accidental en tablet soltaba la mesa con consumo activo.
+  const handleFree = async (t: DiningTable) => {
+    const m = meta[t.id]
+    const hasAccount = Boolean(t.current_ticket_id) || (m?.total ?? 0) > 0
+    if (hasAccount) {
+      const ok = await confirmDialog({
+        title: `Liberar mesa ${t.code}`,
+        message: m?.total
+          ? `La mesa tiene una cuenta abierta por ${formatCurrency(m.total)}. Al liberarla, el ticket queda pausado sin mesa.`
+          : 'La mesa tiene una cuenta abierta. Al liberarla, el ticket queda pausado sin mesa.',
+        variant: 'warning',
+        confirmText: 'Liberar mesa',
+      })
+      if (!ok) return
+    }
+    await act(t.id, () => tablesApi.free(t.id))
   }
 
   const tablesByArea = (areaId: number | null) => tables.filter((t) => t.area_id === areaId)
@@ -191,13 +229,21 @@ export function FloorPlan() {
                       ) : null}
                     </div>
                   )}
-                  <div className="mt-2 flex gap-1">
+                  <div className="mt-2 flex gap-1 flex-wrap">
                     {t.status === 'AVAILABLE' ? (
                       <Button variant="primary" size="sm" loading={busy === t.id}
                         onClick={() => act(t.id, () => tablesApi.open(t.id))}>Abrir</Button>
                     ) : (
-                      <Button variant="secondary" size="sm" loading={busy === t.id}
-                        onClick={() => act(t.id, () => tablesApi.free(t.id))}>Liberar</Button>
+                      <>
+                        <Button variant="primary" size="sm" icon="fa-utensils"
+                          onClick={() => nav(`/mobile/comanda/${t.id}`)}>Comanda</Button>
+                        {t.current_ticket_id && (
+                          <Button variant="secondary" size="sm" icon="fa-cash-register"
+                            onClick={() => nav(`/pos?parked=${t.current_ticket_id}`)}>Cobrar</Button>
+                        )}
+                        <Button variant="ghost" size="sm" loading={busy === t.id}
+                          onClick={() => handleFree(t)}>Liberar</Button>
+                      </>
                     )}
                   </div>
                 </div>
