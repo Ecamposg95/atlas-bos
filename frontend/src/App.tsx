@@ -10,6 +10,7 @@ import { useIsMobile } from './hooks/useIsMobile'
 const _savedTheme = localStorage.getItem('atlas_theme') ?? 'dark'
 document.documentElement.classList.add(_savedTheme)
 import { Layout } from './components/layout/Layout'
+import { MobileLayout } from './components/layout/MobileLayout'
 import { RequireRole } from './components/layout/RequireRole'
 import { LoginPage } from './pages/Login'
 import { NotFoundPage } from './pages/NotFound'
@@ -354,29 +355,45 @@ export default function App() {
           <Route path="ai"           element={<Suspense fallback={<PageLoader />}><AIComingSoon /></Suspense>} />
           <Route path="purchasing"   element={<Suspense fallback={<PageLoader />}><PurchasingComingSoon /></Suspense>} />
 
-          {/* Portal CLIENTE */}
-          <Route path="portal" element={<Suspense fallback={<PageLoader />}><Portal /></Suspense>} />
-
           {/* POS */}
           <Route path="pos"             element={<Suspense fallback={<PageLoader />}><POS /></Suspense>} />
           <Route path="printer-settings" element={<Suspense fallback={<PageLoader />}><PrinterSettings /></Suspense>} />
 
-          {/* Mobile */}
-          <Route path="mobile">
-            <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><MobileDashboard /></Suspense>} />
-            <Route path="query"     element={<Suspense fallback={<PageLoader />}><MobileQuery /></Suspense>} />
-            <Route path="sales"     element={<Suspense fallback={<PageLoader />}><MobileSales /></Suspense>} />
-            <Route path="profile"   element={<Suspense fallback={<PageLoader />}><MobileProfile /></Suspense>} />
-            <Route path="comanda"          element={<Suspense fallback={<PageLoader />}><ComandaTables /></Suspense>} />
-            <Route path="comanda/:tableId" element={<Suspense fallback={<PageLoader />}><ComandaOrder /></Suspense>} />
-            <Route path="owner"     element={
-              <RequireRole roles={['DUEÑO', 'ADMINISTRADOR']}>
-                <Suspense fallback={<PageLoader />}><MobileOwnerDashboard /></Suspense>
-              </RequireRole>
-            } />
-          </Route>
-
           <Route path="*" element={<NotFoundPage />} />
+        </Route>
+
+        {/* Mobile + Portal — shell móvil propio (bottom-nav, sin sidebar) */}
+        <Route
+          path="/mobile"
+          element={
+            <PrivateRoute>
+              <MobileLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route path="dashboard" element={<Suspense fallback={<PageLoader />}><MobileDashboard /></Suspense>} />
+          <Route path="query"     element={<Suspense fallback={<PageLoader />}><MobileQuery /></Suspense>} />
+          <Route path="sales"     element={<Suspense fallback={<PageLoader />}><MobileSales /></Suspense>} />
+          <Route path="profile"   element={<Suspense fallback={<PageLoader />}><MobileProfile /></Suspense>} />
+          <Route path="comanda"          element={<Suspense fallback={<PageLoader />}><ComandaTables /></Suspense>} />
+          <Route path="comanda/:tableId" element={<Suspense fallback={<PageLoader />}><ComandaOrder /></Suspense>} />
+          <Route path="owner"     element={
+            <RequireRole roles={['DUEÑO', 'ADMINISTRADOR']}>
+              <Suspense fallback={<PageLoader />}><MobileOwnerDashboard /></Suspense>
+            </RequireRole>
+          } />
+        </Route>
+
+        {/* Portal CLIENTE — mismo shell móvil */}
+        <Route
+          path="/portal"
+          element={
+            <PrivateRoute>
+              <MobileLayout />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<Suspense fallback={<PageLoader />}><Portal /></Suspense>} />
         </Route>
 
         {/* Platform — SUPERADMIN only, layout propio */}

@@ -118,7 +118,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Mi Expediente',     short: 'YO',  icon: 'fa-id-card',             url: '/hr/me',            group: 'pos',  sort: 8  },
   { label: 'Dashboard Móvil',   short: 'DSH', icon: 'fa-mobile-screen',       url: '/mobile/dashboard', group: 'mob',  sort: 0  },
   { label: 'Consulta Móvil',    short: 'QRY', icon: 'fa-mobile-alt',          url: '/mobile/query',     group: 'mob',  sort: 1  },
-  { label: 'Venta Móvil',       short: 'VTA', icon: 'fa-cart-plus',           url: '/mobile/sales',     group: 'mob',  sort: 2  },
+  { label: 'Cotización móvil',  short: 'COT', icon: 'fa-file-invoice',        url: '/mobile/sales',     group: 'mob',  sort: 2  },
   { label: 'Perfil Móvil',      short: 'PRF', icon: 'fa-user-circle',         url: '/mobile/profile',   group: 'mob',  sort: 3  },
 ]
 

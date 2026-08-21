@@ -104,7 +104,8 @@ export function MobileDashboard() {
             { label: 'Consulta', icon: 'fa-magnifying-glass', to: '/mobile/query', color: 'text-indigo-400' },
             { label: 'Cotización', icon: 'fa-file-invoice', to: '/mobile/sales', color: 'text-emerald-400' },
             { label: 'Mi perfil', icon: 'fa-user-circle', to: '/mobile/profile', color: 'text-slate-400' },
-            { label: 'Clientes', icon: 'fa-users', to: '/customers', color: 'text-amber-400' },
+            // '/customers' era una vista de escritorio fuera del allowlist del
+            // VENDEDOR; la consulta móvil cubre búsqueda de clientes/productos.
           ].map((link) => (
             <Link key={link.to} to={link.to} className="dax-card flex items-center gap-3 hover:border-indigo-500/40 transition-colors">
               <i className={`fa-solid ${link.icon} ${link.color} text-lg`} />

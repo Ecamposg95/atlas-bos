@@ -42,7 +42,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/printer-settings': 'Config. Impresora',
   '/mobile/dashboard': 'Dashboard Móvil',
   '/mobile/query':     'Consulta Móvil',
-  '/mobile/sales':     'Venta Móvil',
+  '/mobile/sales':     'Cotización móvil',
   '/mobile/profile':   'Perfil Móvil',
 }
 
