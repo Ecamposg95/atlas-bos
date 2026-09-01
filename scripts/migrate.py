@@ -22,6 +22,7 @@ Convenciones:
 from __future__ import annotations
 
 import argparse
+import os
 import importlib.util
 import subprocess
 import sys
@@ -43,6 +44,19 @@ BOOTSTRAP_SCRIPT = "migrate_add_schema_migrations.py"
 RUNNER_SCRIPT = "migrate.py"
 
 
+def _subprocess_env() -> dict:
+    """Entorno para los scripts hijos, con la raiz del repo en PYTHONPATH.
+
+    Python antepone el directorio del script (``scripts/``) a ``sys.path``, no
+    el directorio de trabajo, asi que los scripts que no se bootstrapean solos
+    fallaban con ``ModuleNotFoundError: No module named 'app'``.
+    """
+    env = dict(os.environ)
+    previo = env.get("PYTHONPATH")
+    env["PYTHONPATH"] = str(ROOT) if not previo else f"{ROOT}{os.pathsep}{previo}"
+    return env
+
+
 def ensure_bootstrap() -> None:
     """Aplica migrate_add_schema_migrations.py antes de cualquier otra cosa."""
     bootstrap_path = SCRIPTS_DIR / BOOTSTRAP_SCRIPT
@@ -53,6 +67,7 @@ def ensure_bootstrap() -> None:
     result = subprocess.run(
         [sys.executable, str(bootstrap_path)],
         cwd=ROOT,
+        env=_subprocess_env(),
         capture_output=True,
         text=True,
     )
@@ -95,6 +110,7 @@ def run_script(path: Path) -> None:
     result = subprocess.run(
         [sys.executable, str(path)],
         cwd=ROOT,
+        env=_subprocess_env(),
         capture_output=True,
         text=True,
     )
