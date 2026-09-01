@@ -8,6 +8,7 @@ Ejecuta la secuencia completa de inicialización:
 """
 import sys
 import os
+import secrets
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -301,6 +302,33 @@ def run_migrations():
 
     print("✅ Migrations complete")
 
+def should_seed_demo() -> bool:
+    """Si se siembran organizaciones demo en este arranque.
+
+    Por omision si, para no alterar el comportamiento historico. En una base
+    de produccion con un cliente real se apaga con ATLAS_SEED_DEMO=0: usuarios
+    demo con contrasena conocida no tienen nada que hacer junto a datos de un
+    negocio que factura.
+    """
+    valor = os.getenv("ATLAS_SEED_DEMO")
+    if valor is None:
+        return True
+    return valor.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def superadmin_password() -> str:
+    """Contrasena del superadministrador al crear una base desde cero.
+
+    Sale de SUPERADMIN_PASSWORD. Sin esa variable se genera una aleatoria y se
+    avisa por consola: el valor historico estaba escrito en este archivo y por
+    tanto publicado en el repositorio.
+    """
+    del_entorno = os.getenv("SUPERADMIN_PASSWORD")
+    if del_entorno:
+        return del_entorno
+    return secrets.token_urlsafe(24)
+
+
 def create_superadmin(db):
     """Create superadmin user if not exists"""
     print("\n👤 Creating Superadmin...")
@@ -311,9 +339,10 @@ def create_superadmin(db):
         print("⚠️  Superadmin already exists, skipping...")
         return existing
     
+    clave = superadmin_password()
     superadmin = User(
         username="superadmin",
-        password_hash=get_password_hash("784512"),
+        password_hash=get_password_hash(clave),
         role=Role.ADMINISTRADOR,
         platform_role=PlatformRole.SUPERADMIN,
         is_active=True
@@ -324,7 +353,10 @@ def create_superadmin(db):
     db.refresh(superadmin)
     
     print(f"✅ Superadmin created: {superadmin.username}")
-    print(f"   Password: 784512")
+    if os.getenv("SUPERADMIN_PASSWORD"):
+        print("   Password: la de SUPERADMIN_PASSWORD")
+    else:
+        print(f"   Password GENERADA (guardala, no se vuelve a mostrar): {clave}")
     return superadmin
 
 def create_rmazh_organization(db):
@@ -498,15 +530,18 @@ def main():
             # Creates 7 orgs (1 per Atlas One preset) with branch HQ, admin
             # user demo_<preset>/demo1234, applied preset, and sample products.
             # Wrapped in try/except so a partial failure does not crash boot.
-            print("\n🎭 Atlas One — seeding demo organizations...")
-            try:
-                from scripts.seed_demo_orgs import seed_all as seed_demo_orgs_all
-                seed_demo_orgs_all(db)
-                print("✅ Demo organizations seed complete")
-            except Exception as e:
-                print(f"⚠️ Demo orgs seed failed (non-fatal): {e}")
-                import traceback
-                traceback.print_exc()
+            if not should_seed_demo():
+                print("\n🎭 Atlas One — demo orgs OMITIDAS (ATLAS_SEED_DEMO apagado)")
+            else:
+                print("\n🎭 Atlas One — seeding demo organizations...")
+                try:
+                    from scripts.seed_demo_orgs import seed_all as seed_demo_orgs_all
+                    seed_demo_orgs_all(db)
+                    print("✅ Demo organizations seed complete")
+                except Exception as e:
+                    print(f"⚠️ Demo orgs seed failed (non-fatal): {e}")
+                    import traceback
+                    traceback.print_exc()
 
             print("\n" + "=" * 60)
             print("✅ INITIALIZATION COMPLETE!")
