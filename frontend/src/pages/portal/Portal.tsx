@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { portalApi } from '../../api/portal'
 import type { LinkedAccount, CustomerBalance, AccountTransaction, PortalQuote } from '../../api/portal'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { ErrorState } from '../../components/ui/ErrorState'
 import { formatCurrency } from '../../utils/currency'
 
 type Tab = 'balance' | 'transactions' | 'quotes'
@@ -40,26 +41,40 @@ export function Portal() {
   const [balance, setBalance] = useState<CustomerBalance | null>(null)
   const [transactions, setTransactions] = useState<AccountTransaction[]>([])
   const [quotes, setQuotes] = useState<PortalQuote[]>([])
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      const [accsRes, balRes, txsRes, qsRes] = await Promise.allSettled([
-        portalApi.getAccounts(),
-        portalApi.getBalance(),
-        portalApi.getTransactions(),
-        portalApi.getQuotes(),
-      ])
-      if (accsRes.status === 'fulfilled') setAccounts(Array.isArray(accsRes.value) ? accsRes.value : [])
-      if (balRes.status === 'fulfilled') setBalance(balRes.value)
-      if (txsRes.status === 'fulfilled') setTransactions(Array.isArray(txsRes.value) ? txsRes.value : [])
-      if (qsRes.status === 'fulfilled') setQuotes(Array.isArray(qsRes.value) ? qsRes.value : [])
-      setLoading(false)
-    }
-    load()
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(false)
+    const results = await Promise.allSettled([
+      portalApi.getAccounts(),
+      portalApi.getBalance(),
+      portalApi.getTransactions(),
+      portalApi.getQuotes(),
+    ])
+    const [accsRes, balRes, txsRes, qsRes] = results
+    if (accsRes.status === 'fulfilled') setAccounts(Array.isArray(accsRes.value) ? accsRes.value : [])
+    if (balRes.status === 'fulfilled') setBalance(balRes.value)
+    if (txsRes.status === 'fulfilled') setTransactions(Array.isArray(txsRes.value) ? txsRes.value : [])
+    if (qsRes.status === 'fulfilled') setQuotes(Array.isArray(qsRes.value) ? qsRes.value : [])
+    // Si TODAS las llamadas clave fallaron, no hay portal que mostrar: es un error de red.
+    if (results.every((r) => r.status === 'rejected')) setLoadError(true)
+    setLoading(false)
   }, [])
 
+  useEffect(() => { load() }, [load])
+
   if (loading) return <Spinner text="Cargando portal..." />
+
+  if (loadError) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <DaxCard>
+          <ErrorState message="No se pudo cargar tu portal. Verifica tu conexión." onRetry={load} />
+        </DaxCard>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-5 max-w-4xl mx-auto">

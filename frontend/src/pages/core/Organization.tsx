@@ -3,6 +3,8 @@ import { organizationApi, type Organization, type Branch, type BranchCreate } fr
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { Badge } from '../../components/ui/Badge'
+import { toast } from '../../store/toastStore'
+import { confirm as confirmDialog } from '../../components/ui/ConfirmDialog'
 import client from '../../api/client'
 
 const BRANCH_TYPES: Branch['branch_type'][] = ['HQ', 'STORE', 'WAREHOUSE', 'OFFICE']
@@ -40,7 +42,7 @@ export function Organization() {
     try {
       const updated = await organizationApi.updateOrg(orgForm)
       setOrg(updated); setOrgForm(updated)
-    } catch { alert('Error al guardar') } finally { setSaving(false) }
+    } catch { toast.error('Error al guardar la organización') } finally { setSaving(false) }
   }
 
   const openCreateBranch = () => { setBranchForm(EMPTY_BRANCH); setEditingBranch(null); setBranchModal('create') }
@@ -57,15 +59,21 @@ export function Organization() {
       else if (editingBranch) await organizationApi.updateBranch(editingBranch.id, payload)
       setBranchModal(null)
       organizationApi.getBranches().then(setBranches).catch(() => {})
-    } catch { alert('Error al guardar') } finally { setBranchSaving(false) }
+    } catch { toast.error('Error al guardar la sucursal') } finally { setBranchSaving(false) }
   }
 
-  const deleteBranch = async (id: number) => {
-    if (!confirm('¿Eliminar sucursal?')) return
+  const deleteBranch = async (branch: Branch) => {
+    const ok = await confirmDialog({
+      title: 'Eliminar sucursal',
+      message: `¿Eliminar la sucursal "${branch.name}"?`,
+      variant: 'danger',
+      confirmText: 'Eliminar',
+    })
+    if (!ok) return
     try {
-      await organizationApi.deleteBranch(id)
-      setBranches((prev) => prev.filter((b) => b.id !== id))
-    } catch { alert('Error al eliminar') }
+      await organizationApi.deleteBranch(branch.id)
+      setBranches((prev) => prev.filter((b) => b.id !== branch.id))
+    } catch { toast.error('Error al eliminar la sucursal') }
   }
 
   const uploadOrgLogo = async (file: File) => {
@@ -280,7 +288,7 @@ export function Organization() {
                             <i className="fa-solid fa-pen" />
                           </button>
                           {!b.is_headquarters && (
-                            <button onClick={() => deleteBranch(b.id)} className="text-slate-600 hover:text-red-400 text-xs ml-1">
+                            <button onClick={() => deleteBranch(b)} className="text-slate-600 hover:text-red-400 text-xs ml-1">
                               <i className="fa-solid fa-trash" />
                             </button>
                           )}

@@ -1053,7 +1053,12 @@ export function Products() {
   // Roles de sucursal (CAJERO/GERENTE) ven la vista simplificada con modales
   // y acciones por fila; HQ conserva la matriz multi-sucursal completa.
   if (useIsBranchUser()) return <ProductsBranchView />
+  return <ProductsHQView />
+}
 
+// Separado para no romper Rules of Hooks: el return condicional de arriba
+// no puede convivir con hooks en el mismo componente.
+function ProductsHQView() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()

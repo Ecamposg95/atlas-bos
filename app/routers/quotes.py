@@ -54,7 +54,9 @@ def create_quote(
             raise HTTPException(status_code=404, detail=f"SKU '{item.sku}' no encontrado")
 
         qty = Decimal(str(item.quantity))
-        line_total = variant.price * qty
+        # Descuento por línea (porcentaje 0-100) capturado por el vendedor.
+        discount_pct = Decimal(str(item.discount or 0))
+        line_total = (variant.price * qty * (Decimal("100") - discount_pct) / Decimal("100")).quantize(Decimal("0.01"))
         total_amount += line_total
 
         temp_lines.append({
@@ -62,7 +64,8 @@ def create_quote(
             "description": f"{variant.sku} - {variant.variant_name}",
             "quantity": item.quantity,
             "unit_price": variant.price,
-            "total_line": line_total
+            "total_line": line_total,
+            "discount_percent": discount_pct,
         })
 
     # Crear documento
@@ -79,6 +82,7 @@ def create_quote(
         seller_id=current_user.id,
         customer_id=quote_in.customer_id,
         total_amount=total_amount,
+        notes=quote_in.notes,
         series="Q" if target_type == DocumentType.QUOTE else "P", # Q=Quote, P=Pedido
         folio=next_folio # Usamos el mismo contador o distinto?
         # TODO: Pedidos deberían tener su propia serie. Por ahora compartimos folio o usamos Q/P prefix.
@@ -103,7 +107,8 @@ def create_quote(
             description=l["description"],
             quantity=l["quantity"],
             unit_price=l["unit_price"],
-            total_line=l["total_line"]
+            total_line=l["total_line"],
+            discount_percent=l["discount_percent"],
         )
         db.add(db_line)
 
@@ -371,7 +376,8 @@ def update_quote(
             quantity=item.quantity,
             unit_price=unit_price,
             total_line=line_total,
-            notes=item.notes
+            # SalesLineItem no tiene columna `notes`: pasarla como kwarg
+            # tronaba este endpoint con TypeError en cada edición.
         )
         db.add(db_line)
 

@@ -42,7 +42,7 @@ const ROUTE_TITLES: Record<string, string> = {
   '/printer-settings': 'Config. Impresora',
   '/mobile/dashboard': 'Dashboard Móvil',
   '/mobile/query':     'Consulta Móvil',
-  '/mobile/sales':     'Venta Móvil',
+  '/mobile/sales':     'Cotización móvil',
   '/mobile/profile':   'Perfil Móvil',
 }
 
@@ -92,7 +92,7 @@ export function Layout() {
           className="flex items-center justify-between px-5 flex-shrink-0"
           style={{
             height: '60px',
-            background: theme === 'dark' ? 'rgba(5,5,8,0.85)' : 'rgba(245,243,255,0.88)',
+            background: theme === 'dark' ? 'rgba(11,11,34,0.85)' : 'rgba(246,245,241,0.88)',
             borderBottom: '1px solid var(--dax-border-dim)',
             backdropFilter: 'blur(12px)',
           }}
@@ -130,8 +130,8 @@ export function Layout() {
                     fontSize: '0.55rem',
                     fontWeight: 800,
                     letterSpacing: '0.1em',
-                    background: 'rgba(99,102,241,0.2)',
-                    color: '#a5b4fc',
+                    background: 'var(--p-accent-soft)',
+                    color: 'var(--dax-accent)',
                     flexShrink: 0,
                   }}
                 >
@@ -164,13 +164,13 @@ export function Layout() {
                   <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--dax-text)', lineHeight: 1.2 }}>
                     {userName}
                   </span>
-                  <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(139,92,246,0.7)', lineHeight: 1.2 }}>
+                  <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--dax-text-faint)', lineHeight: 1.2 }}>
                     {ROLE_LABEL[role]}
                   </span>
                 </div>
                 <div
                   className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black text-white flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--p-accent), var(--p-accent-hover))' }}
                 >
                   {userInitial}
                 </div>
@@ -197,13 +197,13 @@ export function Layout() {
           className="flex items-center justify-center gap-6 flex-shrink-0 px-6"
           style={{
             height: '40px',
-            background: theme === 'dark' ? 'rgba(5,5,8,0.5)' : 'rgba(237,233,254,0.6)',
+            background: theme === 'dark' ? 'rgba(11,11,34,0.5)' : 'rgba(241,240,234,0.6)',
             borderTop: '1px solid var(--dax-border-dim)',
           }}
         >
-          <span style={{ fontSize: '0.68rem', color: 'rgba(100,116,139,0.55)', fontWeight: 500 }}>
+          <span style={{ fontSize: '0.68rem', color: 'var(--dax-text-faint)', fontWeight: 500 }}>
             Desarrollado con ❤️ por{' '}
-            <span style={{ color: '#818cf8', fontWeight: 800 }}>Atlas Tech</span>
+            <span style={{ color: 'var(--dax-accent)', fontWeight: 800 }}>Atlas Tech</span>
           </span>
           <FooterClock />
         </footer>

@@ -67,7 +67,13 @@ function renderMarkdown(src: string): string {
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) => {
+      // Solo esquemas seguros: un [x](javascript:...) ejecutaría XSS al
+      // inyectarse en href dentro de dangerouslySetInnerHTML.
+      const clean = String(url).trim()
+      if (!/^(https?:\/\/|mailto:)/i.test(clean)) return text
+      return '<a href="' + clean.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener noreferrer">' + text + '</a>'
+    })
 }
 
 // ── Form state ───────────────────────────────────────────────────────────────

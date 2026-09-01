@@ -66,30 +66,6 @@ function payColor(method: string): string {
   return PAYMENT_COLORS[method.toUpperCase()] ?? PAYMENT_COLORS.OTHER
 }
 
-/**
- * When the backend doesn't send `charts.heatmap` (older responses), synthesize
- * a best-effort grid from the hourly series by distributing the per-hour
- * total evenly across weekdays — marked as "approximated" via `isApprox`.
- *
- * TODO: remove fallback once all deployments pick up the new /dashboard
- * response with `charts.heatmap`.
- */
-function buildHeatmapFallback(hourly: { labels: string[]; data: number[] }): HeatmapCell[] {
-  if (!hourly?.labels?.length) return []
-  const cells: HeatmapCell[] = []
-  hourly.labels.forEach((lbl, i) => {
-    const hour = parseInt(lbl.split(':')[0], 10)
-    const total = hourly.data[i] ?? 0
-    // Seeded pseudo-random distribution so it's stable across re-renders.
-    for (let d = 0; d <= 6; d++) {
-      const seed = (hour * 7 + d) * 9301 + 49297
-      const r = ((seed % 233280) / 233280) * 0.6 + 0.4
-      cells.push({ day: d, hour, amount: (total / 7) * r, tickets: 0 })
-    }
-  })
-  return cells
-}
-
 export function HQReportsHub() {
   const { theme } = useTheme()
   const chartGrid = theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(99,102,241,0.08)'
@@ -185,12 +161,11 @@ export function HQReportsHub() {
     })
   }, [data])
 
-  const heatmapData = useMemo<HeatmapCell[]>(() => {
-    if (data?.charts?.heatmap && data.charts.heatmap.length > 0) return data.charts.heatmap
-    return buildHeatmapFallback(data?.charts?.hourly ?? { labels: [], data: [] })
-  }, [data])
-
-  const heatmapIsApprox = !data?.charts?.heatmap || data.charts.heatmap.length === 0
+  // Solo datos reales: si el backend no manda el heatmap, no lo inventamos.
+  const heatmapData = useMemo<HeatmapCell[]>(
+    () => data?.charts?.heatmap ?? [],
+    [data]
+  )
 
   const totalPayments = paymentMethods.reduce((s, m) => s + m.total, 0)
 
@@ -510,13 +485,14 @@ export function HQReportsHub() {
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                 <i className="fa-solid fa-table-cells text-emerald-400" /> Heatmap — Día × Hora
               </p>
-              {heatmapIsApprox && (
-                <span className="text-[9px] text-amber-400/80 italic">
-                  Aproximación (distribución horaria sin desglose por día)
-                </span>
-              )}
             </div>
-            <SalesHeatmap data={heatmapData} />
+            {heatmapData.length > 0 ? (
+              <SalesHeatmap data={heatmapData} />
+            ) : (
+              <p className="text-xs text-slate-500 py-6 text-center">
+                Sin desglose por día y hora para este período.
+              </p>
+            )}
           </DaxCard>
 
           {/* ═══════════════════════════════════════════════════════════════
@@ -580,7 +556,8 @@ export function HQReportsHub() {
                 {data.top_products.slice(0, 10).map((p, i) => {
                   const maxQty = Math.max(...(p.trend ?? [0]), p.qty)
                   const relPct = maxQty > 0 ? (p.qty / maxQty) * 100 : 0
-                  const trendArr = (p.trend && p.trend.length >= 2) ? p.trend : fakeTrend(p.qty, i)
+                  // Solo datos reales: sin `trend` del backend no hay sparkline.
+                  const trendArr = (p.trend && p.trend.length >= 2) ? p.trend : null
                   return (
                     <div
                       key={i}
@@ -588,9 +565,11 @@ export function HQReportsHub() {
                     >
                       <span className="text-[10px] font-mono font-bold text-slate-500 w-6 text-right">#{i + 1}</span>
                       <span className="text-xs font-bold text-slate-200 flex-1 truncate" title={p.name}>{p.name}</span>
-                      <div className="hidden sm:block">
-                        <Sparkline data={trendArr} />
-                      </div>
+                      {trendArr && (
+                        <div className="hidden sm:block">
+                          <Sparkline data={trendArr} />
+                        </div>
+                      )}
                       <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden hidden md:block">
                         <div
                           className="h-full bg-gradient-to-r from-orange-500 to-amber-400 rounded-full transition-all duration-500"
@@ -604,11 +583,6 @@ export function HQReportsHub() {
                   )
                 })}
               </div>
-              {data.top_products.some((p) => !p.trend || p.trend.length < 2) && (
-                <p className="mt-3 text-[9px] text-amber-400/70 italic">
-                  Algunos productos muestran tendencia simulada — el backend completará los datos reales por producto.
-                </p>
-              )}
             </DaxCard>
           )}
         </>
@@ -639,17 +613,3 @@ function MethodKPICard({ method }: { method: string }) {
   )
 }
 
-/**
- * Stable pseudo-random sparkline used only when the backend doesn't include
- * per-product `trend`. Seeded by position so the sequence is deterministic
- * across renders. Flagged visually in the caller with a disclaimer.
- */
-function fakeTrend(mean: number, seedBase: number, n = 14): number[] {
-  const out: number[] = []
-  for (let i = 0; i < n; i++) {
-    const seed = (seedBase * 31 + i * 17) * 9301 + 49297
-    const r = ((seed % 233280) / 233280)
-    out.push(Math.max(0, mean / n * (0.4 + r * 1.2)))
-  }
-  return out
-}

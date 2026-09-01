@@ -20,6 +20,12 @@ const CAN_APPROVE = ['ADMINISTRADOR', 'DUEÑO', 'GERENTE']
 export function Returns() {
   const role = useAuthStore((s) => s.user?.role)
   if (role === 'CAJERO') return <ReturnsBranchView />
+  return <ReturnsAdminView />
+}
+
+// Separado para no romper Rules of Hooks: el return condicional de arriba
+// no puede convivir con hooks en el mismo componente.
+function ReturnsAdminView() {
   const { user } = useAuthStore()
   const canApprove = CAN_APPROVE.includes(user?.role ?? '')
 

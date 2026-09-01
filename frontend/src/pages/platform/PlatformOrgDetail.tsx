@@ -482,7 +482,9 @@ export function PlatformOrgDetail() {
     if (!org) return
     setDeleting(true)
     try {
-      await platformApi.deleteOrg(id, true)
+      // Sin force: el backend valida dependencias (igual que el borrado
+      // desde la lista). El borrado en cascada no debe ser el default.
+      await platformApi.deleteOrg(id)
       toast.success(`Organización "${org.name}" eliminada`)
       navigate('/platform/organizations')
     } catch (err: any) {

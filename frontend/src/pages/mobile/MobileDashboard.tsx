@@ -1,23 +1,31 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { reportsApi, type DailySummary } from '../../api/reports'
 import { Link } from 'react-router-dom'
 import { Spinner } from '../../components/ui/Spinner'
+import { ErrorState } from '../../components/ui/ErrorState'
 import { formatCurrency } from '../../utils/currency'
 import { todayStr } from '../../utils/dates'
 
 export function MobileDashboard() {
   const [summary, setSummary] = useState<DailySummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [now, setNow] = useState(new Date())
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true)
+    setLoadError(false)
     reportsApi.dailySummary(todayStr())
       .then(setSummary)
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
+  }, [])
+
+  useEffect(() => {
+    load()
     const tick = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(tick)
-  }, [])
+  }, [load])
 
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches'
@@ -37,7 +45,11 @@ export function MobileDashboard() {
         </div>
       </div>
 
-      {loading ? <Spinner text="Cargando..." /> : summary ? (
+      {loading ? <Spinner text="Cargando..." /> : loadError ? (
+        <div className="dax-card">
+          <ErrorState onRetry={load} compact />
+        </div>
+      ) : summary ? (
         <div className="space-y-3">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hoy</p>
           <div className="grid grid-cols-2 gap-3">
@@ -92,7 +104,8 @@ export function MobileDashboard() {
             { label: 'Consulta', icon: 'fa-magnifying-glass', to: '/mobile/query', color: 'text-indigo-400' },
             { label: 'Cotización', icon: 'fa-file-invoice', to: '/mobile/sales', color: 'text-emerald-400' },
             { label: 'Mi perfil', icon: 'fa-user-circle', to: '/mobile/profile', color: 'text-slate-400' },
-            { label: 'Clientes', icon: 'fa-users', to: '/customers', color: 'text-amber-400' },
+            // '/customers' era una vista de escritorio fuera del allowlist del
+            // VENDEDOR; la consulta móvil cubre búsqueda de clientes/productos.
           ].map((link) => (
             <Link key={link.to} to={link.to} className="dax-card flex items-center gap-3 hover:border-indigo-500/40 transition-colors">
               <i className={`fa-solid ${link.icon} ${link.color} text-lg`} />

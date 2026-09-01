@@ -3,6 +3,7 @@ import { hrApi, type Employee, employeeFullName } from '../../api/hr'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -57,7 +58,7 @@ export function HRMe() {
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
     } catch {
-      setError('Error al guardar. Intenta de nuevo.')
+      toast.error('Error al guardar tus datos. Intenta de nuevo.')
     } finally {
       setSaving(false)
     }

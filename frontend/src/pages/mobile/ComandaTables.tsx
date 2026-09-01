@@ -17,16 +17,28 @@ export function ComandaTables() {
   const [loading, setLoading] = useState(true)
   const [scope, setScope] = useState<'mine' | 'all'>('mine')
   const [busy, setBusy] = useState<number | null>(null)
-  const now = Date.now()
+  const [now, setNow] = useState(() => Date.now())
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  // Minutos vivos: antes `now` se calculaba una vez y los tiempos se congelaban.
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(t)
+  }, [])
+
+  const load = useCallback(async (background = false) => {
+    if (!background) setLoading(true)
     try { setTables(await tablesApi.listTables(branchId)) }
-    catch (e: any) { toast.error(e?.response?.data?.detail ?? 'Error al cargar mesas') }
-    finally { setLoading(false) }
+    catch (e: any) { if (!background) toast.error(e?.response?.data?.detail ?? 'Error al cargar mesas') }
+    finally { if (!background) setLoading(false) }
   }, [branchId])
 
   useEffect(() => { load() }, [load])
+
+  // Auto-refresh silencioso: el mesero ve mesas abiertas/liberadas por otros.
+  useEffect(() => {
+    const id = setInterval(() => { if (!document.hidden) load(true) }, 20000)
+    return () => clearInterval(id)
+  }, [load])
 
   const visible = tables.filter((t) =>
     scope === 'all' ? true : (t.server_user_id === user?.id || t.status === 'AVAILABLE'))

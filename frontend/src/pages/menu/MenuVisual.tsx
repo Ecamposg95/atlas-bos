@@ -4,9 +4,11 @@ import { productsApi } from '../../api/products'
 import type { Product } from '../../types/products'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { formatCurrency } from '../../utils/currency'
 
-const money = (n: number) =>
-  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(n || 0)
+// Formateador compartido: centavos incluidos — redondear al peso mostraba
+// precios incorrectos frente al cliente ($25.50 aparecía como $26).
+const money = (n: number) => formatCurrency(n)
 
 /** Accent del preset actual (leído del CSS): violeta bar, marrón café, naranja restaurant… */
 function presetAccent(): string {

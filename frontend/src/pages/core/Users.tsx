@@ -4,6 +4,7 @@ import { organizationApi, type Branch } from '../../api/organization'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { Badge } from '../../components/ui/Badge'
+import { toast } from '../../store/toastStore'
 
 const ROLES = ['ADMINISTRADOR', 'DUEÑO', 'GERENTE', 'CAJERO', 'VENDEDOR', 'SOPORTE_OPERATIVO']
 const roleVariant = (r: string) =>
@@ -64,8 +65,8 @@ export function Users() {
       }
       setModal(null); load()
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Error al guardar'
-      alert(msg)
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      toast.error(typeof detail === 'string' && detail ? detail : 'Error al guardar el usuario')
     } finally { setSaving(false) }
   }
 
@@ -73,7 +74,7 @@ export function Users() {
     try {
       await usersApi.update(u.id, { is_active: !u.is_active })
       load()
-    } catch { alert('Error') }
+    } catch { toast.error('Error al cambiar el estado del usuario') }
   }
 
   const f = (field: keyof UserForm, val: string | boolean) => setForm((prev) => ({ ...prev, [field]: val }))

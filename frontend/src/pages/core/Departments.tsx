@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { productsApi } from '../../api/products'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
+import { confirm as confirmDialog } from '../../components/ui/ConfirmDialog'
 import type { Department } from '../../types/products'
 
 interface DeptForm { name: string }
@@ -36,13 +38,19 @@ export function Departments() {
       if (modal === 'create') await productsApi.createDepartment({ name: form.name })
       else if (editing) await productsApi.updateDepartment(editing.id, { name: form.name })
       setModal(null); load()
-    } catch { alert('Error al guardar') } finally { setSaving(false) }
+    } catch { toast.error('Error al guardar el departamento') } finally { setSaving(false) }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar departamento?')) return
-    try { await productsApi.deleteDepartment(id); load() }
-    catch { alert('Error al eliminar') }
+  const handleDelete = async (d: Department) => {
+    const ok = await confirmDialog({
+      title: 'Eliminar departamento',
+      message: `¿Eliminar el departamento "${d.name}"?`,
+      variant: 'danger',
+      confirmText: 'Eliminar',
+    })
+    if (!ok) return
+    try { await productsApi.deleteDepartment(d.id); load() }
+    catch { toast.error('Error al eliminar el departamento') }
   }
 
   return (
@@ -75,7 +83,7 @@ export function Departments() {
                     <td className="font-semibold text-white">{d.name}</td>
                     <td className="flex gap-2">
                       <button onClick={() => openEdit(d)} className="text-slate-500 hover:text-white text-xs"><i className="fa-solid fa-pen" /></button>
-                      <button onClick={() => handleDelete(d.id)} className="text-slate-600 hover:text-red-400 text-xs"><i className="fa-solid fa-trash" /></button>
+                      <button onClick={() => handleDelete(d)} className="text-slate-600 hover:text-red-400 text-xs"><i className="fa-solid fa-trash" /></button>
                     </td>
                   </tr>
                 ))}

@@ -124,8 +124,12 @@ export function SalesHistory() {
 
   const pages = Math.ceil(total / LIMIT)
 
+  // Estados reales del backend: PAID / CANCELLED / REFUNDED_* / PENDING / DRAFT
   const statusVariant = (s: string) =>
-    s === 'CLOSED' ? 'green' : s === 'CANCELLED' ? 'red' : s === 'OPEN' ? 'blue' : 'yellow'
+    s === 'PAID' ? 'green'
+    : s === 'CANCELLED' ? 'red'
+    : s.startsWith('REFUNDED') ? 'blue'
+    : 'yellow' // PENDING / DRAFT / desconocidos
 
   return (
     <div className="space-y-5">

@@ -35,8 +35,8 @@ export const kitchenApi = {
   feed: (params: { branch_id?: number; station_id?: number; status?: KdsStatus } = {}) =>
     client.get<KitchenTicket[]>('/kitchen/tickets', { params }).then((r) => r.data),
 
-  bumpTicket: (id: number) =>
-    client.post<KitchenTicket>(`/kitchen/tickets/${id}/bump`).then((r) => r.data),
+  bumpTicket: (id: number, stationId?: number) =>
+    client.post<KitchenTicket>(`/kitchen/tickets/${id}/bump`, null, { params: { station_id: stationId } }).then((r) => r.data),
 
   recallTicket: (id: number) =>
     client.post<KitchenTicket>(`/kitchen/tickets/${id}/recall`).then((r) => r.data),

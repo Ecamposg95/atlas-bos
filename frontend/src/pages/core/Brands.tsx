@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react'
 import { productsApi } from '../../api/products'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
+import { confirm as confirmDialog } from '../../components/ui/ConfirmDialog'
 import type { Brand } from '../../types/products'
 
 interface BrandForm { name: string; logo_url: string }
@@ -38,13 +40,19 @@ export function Brands() {
       if (modal === 'create') await productsApi.createBrand(payload)
       else if (editing) await productsApi.updateBrand(editing.id, payload)
       setModal(null); load()
-    } catch { alert('Error al guardar') } finally { setSaving(false) }
+    } catch { toast.error('Error al guardar la marca') } finally { setSaving(false) }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar marca?')) return
-    try { await productsApi.deleteBrand(id); load() }
-    catch { alert('Error al eliminar') }
+  const handleDelete = async (b: Brand) => {
+    const ok = await confirmDialog({
+      title: 'Eliminar marca',
+      message: `¿Eliminar la marca "${b.name}"?`,
+      variant: 'danger',
+      confirmText: 'Eliminar',
+    })
+    if (!ok) return
+    try { await productsApi.deleteBrand(b.id); load() }
+    catch { toast.error('Error al eliminar la marca') }
   }
 
   const filtered = brands.filter((b) =>
@@ -96,7 +104,7 @@ export function Brands() {
                     <td className="font-semibold text-white">{b.name}</td>
                     <td className="flex gap-2">
                       <button onClick={() => openEdit(b)} className="text-slate-500 hover:text-white text-xs"><i className="fa-solid fa-pen" /></button>
-                      <button onClick={() => handleDelete(b.id)} className="text-slate-600 hover:text-red-400 text-xs"><i className="fa-solid fa-trash" /></button>
+                      <button onClick={() => handleDelete(b)} className="text-slate-600 hover:text-red-400 text-xs"><i className="fa-solid fa-trash" /></button>
                     </td>
                   </tr>
                 ))}

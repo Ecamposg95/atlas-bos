@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import client from '../../api/client'
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
+import { toast } from '../../store/toastStore'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -85,7 +86,7 @@ export function Boxes() {
       setShowContainerModal(false)
       setContainerForm(emptyContainerForm())
       load()
-    } catch { alert('Error al guardar el contenedor') } finally { setSavingContainer(false) }
+    } catch { toast.error('Error al guardar el contenedor') } finally { setSavingContainer(false) }
   }
 
   // ── Box submit ──────────────────────────────────────────────────────────────
@@ -104,7 +105,7 @@ export function Boxes() {
       setShowBoxModal(false)
       setBoxForm(emptyBoxForm())
       load()
-    } catch { alert('Error al guardar el tipo de caja') } finally { setSavingBox(false) }
+    } catch { toast.error('Error al guardar el tipo de caja') } finally { setSavingBox(false) }
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────

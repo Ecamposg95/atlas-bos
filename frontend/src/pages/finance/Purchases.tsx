@@ -3,6 +3,7 @@ import { purchasesApi, type PurchaseOrder, type POStatus, type POStats, type POC
 import { DaxCard } from '../../components/ui/DaxCard'
 import { Spinner } from '../../components/ui/Spinner'
 import { Badge } from '../../components/ui/Badge'
+import { toast } from '../../store/toastStore'
 import { formatCurrency } from '../../utils/currency'
 
 const statusVariant = (s: POStatus) =>
@@ -55,7 +56,7 @@ export function Purchases() {
       setModal(false); setSupplier(''); setNotes(''); setPoItems([{ product_name: '', sku: '', qty_ordered: '1', unit_cost: '0' }])
       purchasesApi.getStats().then(setStats).catch(() => {})
       load(filterStatus)
-    } catch { alert('Error al crear OC') } finally { setSaving(false) }
+    } catch { toast.error('Error al crear la orden de compra') } finally { setSaving(false) }
   }
 
   const handleStatusChange = async (id: number, status: POStatus) => {
@@ -66,7 +67,7 @@ export function Purchases() {
         const updated = await purchasesApi.getById(id)
         setSelected(updated)
       }
-    } catch { alert('Error al cambiar estado') }
+    } catch { toast.error('Error al cambiar el estado de la orden') }
   }
 
   const handleReceive = async (po: PurchaseOrder) => {
@@ -75,7 +76,7 @@ export function Purchases() {
       await purchasesApi.receive(po.id, lines)
       load(filterStatus)
       setSelected(null)
-    } catch { alert('Error al recibir') }
+    } catch { toast.error('Error al recibir la orden de compra') }
   }
 
   const addItem = () => setPoItems((prev) => [...prev, { product_name: '', sku: '', qty_ordered: '1', unit_cost: '0' }])
