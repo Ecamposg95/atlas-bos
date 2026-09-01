@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, Date
 from decimal import Decimal
-from datetime import date, datetime, timezone
+from datetime import date, timedelta, datetime, timezone
 from typing import Optional
 from pydantic import BaseModel
 
@@ -47,7 +47,9 @@ def get_expense_stats(
 ):
     today = date.today()
     month_start = today.replace(day=1)
-    week_start = today.replace(day=today.day - today.weekday())
+    # `today.replace(day=...)` reventaba con ValueError los dias en que
+    # day <= weekday (p.ej. martes 1 de mes): restar los dias es lo correcto.
+    week_start = today - timedelta(days=today.weekday())
 
     base = db.query(Expense).filter(Expense.organization_id == org_id)
 
