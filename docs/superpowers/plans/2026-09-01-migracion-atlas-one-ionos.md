@@ -21,7 +21,11 @@
 - `LOG_LEVEL` en MAYÚSCULAS en todo `.env`: `app/main.py:27` lo pasa directo a `logging` y con `info` uvicorn muere.
 - Los registros de Cloudflare deben quedar en **DNS only (nube gris)**; con el proxy naranja Caddy nunca completa el desafío de Let's Encrypt.
 - No se toca `rmazh` ni HRFlow.
-- El código de producción sale de `origin/staging`; la rama no incluye el `Dockerfile`, que se copia de la raíz del repositorio.
+- **El código de producción sale de `origin/main`.** El 2026-09-01 se unificaron
+  las ramas: `main` absorbió `staging` más la franja de avisos y se desplegó a
+  Railway, así que Kaory ya corre exactamente este código. El corte deja de ser
+  una subida de versión y pasa a ser sólo un cambio de servidor.
+- La rama no incluye el `Dockerfile`, que se copia de la raíz del repositorio.
 
 ## Cifras de referencia de Kaory (medidas 2026-09-01)
 
@@ -118,7 +122,7 @@ Esperado: `atlas_one_prod|atlas_prod|f`. El `f` importa: el rol **no** debe ser 
 ```bash
 cd /mnt/d/Devs/atlas-one
 git fetch origin
-git archive --format=tar origin/staging | ssh ionos 'mkdir -p /srv/apps/atlas-one-prod/src && tar -x -C /srv/apps/atlas-one-prod/src'
+git archive --format=tar origin/main | ssh ionos 'mkdir -p /srv/apps/atlas-one-prod/src && tar -x -C /srv/apps/atlas-one-prod/src'
 scp Dockerfile .dockerignore ionos:/srv/apps/atlas-one-prod/src/
 ssh ionos 'ls /srv/apps/atlas-one-prod/src/Dockerfile && echo "Dockerfile presente"'
 ```
