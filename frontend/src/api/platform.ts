@@ -614,7 +614,24 @@ export const platformApi = {
 
 // ── Announcements API (Sprint 1 · D4) ────────────────────────────────────────
 
+export interface TenantAnnouncement {
+  id: number
+  title: string
+  body_md: string
+  severity: AnnouncementSeverity
+  published_at: string | null
+  expires_at: string | null
+}
+
 export const announcementsApi = {
+  /** Avisos vigentes para la organizacion en sesion, vistos por el inquilino.
+   *  Vive fuera de /platform/* porque ese paquete exige rol de plataforma:
+   *  `active` (abajo) sigue siendo la vista previa del superadministrador. */
+  activeForTenant: () =>
+    client.get<TenantAnnouncement[]>('/announcements/active').then((r) =>
+      Array.isArray(r.data) ? r.data : [],
+    ),
+
   list: (params?: { status?: 'draft' | 'published' | 'expired' | 'all'; severity?: AnnouncementSeverity }) =>
     client.get<PlatformAnnouncement[]>('/platform/announcements', { params }).then((r) =>
       Array.isArray(r.data) ? r.data : (r.data as any)?.items ?? [],

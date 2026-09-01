@@ -13,6 +13,7 @@ from app.routers import (
     inventory, sales, cash, customers, reports,
     printer, returns, quotes, organization, hr, portal, logistics,
     platform, transfers, purchases, expenses, branch,
+    announcements,
 )
 from app.subscribers.abasto import setup_abasto_subscribers
 
@@ -170,6 +171,9 @@ app.include_router(hr.router,               prefix="/api/hr",               tags
 app.include_router(portal.router,           prefix="/api/portal",           tags=["Portal"])
 app.include_router(logistics.router,        prefix="/api/logistics",        tags=["Logística"])
 app.include_router(platform.router,         prefix="/api/platform",         tags=["Platform"])
+# Consumidor del inquilino: el paquete /api/platform/* esta detras de
+# require_platform_admin, asi que los avisos necesitan su propia ruta de lectura.
+app.include_router(announcements.router,    prefix="/api/announcements",    tags=["Avisos"])
 app.include_router(transfers.router,        prefix="/api/transfers",        tags=["Transferencias"])
 # `capabilities_router` vive en organization.py (Fase A cleanup). Mantiene
 # el prefix histórico /api/org/capabilities para no romper al frontend.

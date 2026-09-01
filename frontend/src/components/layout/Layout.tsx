@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BranchSwitcher } from './BranchSwitcher'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { AnnouncementBanner } from './AnnouncementBanner'
 import { Toaster } from '../ui/Toast'
 import { useAuthStore } from '../../store/authStore'
 import { useTheme } from '../../context/ThemeContext'
@@ -87,6 +88,7 @@ export function Layout() {
 
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <ImpersonationBanner />
+        <AnnouncementBanner />
         {/* ── Topbar ── */}
         <header
           className="flex items-center justify-between px-5 flex-shrink-0"
