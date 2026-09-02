@@ -104,8 +104,18 @@ def run_migrations():
         )).scalar() or 0
         print(f"  · payments huérfanos detectados: {orphan_count}")
         if orphan_count > 0:
-            conn.execute(text("DELETE FROM payments WHERE sales_document_id IS NULL"))
-            print(f"  ✓ {orphan_count} payments huérfanos eliminados (QA cleanup)")
+            # Un pago sin venta es EVIDENCIA de dinero recibido: puede venir de
+            # un checkout que fallo a medias. Borrarlo en silencio en cada
+            # arranque destruye el rastro. Solo se limpia si alguien lo pide
+            # explicitamente con ATLAS_PURGE_ORPHAN_PAYMENTS=1.
+            if os.getenv("ATLAS_PURGE_ORPHAN_PAYMENTS", "").strip().lower() in {"1", "true", "yes"}:
+                conn.execute(text("DELETE FROM payments WHERE sales_document_id IS NULL"))
+                print(f"  ✓ {orphan_count} payments huérfanos eliminados (purga explícita)")
+            else:
+                print(
+                    f"  ⚠ {orphan_count} payments huérfanos NO se tocan. Revísalos a mano; "
+                    f"para purgarlos usa ATLAS_PURGE_ORPHAN_PAYMENTS=1."
+                )
         # Aplicar NOT NULL si aún no lo es
         is_nullable = conn.execute(text(
             "SELECT is_nullable FROM information_schema.columns "

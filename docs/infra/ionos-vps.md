@@ -60,14 +60,15 @@ consultar datos actuales: diverge de Railway con cada venta.
 ## Redesplegar
 
 ```bash
-rsync -az --delete --exclude node_modules --exclude .git --exclude dumps \
-  <repo>/ ionos:/srv/apps/atlas-one-beta/src/
+git archive --format=tar origin/main | ssh ionos 'tar -x -C /srv/apps/atlas-one-prod/src'
+scp Dockerfile .dockerignore ionos:/srv/apps/atlas-one-prod/src/
 ssh ionos 'cd /srv/apps/atlas-one-beta && docker compose build && docker compose up -d'
 ```
 
 El `src/` del VPS es un export de `origin/staging` más el `Dockerfile` de
 producción. Mientras la llave de despliegue de GitHub no esté en el servidor,
-el código viaja por `rsync`.
+el código viaja por `git archive` desde `origin/main`, y el `.env` **no** entra
+en la imagen: lo aporta `env_file:` del compose en tiempo de ejecución.
 
 ## TLS
 
@@ -101,7 +102,7 @@ docker events --filter event=die --filter event=oom --filter event=health_status
 
 ## Pendientes
 
-- Llave de despliegue de GitHub en el servidor para reemplazar `rsync` por `git pull`
+- Llave de despliegue de GitHub en el servidor para hacer `git pull` en el propio VPS
 - Reverse DNS (PTR) de la IP hacia `atlas-prod-01.atlasone.com.mx`
 - `rmazh.mx` (servidor **74.208.195.59**, distinto a este) tiene el certificado
   vencido desde el 2026-07-19 y ese dominio se imprime en cada ticket

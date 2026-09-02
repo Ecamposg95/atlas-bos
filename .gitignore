@@ -129,3 +129,12 @@ file::memory:
 
 # Worktrees locales de Claude Code
 .claude/worktrees/
+
+# Credenciales de cuentas QA — nunca al repositorio ni a la imagen
+acceso-qa-atlasone.pdf
+*.pdf
+
+# El Dockerfile de raiz NO debe llegar a main: Railway lo prioriza sobre
+# Railpack y cambiaria la compilacion de produccion. Vive en el servidor.
+/Dockerfile
+/.dockerignore
