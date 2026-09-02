@@ -29,7 +29,7 @@ from datetime import datetime, time as _time, timezone
 from decimal import Decimal
 from typing import List, Optional
 
-from sqlalchemy import func, or_
+from sqlalchemy import and_, func, or_
 from sqlalchemy.orm import Session
 
 try:
@@ -172,6 +172,23 @@ def _compute_change_given(db: Session, session: CashSession) -> Decimal:
     leemos del campo (consistencia garantizada). Para ventas legadas (campo
     NULL, creadas antes de la migración) recomputamos con la fórmula original:
     excedente de CASH sobre lo que el efectivo realmente tenía que cubrir.
+
+    Nota (atribución por pago, Task 2): esta función se quedó filtrando por
+    `session_sales_filter` a nivel DOCUMENTO — no adoptó el criterio OR por
+    `Payment.cash_session_id` que sí usa `compute_expected_cash`. No es un
+    olvido: `change_given` vive en el SalesDocument como un escalar único, no
+    hay un `change_given` por Payment que redistribuir. Y en los dos únicos
+    lugares donde se calcula y persiste (creación de venta y conversión de
+    cotización/crédito en `app/routers/sales.py`), el mismo bloque de código
+    reasigna `sales_doc.cash_session_id` a la sesión abierta en ese momento —
+    o sea, el documento YA queda atribuido a la caja que entregó el vuelto.
+    Los pagos que sí divergen de la caja del documento (abonos a crédito via
+    `app/modules/customers/router.py::register_customer_payment`) nunca
+    generan vuelto. Forzar el mismo OR aquí sumaría `change_given` completo
+    una vez por `session_sales_filter` (el documento) y otra vez por cualquier
+    pago explícitamente atribuido a otra sesión — doble conteo real, no
+    hipotético, porque a diferencia del SUM de pagos, `change_given` no se
+    parte por pago.
     """
     sales = (
         db.query(SalesDocument)
@@ -219,13 +236,26 @@ def compute_expected_cash(db: Session, session: CashSession) -> ExpectedCashBrea
     """
     out = ExpectedCashBreakdown(opening=Decimal(str(session.opening_balance or 0)))
 
-    # Pagos efectivo brutos (PAID) en la sesión
+    # Pagos efectivo brutos (PAID) en la sesión.
+    #
+    # Un pago cuenta en esta sesion si (a) esta atribuido explicitamente a
+    # ella via Payment.cash_session_id (Task 1: el abono de un credito
+    # liquidado hoy pertenece al cajon de hoy), o (b) no tiene atribucion
+    # propia y su documento cae en `session_sales_filter` (respaldo para
+    # pagos anteriores a la columna, o sin caja abierta al crearse). Las dos
+    # ramas son mutuamente excluyentes por construccion — (b) exige
+    # cash_session_id IS NULL — asi que un pago nunca satisface ambas y
+    # nunca se suma dos veces.
+    pago_de_esta_sesion = or_(
+        Payment.cash_session_id == session.id,
+        and_(Payment.cash_session_id.is_(None), session_sales_filter(session)),
+    )
     cash_payments = (
         db.query(func.sum(Payment.amount))
         .join(SalesDocument)
         .filter(
             Payment.method == PaymentMethod.CASH,
-            session_sales_filter(session),
+            pago_de_esta_sesion,
             SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
         )
         .scalar()
