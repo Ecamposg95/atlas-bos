@@ -23,8 +23,28 @@ export function SessionModal({ onOpened }: Props) {
     try {
       const session = await cashApi.open(amt, notes || undefined)
       onOpened(session)
-    } catch {
-      setError('Error al abrir turno. Intenta de nuevo.')
+    } catch (e: unknown) {
+      const status = (e as { response?: { status?: number } })?.response?.status
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+
+      if (status === 409) {
+        // El backend responde 409 cuando ya hay una caja abierta para este
+        // usuario/sucursal (p. ej. otra PC del mismo cajero se adelantó).
+        // Antes esto dejaba al cajero atrapado: el modal seguía pidiendo
+        // "Abrir Turno" y cada intento repetía el mismo 409. Reconsultamos
+        // /cash/status y adoptamos la sesión ya abierta en vez de insistir.
+        try {
+          const existing = await cashApi.getStatus()
+          if (existing) {
+            onOpened(existing)
+            return
+          }
+        } catch {
+          // Si tampoco se pudo consultar el status, cae al mensaje de abajo.
+        }
+      }
+
+      setError(detail ?? 'Error al abrir turno. Intenta de nuevo.')
     } finally {
       setLoading(false)
     }

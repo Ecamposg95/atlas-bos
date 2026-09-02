@@ -4,6 +4,12 @@ import { formatCurrency } from '../../../utils/currency'
 
 const QUICK = [50, 100, 200, 500, 1000]
 
+// El backend (app/routers/cash.py, MIN_REASON_LENGTH) exige un motivo de al
+// menos 10 caracteres tanto para /inflow como para /outflow. Antes esta
+// validación pedía "más de 0 caracteres", así que el 422 del backend era la
+// primera vez que el cajero se enteraba del requisito real.
+const MIN_REASON_LENGTH = 10
+
 interface Props {
   type: 'IN' | 'OUT'
   onClose: () => void
@@ -18,7 +24,8 @@ export function CashMovementModal({ type, onClose, onSuccess }: Props) {
 
   const isIn = type === 'IN'
   const amtNum = parseFloat(amount) || 0
-  const isValid = amtNum > 0 && concept.trim().length > 0
+  const conceptLen = concept.trim().length
+  const isValid = amtNum > 0 && conceptLen >= MIN_REASON_LENGTH
 
   const submit = async () => {
     if (!isValid) return
@@ -29,8 +36,14 @@ export function CashMovementModal({ type, onClose, onSuccess }: Props) {
       else await cashApi.outflow(amtNum, concept.trim())
       onSuccess(`${isIn ? 'Entrada' : 'Salida'} de ${formatCurrency(amtNum)} registrada`)
       onClose()
-    } catch {
-      setError('Error al registrar movimiento')
+    } catch (e: unknown) {
+      // El backend distingue 422 (motivo insuficiente), 409 (saldo
+      // insuficiente para la salida) y 403 (monto alto sin rol autorizado).
+      // Antes los tres se mostraban igual, como "Error al registrar
+      // movimiento" — propagamos el `detail` real para que el cajero sepa
+      // qué corregir.
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+      setError(detail ?? 'Error al registrar movimiento')
     } finally {
       setLoading(false)
     }
@@ -87,8 +100,11 @@ export function CashMovementModal({ type, onClose, onSuccess }: Props) {
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-              Concepto <span className="text-red-400">*</span>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>Concepto <span className="text-red-400">*</span></span>
+              <span className={conceptLen >= MIN_REASON_LENGTH ? 'text-slate-500' : 'text-amber-400'}>
+                {conceptLen}/{MIN_REASON_LENGTH}
+              </span>
             </label>
             <input
               type="text"
@@ -98,6 +114,11 @@ export function CashMovementModal({ type, onClose, onSuccess }: Props) {
               className="dax-input text-sm"
               placeholder={isIn ? 'Ej: Préstamo del dueño...' : 'Ej: Compra de materiales...'}
             />
+            {conceptLen > 0 && conceptLen < MIN_REASON_LENGTH && (
+              <p className="text-amber-400 text-[11px] mt-1">
+                Describe el motivo con al menos {MIN_REASON_LENGTH} caracteres.
+              </p>
+            )}
           </div>
         </div>
 
