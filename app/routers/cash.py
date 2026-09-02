@@ -25,6 +25,54 @@ from app.core.tenant_context import get_current_active_organization
 
 router = APIRouter()
 
+# Umbral por encima del cual una salida de efectivo exige rol GERENTE+.
+# Espeja el patron que ya existe para reembolsos en efectivo
+# (app/crud/returns.py:28, LARGE_CASH_REFUND_THRESHOLD).
+LARGE_CASH_OUTFLOW_THRESHOLD = Decimal("2000")
+MIN_REASON_LENGTH = 10
+ROLES_SALIDA_ALTA = {"ADMINISTRADOR", "DUEÑO", "GERENTE"}
+
+
+def _validar_salida(db: Session, session: CashSession, current_user: User, amount: Decimal, reason: str) -> None:
+    """Guardas de una salida de efectivo. Lanza HTTPException si no procede.
+
+    Orden de las validaciones (importa para el resultado):
+    1) motivo (422) — siempre, es la mas barata.
+    2) saldo disponible (409) — una salida que deja la caja en negativo es
+       un error de estado, independiente de quien la pida.
+    3) umbral por rol (403) — solo aplica si el monto SI cabe en la caja;
+       de lo contrario un cajero pidiendo un monto alto e insuficiente
+       recibiria "no autorizado" en vez de "no hay ese efectivo", que es
+       el error real. Ver tests/test_cash_outflow_guards.py::
+       test_no_puede_dejar_la_caja_en_negativo (monto 5000 sobre fondo de
+       100: es a la vez > umbral y > disponible, y debe ganar el 409).
+    """
+    motivo = (reason or "").strip()
+    if len(motivo) < MIN_REASON_LENGTH:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Describe el motivo de la salida (al menos {MIN_REASON_LENGTH} caracteres).",
+        )
+    from app.services.cash_reconciliation import compute_expected_cash
+    disponible = Decimal(str(compute_expected_cash(db, session).expected))
+    if amount > disponible:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"La caja tiene {disponible} disponible; no se puede sacar {amount}."
+            ),
+        )
+    if amount > LARGE_CASH_OUTFLOW_THRESHOLD:
+        rol = str(getattr(current_user.role, "value", current_user.role))
+        if rol not in ROLES_SALIDA_ALTA:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"Una salida mayor a {LARGE_CASH_OUTFLOW_THRESHOLD} requiere "
+                    f"autorizacion de un gerente o el dueño."
+                ),
+            )
+
 @router.get("/status", response_model=Optional[CashSessionRead])
 def get_current_session(
     db: Session = Depends(get_db),
@@ -274,6 +322,19 @@ def register_cash_movement(
     if payload.amount is None or payload.amount <= 0:
         raise HTTPException(status_code=400, detail="El monto debe ser mayor a 0.")
 
+    # Task 3: una salida (OUT) por esta ruta recibe las mismas guardas que
+    # /outflow (motivo, saldo disponible, umbral por rol). Una entrada (IN)
+    # solo valida el motivo, igual que /inflow.
+    if payload.type == "OUT":
+        _validar_salida(db, session, current_user, payload.amount, payload.concept)
+    else:
+        motivo_in = (payload.concept or "").strip()
+        if len(motivo_in) < MIN_REASON_LENGTH:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Describe el motivo de la entrada (al menos {MIN_REASON_LENGTH} caracteres).",
+            )
+
     movement = CashMovement(
         session_id=session.id,
         type=payload.type,
@@ -519,11 +580,20 @@ def register_inflow(
     if not session:
         raise HTTPException(400, "No hay sesión de caja abierta.")
 
+    # Task 3: una entrada solo exige un motivo real (sin umbral de rol ni
+    # validacion de saldo — eso aplica a las salidas, no a las entradas).
+    motivo_in = (reason or "").strip()
+    if len(motivo_in) < MIN_REASON_LENGTH:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Describe el motivo de la entrada (al menos {MIN_REASON_LENGTH} caracteres).",
+        )
+
     new_move = CashMovement(
         session_id=session.id,
         type="IN",
         amount=Decimal(str(amount)),
-        reason=reason.strip() or "Entrada de efectivo",
+        reason=motivo_in,
         created_at=datetime.now(timezone.utc)
     )
     db.add(new_move)
@@ -559,11 +629,14 @@ def register_outflow(
     if not session:
         raise HTTPException(400, "No hay sesión de caja abierta.")
 
+    monto = Decimal(str(amount))
+    _validar_salida(db, session, current_user, monto, reason)
+
     new_move = CashMovement(
         session_id=session.id,
         type="OUT",
-        amount=Decimal(str(amount)),
-        reason=reason.strip() or "Salida de efectivo",
+        amount=monto,
+        reason=reason.strip(),
         created_at=datetime.now(timezone.utc)
     )
     db.add(new_move)
