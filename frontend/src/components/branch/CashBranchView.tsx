@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { BLIND_MASK, BLIND_LABEL, isValidCount, shouldRevealExpected, shouldShowExpectedKpi } from '../../utils/blindCash'
 import client from '../../api/client'
 import { cashApi, type CashSummary } from '../../api/cash'
 import { printerApi } from '../../api/printer'
@@ -155,8 +156,10 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
   const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
+    // Conteo ciego: NO pre-llenar "contado" con el esperado. El cajero captura
+    // su propio conteo físico; el esperado se revela después (shouldRevealExpected).
     cashApi.getSummary()
-      .then((s) => { setSummary(s); setCounted(s.expected_cash.toFixed(2)) })
+      .then((s) => setSummary(s))
       .catch(() => setLoadError(true))
   }, [])
 
@@ -165,7 +168,7 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
   const diff = !isNaN(countedNum) ? countedNum - expected : 0
 
   async function submit() {
-    if (isNaN(countedNum)) return
+    if (!isValidCount(counted)) return
     setSubmitting(true)
     try {
       const closed = await cashApi.close(countedNum)
@@ -228,8 +231,22 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
               )}
               <div className="border-t border-stone-200 dark:border-slate-700 pt-2 flex justify-between font-bold text-slate-900 dark:text-slate-100">
                 <span>Esperado en caja</span>
-                <span className="tabular-nums">{fmtMoney(String(expected))}</span>
+                {shouldRevealExpected(counted) ? (
+                  <span className="tabular-nums">{fmtMoney(String(expected))}</span>
+                ) : (
+                  <span
+                    className="tabular-nums text-slate-400 dark:text-slate-500"
+                    title={`${BLIND_LABEL} — cuenta el efectivo y captúralo abajo`}
+                  >
+                    {BLIND_MASK}
+                  </span>
+                )}
               </div>
+              {!shouldRevealExpected(counted) && (
+                <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
+                  {BLIND_LABEL} · se revela al capturar tu conteo
+                </p>
+              )}
             </div>
 
             <label className={`block ${ui.kpiLabel} mb-1`}>Efectivo contado</label>
@@ -571,7 +588,7 @@ export function CashBranchView() {
             label={current ? COPY.cashKpis.expected : 'Cierre reportado'}
             value={
               summary?.expected_cash != null
-                ? fmtMoney(String(summary.expected_cash))
+                ? (shouldShowExpectedKpi(current != null) ? fmtMoney(String(summary.expected_cash)) : BLIND_MASK)
                 : (todayClosedSession ? fmtMoney(String(todayClosedSession.closing_balance)) : '—')
             }
             sub={

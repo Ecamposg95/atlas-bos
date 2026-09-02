@@ -191,7 +191,10 @@ def _safe_queue_name(name: str) -> str:
     '$', '`', comillas, saltos de línea). Los subprocesos se invocan con
     `shell=False`, así que el riesgo real es path-traversal o bytes nulos.
     """
-    if not name or not _QUEUE_NAME_RE.match(name):
+    # fullmatch, no match: con `$`, `match` deja pasar un salto de linea final
+    # porque `$` casa justo antes del '\n' de cierre sin consumirlo, asi que
+    # "POS-80\n" pasaba pese a que este docstring afirma rechazarlos.
+    if not name or not _QUEUE_NAME_RE.fullmatch(name):
         raise HTTPException(
             status_code=400,
             detail="Nombre de impresora inválido.",
