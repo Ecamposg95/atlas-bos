@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 import csv
 import io
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
+from sqlalchemy import func, case
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from typing import Dict, Any, List, Optional
@@ -375,6 +375,44 @@ def _respuesta_de_venta_existente(db: Session, sale: SalesDocument) -> Dict[str,
     }
 
 
+def _deuda_cargada_por_documento(
+    db: Session, *, org_id: int, documento: SalesDocument, customer_id: int
+) -> Decimal:
+    """Cuánto de la cuenta del cliente cargó ESTE documento y sigue vivo.
+
+    El saldo del cliente lo mueven varios caminos (checkout a crédito, abono
+    en caja, cancelación), y solo `customer_ledger_entries` guarda cuál movió
+    qué. Sumamos los asientos de este documento: los cargos (+) menos lo ya
+    abonado (−). Sin asientos, este documento nunca cargó nada — el caso de
+    los pedidos que crea `app/routers/quotes.py`, que nacen PENDING con
+    `customer_id` sin tocar el saldo.
+
+    Un asiento de cargo nace hoy con `sales_document_id` (ver el bloque de
+    "Crédito Cliente" de `create_sale`, que corre después del flush justamente
+    para poder enlazarlo). Los cargos anteriores a esa corrección quedaron sin
+    enlace: si el documento solo tiene abonos, el cargo existió aunque no esté
+    enlazado, y ahí sí caemos a la fórmula vieja (`total_amount`) para no
+    dejarle al cliente una deuda que ya pagó.
+    """
+    cargos, abonos = db.query(
+        func.coalesce(func.sum(case(
+            (CustomerLedgerEntry.amount > 0, CustomerLedgerEntry.amount), else_=0)), 0),
+        func.coalesce(func.sum(case(
+            (CustomerLedgerEntry.amount < 0, -CustomerLedgerEntry.amount), else_=0)), 0),
+    ).filter(
+        CustomerLedgerEntry.organization_id == org_id,
+        CustomerLedgerEntry.sales_document_id == documento.id,
+        CustomerLedgerEntry.customer_id == customer_id,
+    ).one()
+    cargos = Decimal(str(cargos or 0))
+    abonos = Decimal(str(abonos or 0))
+    if cargos == 0 and abonos > 0:
+        # Legado: cargo sin `sales_document_id`. Los abonos enlazados prueban
+        # que este documento sí le cargó su total en su momento.
+        cargos = Decimal(str(documento.total_amount or 0))
+    return max(Decimal("0.00"), cargos - abonos)
+
+
 @router.post("/", response_model=Dict[str, Any])
 def create_sale(
     sale_in: SaleCreate,
@@ -492,13 +530,24 @@ def create_sale(
                 (Decimal(str(p.amount)) for p in existing_sale.payments),
                 Decimal("0.00"),
             )
-            # Deuda que este documento ya le cargó al cliente (misma fórmula
-            # que usa la cancelación de venta): sirve para ajustar el saldo
-            # por la DIFERENCIA y no volver a cargarle la venta entera.
-            deuda_previa = max(
-                Decimal("0.00"),
-                Decimal(str(existing_sale.total_amount or 0)) - pagos_previos,
-            )
+            # Deuda que este documento ya le cargó al cliente: sirve para
+            # ajustar el saldo por la DIFERENCIA y no volver a cargarle la
+            # venta entera. Se lee del LEDGER, no de `total_amount - pagos`.
+            #
+            # Esa fórmula (la que usa la cancelación de venta) da por hecho que
+            # todo documento PENDING ya cargó su saldo al cliente, y es falsa:
+            # `app/routers/quotes.py` crea pedidos PENDING con `customer_id`
+            # sin tocar `current_balance` ni el ledger. Cobrar uno de esos
+            # pedidos calculaba `ajuste = 0 - deuda_previa` y le regalaba al
+            # cliente un saldo a favor por el importe completo. El ledger es la
+            # única bitácora de lo que un documento cargó de verdad.
+            if sale_in.customer_id:
+                deuda_previa = _deuda_cargada_por_documento(
+                    db,
+                    org_id=org_id,
+                    documento=existing_sale,
+                    customer_id=sale_in.customer_id,
+                )
 
     # --- 1. Cálculos de Stock y Precios ---
     total_sale = Decimal("0.00")
@@ -765,27 +814,6 @@ def create_sale(
         remaining_debt = balance_diff
         doc_status = DocumentStatus.PENDING
 
-    # Crédito Cliente. Se mueve el saldo por la DIFERENCIA entre la deuda que
-    # este documento deja ahora y la que ya le tenía cargada (0 en una venta
-    # nueva). Antes se sumaba `remaining_debt` completo cada vez, así que
-    # reprocesar la venta volvía a cargarle la deuda; y liquidarla por aquí no
-    # le abonaba nada, dejándole un saldo que ya había pagado.
-    ajuste_deuda = remaining_debt - deuda_previa
-    if sale_in.customer_id and ajuste_deuda != Decimal("0.00"):
-        customer = db.query(Customer).filter(Customer.id == sale_in.customer_id, Customer.organization_id == org_id).first()
-        if customer and customer.has_credit:
-            customer.current_balance += ajuste_deuda
-            db.add(CustomerLedgerEntry(
-                customer_id=customer.id,
-                sales_document_id=existing_sale.id if existing_sale else None,
-                amount=ajuste_deuda,
-                description=(
-                    "Crédito por Venta" if ajuste_deuda > 0
-                    else "Liquidación de venta a crédito"
-                ),
-                organization_id=org_id
-            ))
-
     # --- 3. Guardar / Actualizar Cabecera ---
     if existing_sale:
         sales_doc = existing_sale
@@ -848,6 +876,34 @@ def create_sale(
         db.add(sales_doc)
     
     db.flush()
+
+    # Crédito Cliente. Se mueve el saldo por la DIFERENCIA entre la deuda que
+    # este documento deja ahora y la que ya le tenía cargada (0 en una venta
+    # nueva y en un pedido de cotizaciones, que nunca cargó nada). Antes se
+    # sumaba `remaining_debt` completo cada vez, así que reprocesar la venta
+    # volvía a cargarle la deuda; y liquidarla por aquí no le abonaba nada,
+    # dejándole un saldo que ya había pagado.
+    #
+    # Va DESPUÉS del flush —antes se calculaba junto con `remaining_debt`—
+    # porque el asiento necesita `sales_doc.id`: en una venta nueva el
+    # documento aún no existía y el cargo nacía con `sales_document_id=None`,
+    # así que la deuda por documento no era reconstruible desde el ledger, que
+    # es de donde `_deuda_cargada_por_documento` la lee.
+    ajuste_deuda = remaining_debt - deuda_previa
+    if sale_in.customer_id and ajuste_deuda != Decimal("0.00"):
+        customer = db.query(Customer).filter(Customer.id == sale_in.customer_id, Customer.organization_id == org_id).first()
+        if customer and customer.has_credit:
+            customer.current_balance += ajuste_deuda
+            db.add(CustomerLedgerEntry(
+                customer_id=customer.id,
+                sales_document_id=sales_doc.id,
+                amount=ajuste_deuda,
+                description=(
+                    "Crédito por Venta" if ajuste_deuda > 0
+                    else "Liquidación de venta a crédito"
+                ),
+                organization_id=org_id
+            ))
 
     # --- H-2: Persist global_discount_pct (defensive write) ---
     # La columna se agrega via migrator runtime (scripts/railway_init.py); el
