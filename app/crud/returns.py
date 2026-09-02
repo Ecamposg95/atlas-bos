@@ -162,23 +162,26 @@ def approve_return(db: Session, return_id: str, supervisor_id: int,
     # 2. Get Sale (needed for R-2)
     sale = db_return.sale  # Relationship
 
-    # R-2: refund + prior approved refunds must not exceed the original sale
-    # total. We reconstruct the original from current sale.total_amount + any
-    # prior approved refund_amounts (sale.total_amount is netted by previous
-    # approve_return calls).
-    prior_refunded = db.query(
-        func.coalesce(func.sum(SaleReturnItem.refund_amount), Decimal("0"))
-    ).join(SaleReturn).filter(
-        SaleReturn.sale_id == sale.id,
-        SaleReturn.status == "APPROVED",
-        SaleReturn.id != db_return.id,
-    ).scalar() or Decimal("0")
-    prior_refunded = Decimal(str(prior_refunded))
-    original_sale_total = Decimal(str(sale.total_amount or 0)) + prior_refunded
-    if refund_amount > original_sale_total + Decimal("0.01"):
+    # R-0: una venta cancelada ya devolvio su dinero por otra via. Aprobar una
+    # devolucion encima sobrescribiria su estado CANCELLED y sacaria efectivo
+    # real por segunda vez.
+    if sale.status == DocumentStatus.CANCELLED:
+        raise ValueError("La venta fue cancelada; no se puede aprobar su devolución.")
+
+    # R-2: no se puede devolver mas de lo que QUEDA por devolver.
+    #
+    # `sale.total_amount` ya viene neteado por cada aprobacion previa, asi que
+    # ES el monto restante. Antes se reconstruia el total original sumandole de
+    # vuelta lo ya devuelto y se comparaba contra el: tras aprobar una primera
+    # devolucion por el total (restante ~0), una segunda por el total —creada
+    # por la carrera que evade el guard de PENDING— tambien pasaba, produciendo
+    # un DOBLE reembolso. Portado de Atlas-Rmazh (critico #3, auditoria
+    # 2026-08-12).
+    remaining = Decimal(str(sale.total_amount or 0))
+    if refund_amount > remaining + Decimal("0.01"):
         raise ValueError(
-            f"El monto a devolver ({refund_amount}) excede el total original "
-            f"de la venta ({original_sale_total})."
+            f"El monto a devolver ({refund_amount}) excede el restante de la "
+            f"venta ({remaining})."
         )
 
     # R-3: large CASH refunds require explicit force=True (fat-finger guard).
