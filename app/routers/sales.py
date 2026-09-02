@@ -665,7 +665,14 @@ def create_sale(
             detail="Los montos de pago no pueden ser negativos"
         )
 
-    total_paid = sum(Decimal(str(p.amount)) for p in sale_in.payments)
+    # Hallazgo preexistente (revisión final): `sum()` sin valor inicial
+    # devuelve `int 0` (no `Decimal`) cuando `sale_in.payments` está vacío
+    # (venta a crédito puro). Eso dejaba pasar folio, descuento de stock y
+    # cargo de deuda al cliente, y solo reventaba después, al commitear,
+    # cuando `total_paid.quantize(...)` truena con `AttributeError` porque
+    # `int` no tiene `.quantize()` — 500 después de mutar todo. `Decimal("0")`
+    # como valor inicial evita el `int 0`.
+    total_paid = sum((Decimal(str(p.amount)) for p in sale_in.payments), Decimal("0"))
 
     # Fase 1.3: cambio entregado al cliente. Se calcula al crear la venta y se
     # persiste para que el cuadre de turno NO recompute (evita drift si la
