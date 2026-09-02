@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { fieldErrorsFromDetail, summarizeFieldErrors } from '../../utils/apiErrors'
 import { useNavigate } from 'react-router-dom'
 import { productsApi } from '../../api/products'
 import { organizationApi } from '../../api/organization'
@@ -97,6 +98,18 @@ export function AdminProductCreate() {
     if (!Number.isFinite(stockNum) || stockNum < 0) e.initial_stock = 'Número ≥ 0'
     if (stockNum > 0 && !form.initial_stock_branch_id) e.initial_stock_branch_id = 'Requerido con stock > 0'
     if (enabledBranchIds.length === 0) e.target_branch_ids = 'Activa al menos una sucursal'
+    // Los renglones de precios extra (Mayoreo, Caja) no se validaban: un valor
+    // no numerico llegaba al backend como null y volvia un 422 que la pantalla
+    // mostraba como "no se pudo", sin decir cual campo.
+    prices.forEach((p, i) => {
+      if (!p.price_name.trim()) e[`prices.${i}.price_name`] = 'Requerido'
+      if (!Number.isFinite(Number(p.min_quantity)) || Number(p.min_quantity) <= 0)
+        e[`prices.${i}.min_quantity`] = 'Cantidad mínima mayor a 0'
+      if (!Number.isFinite(Number(p.unit_price)) || Number(p.unit_price) < 0)
+        e[`prices.${i}.unit_price`] = 'Número ≥ 0'
+    })
+    if (form.has_iva && !Number.isFinite(Number(form.tax_rate)))
+      e.tax_rate = 'Escribe un número'
     return e
   }
 
@@ -142,7 +155,15 @@ export function AdminProductCreate() {
       if (status === 409 || (typeof detail === 'string' && detail.toLowerCase().includes('sku'))) {
         setErrors((e) => ({ ...e, sku: typeof detail === 'string' ? detail : 'SKU duplicado' }))
       }
-      toast.error(typeof detail === 'string' ? detail : 'No se pudo crear el producto.')
+      // Un 422 trae `detail` como LISTA de campos. Antes se caia al mensaje
+      // generico y el usuario no sabia que corregir.
+      const porCampo = fieldErrorsFromDetail(detail)
+      if (Object.keys(porCampo).length > 0) {
+        setErrors((prev) => ({ ...prev, ...porCampo }))
+        toast.error(summarizeFieldErrors(porCampo))
+      } else {
+        toast.error(typeof detail === 'string' ? detail : 'No se pudo crear el producto.')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -168,6 +189,7 @@ export function AdminProductCreate() {
           <ProductTieredPricesSection
             prices={prices}
             onChange={setPrices}
+            errors={errors}
             help="Para precios por cantidad (mayoreo, promo). Se aplica sobre el precio base."
           />
           <ProductBranchMatrixSection

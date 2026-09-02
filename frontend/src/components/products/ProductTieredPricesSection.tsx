@@ -9,7 +9,10 @@ interface Props {
   help?: string
 }
 
-export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
+export function ProductTieredPricesSection({ prices, onChange, errors, help }: Props) {
+  // `errors` se declaraba en Props y no se usaba: los fallos de un renglon
+  // quedaban invisibles y el usuario solo veia un aviso generico.
+  const errorDe = (i: number, campo: string) => errors?.[`prices.${i}.${campo}`]
   const add = () => onChange([...prices, emptyPriceRow()])
   const remove = (i: number) => onChange(prices.filter((_, idx) => idx !== i))
   const update = (i: number, field: keyof PriceRow, val: string | number) =>
@@ -45,6 +48,9 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
                   onChange={(e) => update(i, 'price_name', e.target.value)}
                   placeholder="ej. Mayoreo"
                 />
+                {errorDe(i, 'price_name') && (
+                  <p className="text-[10px] text-red-400 mt-0.5">{errorDe(i, 'price_name')}</p>
+                )}
               </div>
               <div>
                 {i === 0 && <label className="block text-[10px] mb-0.5 text-slate-400">Mín. piezas</label>}
@@ -54,6 +60,9 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
                   value={p.min_quantity}
                   onChange={(e) => update(i, 'min_quantity', Number(e.target.value))}
                 />
+                {errorDe(i, 'min_quantity') && (
+                  <p className="text-[10px] text-red-400 mt-0.5">{errorDe(i, 'min_quantity')}</p>
+                )}
               </div>
               <div>
                 {i === 0 && <label className="block text-[10px] mb-0.5 text-slate-400">Precio / unidad</label>}
@@ -63,6 +72,9 @@ export function ProductTieredPricesSection({ prices, onChange, help }: Props) {
                   value={p.unit_price}
                   onChange={(e) => update(i, 'unit_price', Number(e.target.value))}
                 />
+                {errorDe(i, 'unit_price') && (
+                  <p className="text-[10px] text-red-400 mt-0.5">{errorDe(i, 'unit_price')}</p>
+                )}
               </div>
               <button
                 type="button"

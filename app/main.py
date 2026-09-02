@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from fastapi.staticfiles import StaticFiles
@@ -297,6 +299,31 @@ async def clear_support_context():
     return response
 
 # ── Error handlers ────────────────────────────────────────────────────────────
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Registra QUE campo rechazo un 422, y devuelve la respuesta de siempre.
+
+    Sin esto, un 422 solo aparece como `POST /api/products/ 422` y no hay forma
+    de saber que le fallo al usuario sin reproducirlo a ciegas. Paso justo eso
+    con un producto que un dueño no podia dar de alta.
+
+    Se registran los NOMBRES de los campos y el motivo, NUNCA los valores: un
+    payload de producto o de venta lleva datos del negocio.
+    """
+    campos = "; ".join(
+        f"{'.'.join(str(x) for x in e.get('loc', [])[1:]) or '(cuerpo)'}: {e.get('msg', '')}"
+        for e in exc.errors()
+    )
+    logging.getLogger("app.errors").warning(
+        "VALIDATION_ERROR: %s %s -> %s",
+        request.method, request.url.path, campos or "(sin detalle)",
+    )
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=jsonable_encoder({"detail": exc.errors()}),
+    )
+
+
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
     if request.url.path.startswith("/api/"):

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { fieldErrorsFromDetail, summarizeFieldErrors } from '../../utils/apiErrors'
 import { useNavigate, useParams } from 'react-router-dom'
 import { productsApi } from '../../api/products'
 import { organizationApi } from '../../api/organization'
@@ -150,6 +151,18 @@ export function ProductForm() {
         if (!userBranchId) e.target_branch_ids = 'Tu usuario no tiene sucursal asignada'
       }
     }
+    // Los renglones de precios extra (Mayoreo, Caja) no se validaban: un valor
+    // no numerico llegaba al backend como null y volvia un 422 que la pantalla
+    // mostraba como "no se pudo", sin decir cual campo.
+    prices.forEach((p, i) => {
+      if (!p.price_name.trim()) e[`prices.${i}.price_name`] = 'Requerido'
+      if (!Number.isFinite(Number(p.min_quantity)) || Number(p.min_quantity) <= 0)
+        e[`prices.${i}.min_quantity`] = 'Cantidad mínima mayor a 0'
+      if (!Number.isFinite(Number(p.unit_price)) || Number(p.unit_price) < 0)
+        e[`prices.${i}.unit_price`] = 'Número ≥ 0'
+    })
+    if (form.has_iva && !Number.isFinite(Number(form.tax_rate)))
+      e.tax_rate = 'Escribe un número'
     return e
   }
 
@@ -225,7 +238,15 @@ export function ProductForm() {
       if (status === 409 || (typeof detail === 'string' && detail.toLowerCase().includes('sku'))) {
         setErrors((prev) => ({ ...prev, sku: typeof detail === 'string' ? detail : 'SKU duplicado' }))
       }
-      toast.error(typeof detail === 'string' ? detail : `No se pudo ${mode === 'create' ? 'crear' : 'actualizar'} el producto.`)
+      // Un 422 trae `detail` como LISTA de campos. Antes se caia al mensaje
+      // generico y el usuario no sabia que corregir.
+      const porCampo = fieldErrorsFromDetail(detail)
+      if (Object.keys(porCampo).length > 0) {
+        setErrors((prev) => ({ ...prev, ...porCampo }))
+        toast.error(summarizeFieldErrors(porCampo))
+      } else {
+        toast.error(typeof detail === 'string' ? detail : `No se pudo ${mode === 'create' ? 'crear' : 'actualizar'} el producto.`)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -258,6 +279,7 @@ export function ProductForm() {
           <ProductTieredPricesSection
             prices={prices}
             onChange={setPrices}
+            errors={errors}
             help="Para precios por cantidad (mayoreo, promo). Se aplica sobre el precio base."
           />
           {mode === 'create' && isAdmin && (
