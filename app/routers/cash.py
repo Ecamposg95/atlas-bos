@@ -17,7 +17,7 @@ MX_TZ = ZoneInfo("America/Mexico_City")
 
 from app.core.database import get_db
 from app.models import CashSession, CashSessionStatus, Payment, PaymentMethod, SalesDocument, DocumentStatus, CashMovement
-from app.schemas.cash import CashSessionCreate, CashSessionRead, CashSessionClose, CashMovementCreate, CashMovementRead, CashSessionCloseGuided
+from app.schemas.cash import CashSessionCreate, CashSessionRead, CashSessionClose, CashMovementCreate, CashMovementRead, CashSessionCloseGuided, OpeningBalanceCorrection
 from app.core.security import get_current_user
 from app.models import User
 from app.models.users import Role
@@ -144,11 +144,17 @@ def open_session(
         CashSession.status == CashSessionStatus.OPEN
     ).first()
     if active:
-        logger.info(
-            "CASH_OPEN_IDEMPOTENT: returning existing session_id=%s user_id=%s branch_id=%s",
-            active.id, current_user.id, current_user.branch_id
+        # Antes esto devolvia 200 con la sesion existente y descartaba en
+        # silencio el opening_balance recibido. El cajero que corregia un fondo
+        # mal capturado veia "listo" sin que nada cambiara, y su unico recurso
+        # era registrar una entrada de efectivo falsa (Task 5).
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"Ya tienes una caja abierta con fondo {active.opening_balance}. "
+                f"Para corregirlo usa PATCH /cash/sessions/{active.id}/opening-balance."
+            ),
         )
-        return active
 
     # 3. Crear Sesión — organization_id derivado del branch para cumplir multi-tenancy
     from app.models.organization import Branch as _Branch
@@ -173,6 +179,77 @@ def open_session(
         current_user.branch_id, session_in.opening_balance
     )
     return new_session
+
+
+@router.patch("/sessions/{session_id}/opening-balance", response_model=CashSessionRead)
+def corregir_saldo_inicial(
+    session_id: int,
+    payload: OpeningBalanceCorrection,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    org_id: int = Depends(get_current_active_organization),
+):
+    """Corrige el fondo declarado al abrir, mientras la caja siga limpia.
+
+    Es un cambio de estado declarado y auditado, no una transaccion: si ya hay
+    ventas o movimientos, cambiar el fondo reescribiria la historia y la
+    correccion deja de ser correccion. Esta es la unica via legitima para
+    arreglar un fondo mal capturado (Task 5) — antes el unico recurso del
+    cajero era inventar una "entrada de efectivo".
+    """
+    session = _lock_cash_session_query(db.query(CashSession).filter(
+        CashSession.id == session_id,
+        CashSession.organization_id == org_id,
+    )).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada")
+    if session.status != CashSessionStatus.OPEN:
+        raise HTTPException(status_code=409, detail="La caja ya está cerrada.")
+
+    tiene_movimientos = db.query(CashMovement).filter(
+        CashMovement.session_id == session.id).count() > 0
+    tiene_ventas = db.query(SalesDocument).filter(
+        SalesDocument.cash_session_id == session.id).count() > 0
+    if tiene_movimientos or tiene_ventas:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "La caja ya tiene movimientos o ventas: el fondo no se puede "
+                "corregir. Registra un ajuste con autorización."
+            ),
+        )
+
+    anterior = session.opening_balance
+    session.opening_balance = payload.opening_balance
+
+    # No existe un evento dedicado a "correccion de fondo" en CashAuditEvent;
+    # reutilizamos SESSION_OPENED (el evento mas cercano semanticamente:
+    # redeclara el estado con el que arranca la sesion) y dejamos el
+    # antes/despues/motivo en el payload para que el audit-log distinga una
+    # apertura real de una correccion. Ver reporte de Task 5.
+    from app.services.cash_audit import audit_cash_event
+    from app.models.cash_audit import CashAuditEvent
+    audit_cash_event(
+        db,
+        event_type=CashAuditEvent.SESSION_OPENED,
+        organization_id=session.organization_id,
+        session_id=session.id,
+        branch_id=session.branch_id,
+        user_id=current_user.id,
+        amount=payload.opening_balance,
+        related_table="cash_sessions",
+        related_id=str(session.id),
+        payload={
+            "correccion": True,
+            "antes": str(anterior),
+            "despues": str(payload.opening_balance),
+            "motivo": payload.reason,
+        },
+    )
+    db.commit()
+    db.refresh(session)
+    return session
+
 
 def _apply_close_to_session(
     db: Session,

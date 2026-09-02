@@ -6,10 +6,15 @@ from decimal import Decimal
 from datetime import datetime
 
 class CashSessionBase(BaseModel):
-    opening_balance: Decimal
+    opening_balance: Decimal = Field(ge=0)
 
 class CashSessionCreate(CashSessionBase):
     pass # Solo necesitamos el saldo inicial
+
+class OpeningBalanceCorrection(BaseModel):
+    """Correccion del fondo declarado al abrir. No es un movimiento de efectivo."""
+    opening_balance: Decimal = Field(ge=0)
+    reason: str = Field(min_length=10)
 
 class CashSessionClose(BaseModel):
     closing_balance: Decimal # Lo que el cajero contó físicamente
