@@ -224,9 +224,20 @@ def corregir_saldo_inicial(
 
     # No existe un evento dedicado a "correccion de fondo" en CashAuditEvent;
     # reutilizamos SESSION_OPENED (el evento mas cercano semanticamente:
-    # redeclara el estado con el que arranca la sesion) y dejamos el
-    # antes/despues/motivo en el payload para que el audit-log distinga una
-    # apertura real de una correccion. Ver reporte de Task 5.
+    # redeclara el estado con el que arranca la sesion). La etiqueta que
+    # muestra la pantalla de auditoria (PlatformCashAudit.tsx) para este
+    # evento seguira diciendo "Caja abierta" sin importar el payload, asi
+    # que la unica forma de que una correccion no se confunda con una
+    # apertura real es que el texto de `reason` lo diga por si solo — esa
+    # pantalla (TimelineRow) solo renderiza `ev.payload?.reason`, no
+    # `motivo` (Ronda de correcciones 1, hallazgo Importante). Usamos la
+    # misma clave que ya usan MANUAL_INFLOW/MANUAL_OUTFLOW para que el
+    # dato llegue a la UI sin tocarla, y conservamos antes/despues/
+    # correccion aparte para consultas programaticas sobre el audit log.
+    reason_legible = (
+        f"Corrección de fondo inicial: {anterior} → {payload.opening_balance}. "
+        f"Motivo: {payload.reason}"
+    )
     from app.services.cash_audit import audit_cash_event
     from app.models.cash_audit import CashAuditEvent
     audit_cash_event(
@@ -240,6 +251,7 @@ def corregir_saldo_inicial(
         related_table="cash_sessions",
         related_id=str(session.id),
         payload={
+            "reason": reason_legible,
             "correccion": True,
             "antes": str(anterior),
             "despues": str(payload.opening_balance),
