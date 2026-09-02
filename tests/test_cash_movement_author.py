@@ -58,16 +58,24 @@ class TestAutoriaDeMovimientos:
         assert db.query(CashAuditLog).filter(CashAuditLog.session_id == sesion.id).count() >= 1
 
     def test_reembolso_en_efectivo_guarda_al_supervisor_que_aprobo(
-        self, db, org, branch_a, cajero_a, products_setup
+        self, db, org, branch_a, cajero_a, gerente_a, products_setup
     ):
         """approve_return crea un CashMovement OUT propio (la salida del
         reembolso) que no pasa por app/routers/cash.py. `supervisor_id` es
         quien aprueba la devolucion y por tanto quien autoriza la salida de
-        efectivo — debe quedar como autor del movimiento.
+        efectivo — debe quedar como autor del movimiento, no quien la creo.
+
+        Ronda de correcciones 2: la venta y la devolucion las crea
+        `cajero_a`, pero quien APRUEBA (y por tanto autoriza la salida) es
+        `gerente_a` — roles distintos a proposito. Si los tres roles fueran
+        el mismo usuario, la prueba pasaria igual con `db_return.user_id`
+        en vez de `supervisor_id`, que es justo la distincion que protege.
+        Por eso la aserción también verifica explícitamente que el autor
+        NO es `cajero_a.id`.
 
         El reembolso en CASH exige sesion de caja abierta del aprobador en
         la sucursal de la devolucion (ver prioridad de asignacion en
-        approve_return); se abre una para que el escenario sea realista.
+        approve_return); se abre a nombre de `gerente_a`, quien aprueba.
         """
         _, variant = products_setup["product_a"]
 
@@ -85,7 +93,9 @@ class TestAutoriaDeMovimientos:
         ))
         db.commit(); db.refresh(venta)
 
-        _abrir_caja(db, org, branch_a, cajero_a)
+        # Sesion de caja del APROBADOR (gerente_a), no de quien crea la
+        # devolucion — approve_return busca la sesion OPEN de supervisor_id.
+        _abrir_caja(db, org, branch_a, gerente_a)
 
         devolucion = crud_returns.create_return(
             db=db,
@@ -98,7 +108,8 @@ class TestAutoriaDeMovimientos:
             ),
             user_id=cajero_a.id, branch_id=branch_a.id, organization_id=org.id,
         )
-        crud_returns.approve_return(db, devolucion.id, supervisor_id=cajero_a.id, organization_id=org.id)
+        crud_returns.approve_return(db, devolucion.id, supervisor_id=gerente_a.id, organization_id=org.id)
 
         mv = db.query(CashMovement).filter(CashMovement.type == "OUT").one()
-        assert mv.created_by_user_id == cajero_a.id
+        assert mv.created_by_user_id == gerente_a.id
+        assert mv.created_by_user_id != cajero_a.id
