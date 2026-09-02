@@ -417,24 +417,37 @@ def create_sale(
         )
 
     # --- 0b. Cash session gate (H-5) ---
-    # Para CUALQUIER usuario branch-scoped (CAJERO, GERENTE, VENDEDOR…), exigimos
-    # caja abierta independientemente de si la venta lleva pagos. Esto cierra el
-    # bypass de "venta a crédito sin sesión" (audit H-5). HQ users (ADMINISTRADOR
-    # /DUEÑO/SUPERADMIN) pueden registrar ventas sin sesión (back-office/migración).
-    if not _is_hq_role(current_user) and current_user.branch_id:
+    # El efectivo es fisico y no admite excepciones de rol: si esta venta mete
+    # billetes en un cajon de sucursal, tiene que haber una caja abierta que
+    # responda por ellos. La exencion historica para roles HQ se conserva solo
+    # para lo que NO toca el cajon (tarjeta, transferencia, credito), que es el
+    # caso de back-office/migracion para el que se escribio.
+    cobra_efectivo = any(
+        str(getattr(p.method, "value", p.method)).upper() == "CASH"
+        for p in (sale_in.payments or [])
+    )
+    requiere_caja = bool(current_user.branch_id) and (
+        cobra_efectivo or not _is_hq_role(current_user)
+    )
+    if requiere_caja:
         active_session = db.query(CashSession).filter(
             CashSession.user_id == current_user.id,
             CashSession.branch_id == current_user.branch_id,
-            CashSession.status == CashSessionStatus.OPEN
+            CashSession.status == CashSessionStatus.OPEN,
         ).first()
         if not active_session:
             logger.warning(
-                "BLOCKED_CHECKOUT: user_id=%s branch_id=%s pending_sale_id=%s reason=no_open_cash_session",
-                current_user.id, current_user.branch_id, sale_in.id
+                "BLOCKED_CHECKOUT: user_id=%s branch_id=%s pending_sale_id=%s reason=%s",
+                current_user.id, current_user.branch_id, sale_in.id,
+                "no_open_cash_session_cash_payment" if cobra_efectivo else "no_open_cash_session",
             )
             raise HTTPException(
                 status_code=409,
-                detail="Debes abrir caja antes de registrar ventas"
+                detail=(
+                    "Debes abrir caja antes de cobrar en efectivo"
+                    if cobra_efectivo
+                    else "Debes abrir caja antes de registrar ventas"
+                ),
             )
 
     # --- 0. Verificar si es una actualización de una venta existente ---
