@@ -218,11 +218,27 @@ def corregir_saldo_inicial(
             detail="Solo el dueño del turno o un GERENTE/ADMINISTRADOR/DUEÑO puede corregir el fondo.",
         )
 
+    from app.services.cash_reconciliation import session_payments_filter
+
     tiene_movimientos = db.query(CashMovement).filter(
         CashMovement.session_id == session.id).count() > 0
     tiene_ventas = db.query(SalesDocument).filter(
         SalesDocument.cash_session_id == session.id).count() > 0
-    if tiene_movimientos or tiene_ventas:
+    # Tercera via de entrada de dinero a una sesión: un `Payment` atribuido a
+    # ella cuyo documento pertenece a otra (el abono de una venta a crédito
+    # vieja). No genera `CashMovement` ni mueve `SalesDocument.cash_session_id`,
+    # así que el guard lo daba por "caja limpia" y dejaba reescribir el fondo —
+    # enmascarando un faltante por el mismo monto. Se usa el mismo criterio de
+    # atribución que el corte (`session_payments_filter`) para que "la caja
+    # tiene dinero" signifique aquí exactamente lo mismo que allá; el outerjoin
+    # deja pasar los abonos a cuenta, que no cuelgan de ningún documento.
+    tiene_pagos = db.query(Payment).outerjoin(
+        SalesDocument, Payment.sales_document_id == SalesDocument.id
+    ).filter(
+        Payment.organization_id == org_id,
+        session_payments_filter(session),
+    ).count() > 0
+    if tiene_movimientos or tiene_ventas or tiene_pagos:
         raise HTTPException(
             status_code=409,
             detail=(
