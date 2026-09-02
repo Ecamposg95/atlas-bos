@@ -132,9 +132,23 @@ file::memory:
 
 # Credenciales de cuentas QA — nunca al repositorio ni a la imagen
 acceso-qa-atlasone.pdf
-*.pdf
+# PDFs sueltos en la raíz (suelen ser exportes con datos). Los de docs/ sí van.
+/*.pdf
+
+# Volcados de base de datos: pesan mucho y arrastran hashes de contraseña
+dumps/
+*.sql.gz
 
 # El Dockerfile de raiz NO debe llegar a main: Railway lo prioriza sobre
 # Railpack y cambiaria la compilacion de produccion. Vive en el servidor.
 /Dockerfile
 /.dockerignore
+
+# Subidas en tiempo de ejecución: en el servidor viven en volúmenes Docker,
+# así que versionarlas es peso muerto que ademas queda tapado por el volumen.
+app/static/uploads/*
+!app/static/uploads/.gitkeep
+app/static/product_images/*
+!app/static/product_images/.gitkeep
+app/static/branch_logos/*
+!app/static/branch_logos/.gitkeep
