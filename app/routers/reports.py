@@ -21,6 +21,7 @@ def _mx(col):
     return func.timezone("America/Mexico_City", col)
 
 from app.core.database import get_db
+from app.services.cash_reconciliation import SALES_REPORT_STATUSES
 from app.models import (
     SalesDocument, SalesLineItem, Payment, 
     ProductVariant, Customer, CashSession, DocumentStatus, CustomerLedgerEntry,
@@ -57,7 +58,8 @@ def get_daily_summary(
     ).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id
+        SalesDocument.branch_id == current_user.branch_id,
+        SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).first()
 
     # 2. Desglose por Métodos de Pago
@@ -67,7 +69,8 @@ def get_daily_summary(
     ).join(SalesDocument).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(Payment.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id
+        SalesDocument.branch_id == current_user.branch_id,
+        SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).group_by(Payment.method).all()
 
     # 3. Top 5 Productos más vendidos
@@ -76,7 +79,9 @@ def get_daily_summary(
         func.sum(SalesLineItem.quantity).label("qty")
     ).join(SalesDocument).filter(
         SalesDocument.organization_id == org_id,
-        func.date(_mx(SalesDocument.created_at)) == target_date
+        func.date(_mx(SalesDocument.created_at)) == target_date,
+        SalesDocument.branch_id == current_user.branch_id,
+        SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).group_by(SalesLineItem.description).order_by(desc("qty")).limit(5).all()
 
     # 4. Cálculo de Utilidad Bruta (Venta - Costo)
@@ -85,7 +90,8 @@ def get_daily_summary(
     ).join(SalesDocument).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == target_date,
-        SalesDocument.status == DocumentStatus.COMPLETED
+        SalesDocument.branch_id == current_user.branch_id,
+        SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).scalar() or Decimal(0)
 
     return {

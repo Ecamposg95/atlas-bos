@@ -6,6 +6,7 @@ import os
 import pytest
 from decimal import Decimal
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 # Force SQLite before any app imports
 os.environ["DATABASE_URL"] = "sqlite:///file::memory:?cache=shared"
@@ -51,6 +52,21 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):
     # busy_timeout la conexión ESPERA el lock en vez de fallar de inmediato.
     cursor.execute("PRAGMA busy_timeout=30000")
     cursor.close()
+    # Los reportes agrupan por dia local con `timezone(zona, ts)`, que es de
+    # Postgres (app/routers/reports.py::_mx). SQLite no la trae. Shim de solo
+    # pruebas -- el SQL de produccion queda identico al que corre en Postgres.
+    dbapi_connection.create_function("timezone", 2, _pg_timezone)
+
+
+def _pg_timezone(zone, ts):
+    """Equivalente de `timezone(zona, timestamptz)`: pasa el instante UTC
+    almacenado a hora local de `zona` y lo devuelve sin offset, como Postgres."""
+    if ts is None:
+        return None
+    dt = ts if isinstance(ts, datetime) else datetime.fromisoformat(str(ts))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(ZoneInfo(zone)).replace(tzinfo=None).isoformat(sep=" ")
 
 TestSession = sessionmaker(autocommit=False, autoflush=False, bind=TEST_ENGINE)
 
