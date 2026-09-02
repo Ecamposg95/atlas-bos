@@ -20,6 +20,7 @@ from app.core.database import SessionLocal, engine, Base
 from app.models.users import User, PlatformRole, Role, UserOrganization
 from app.models.organization import Organization, IndustryType
 from app.core.security import get_password_hash
+from sqlalchemy import inspect, text
 from sqlalchemy.exc import IntegrityError
 
 def init_database():
@@ -27,6 +28,258 @@ def init_database():
     print("🔧 Creating database tables...")
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created")
+
+
+# ── Migraciones de esquema (regla 3 de CLAUDE.md) ────────────────────────────
+#
+# Estas listas son la UNICA fuente de la DDL incremental: `run_migrations()`
+# las aplica en cada arranque (las cuatro rutas de despliegue —Procfile,
+# nixpacks.toml, railway.json, Dockerfile— corren este script antes de
+# uvicorn) y los envoltorios `scripts/migrate_*.py` importan de aqui el
+# subconjunto que les toca, para que no exista una segunda copia del DDL que
+# se pueda desincronizar.
+
+# Atribucion del efectivo a la caja que lo recibio (rama pago-atribuido-a-caja).
+# Sin esta columna, el codigo nuevo arranca contra el esquema viejo y la
+# primera consulta que toque `Payment` revienta con UndefinedColumn: cobros,
+# cortes y reportes en 500. Nullable a proposito — los pagos historicos y los
+# de ventas sin caja se quedan sin atribucion explicita y caen al respaldo por
+# documento (`session_payments_filter`).
+MIGRACIONES_PAYMENTS_CASH_SESSION = [
+    ("payments", "cash_session_id",
+     "ALTER TABLE payments ADD COLUMN cash_session_id INTEGER REFERENCES cash_sessions(id);"),
+]
+INDICES_PAYMENTS_CASH_SESSION = [
+    ("ix_payments_cash_session_id",
+     "CREATE INDEX IF NOT EXISTS ix_payments_cash_session_id ON payments (cash_session_id);"),
+]
+
+# Autor del movimiento de caja. Las filas historicas quedan en NULL a
+# proposito: inventarles un autor seria peor que reconocer que no se sabe.
+MIGRACIONES_CASH_MOVEMENT_AUTHOR = [
+    ("cash_movements", "created_by_user_id",
+     "ALTER TABLE cash_movements ADD COLUMN created_by_user_id INTEGER REFERENCES users(id);"),
+]
+INDICES_CASH_MOVEMENT_AUTHOR = [
+    ("ix_cash_movements_created_by",
+     "CREATE INDEX IF NOT EXISTS ix_cash_movements_created_by ON cash_movements (created_by_user_id);"),
+]
+
+
+COLUMN_MIGRATIONS = [
+    # (table, column, ddl)
+    ("products", "image_url",      "ALTER TABLE products ADD COLUMN image_url VARCHAR;"),
+    ("product_variants", "has_iva", "ALTER TABLE product_variants ADD COLUMN has_iva BOOLEAN DEFAULT FALSE;"),
+    ("brands",   "logo_url",       "ALTER TABLE brands ADD COLUMN logo_url VARCHAR;"),
+    ("branches", "paper_width_mm", "ALTER TABLE branches ADD COLUMN paper_width_mm INTEGER DEFAULT 80;"),
+    ("branches", "printer_cols",   "ALTER TABLE branches ADD COLUMN printer_cols INTEGER;"),
+    ("branches", "open_drawer_on_print", "ALTER TABLE branches ADD COLUMN open_drawer_on_print BOOLEAN NOT NULL DEFAULT TRUE;"),
+    # Cashier Cockpit (PR #165) — Branch.daily_sales_goal and Branch.closing_time
+    ("branches", "daily_sales_goal", "ALTER TABLE branches ADD COLUMN daily_sales_goal NUMERIC(12,2);"),
+    ("branches", "closing_time",     "ALTER TABLE branches ADD COLUMN closing_time TIME;"),
+    # Branch logo (E#2) — per-branch ticket logo override
+    ("branches", "logo_url",         "ALTER TABLE branches ADD COLUMN logo_url VARCHAR;"),
+    ("cash_sessions", "total_change_given", "ALTER TABLE cash_sessions ADD COLUMN total_change_given NUMERIC(10,2) DEFAULT 0.00;"),
+    ("sales_lines", "discount_percent", "ALTER TABLE sales_lines ADD COLUMN discount_percent NUMERIC(5,2) DEFAULT 0.00;"),
+    # Sprint 2 — multi-tenancy completa (S2.2)
+    ("cash_sessions", "organization_id", "ALTER TABLE cash_sessions ADD COLUMN organization_id INTEGER REFERENCES organization(id);"),
+    ("employees", "organization_id", "ALTER TABLE employees ADD COLUMN organization_id INTEGER REFERENCES organization(id);"),
+    # Track 1 (POS bug-fix) — vincular venta a sesión de caja
+    ("sales_documents", "cash_session_id", "ALTER TABLE sales_documents ADD COLUMN cash_session_id INTEGER REFERENCES cash_sessions(id);"),
+    # Fase 1.3 — vuelto entregado por venta (persistido al crear, leído al cuadrar).
+    # NULL = venta legada → reconciliación recomputa con la lógica antigua.
+    ("sales_documents", "change_given", "ALTER TABLE sales_documents ADD COLUMN change_given NUMERIC(12,2);"),
+    # Track 4 (POS bug-fix) — tracking per-PC en print_jobs
+    ("print_jobs", "device_id",          "ALTER TABLE print_jobs ADD COLUMN device_id VARCHAR(64);"),
+    ("print_jobs", "device_fingerprint", "ALTER TABLE print_jobs ADD COLUMN device_fingerprint VARCHAR(128);"),
+    ("print_jobs", "client_ip",          "ALTER TABLE print_jobs ADD COLUMN client_ip VARCHAR(64);"),
+    # CAJERO audit 2026-04-29 (H-2) — descuento global persistido para reportes.
+    # No se agrega al modelo ORM; solo lectura defensiva via setattr.
+    ("sales_documents", "global_discount_pct", "ALTER TABLE sales_documents ADD COLUMN global_discount_pct NUMERIC(5,2) DEFAULT 0;"),
+    # CAJERO audit 2026-04-29 (M-3) — lifecycle de parked tickets. status='ACTIVE' default;
+    # se setea a 'CONVERTED' cuando el ticket se materializa en una venta. converted_to_sale_id
+    # da trazabilidad parked → sale.
+    ("parked_tickets", "status",                "ALTER TABLE parked_tickets ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE';"),
+    ("parked_tickets", "converted_to_sale_id",  "ALTER TABLE parked_tickets ADD COLUMN converted_to_sale_id VARCHAR(36) REFERENCES sales_documents(id);"),
+    # Atlas One presets expansion 2026-05-13 — upsell metadata per module.
+    # Populated by scripts/init_presets_v2.py (run manually post-deploy).
+    ("modules", "upsell_metadata", "ALTER TABLE modules ADD COLUMN upsell_metadata JSON;"),
+    # Appointments MVP 2026-05-18 — slug for public portal URLs
+    ("organization", "slug", "ALTER TABLE organization ADD COLUMN slug VARCHAR(64);"),
+    # Preset deprecation 2026-06-09 — hide legacy presets from selectors
+    ("industry_presets", "is_deprecated", "ALTER TABLE industry_presets ADD COLUMN is_deprecated BOOLEAN NOT NULL DEFAULT FALSE;"),
+    # Gastro 2026-07-09 — propina cobrada y atribución al mesero (ventas por mesero)
+    ("sales_documents", "tip_amount",     "ALTER TABLE sales_documents ADD COLUMN tip_amount NUMERIC(10,2) DEFAULT 0;"),
+    ("sales_documents", "server_user_id", "ALTER TABLE sales_documents ADD COLUMN server_user_id INTEGER REFERENCES users(id);"),
+    # Atribucion por pago (2026-09-02) — ver los bloques de arriba.
+    *MIGRACIONES_PAYMENTS_CASH_SESSION,
+    *MIGRACIONES_CASH_MOVEMENT_AUTHOR,
+]
+
+INDEX_MIGRATIONS = [
+    # (name, ddl)
+    # Folio race fix 2026-07-29 — garantía dura contra folios fiscales
+    # duplicados. get_next_folio hace MAX(folio)+1 sin bloqueo; dos ventas
+    # concurrentes de la misma sucursal podían compartir folio. El advisory
+    # lock en app/utils/folios.py lo previene; este índice lo hace imposible.
+    # Verificado 0 duplicados en prod antes de crearlo. Parcial: los folios
+    # son permanentes una vez asignados (soft-delete incluido).
+    (
+        "uq_sales_documents_branch_series_folio",
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS uq_sales_documents_branch_series_folio
+            ON sales_documents (branch_id, series, folio)
+            WHERE folio IS NOT NULL;
+        """,
+    ),
+    (
+        "ix_pbs_branch_active_pos",
+        """
+        CREATE INDEX IF NOT EXISTS ix_pbs_branch_active_pos
+            ON product_branch_status (branch_id, variant_id)
+            WHERE is_active_pos = true;
+        """,
+    ),
+    # Sprint 2 — índices para filtros por organization_id
+    (
+        "ix_cash_sessions_organization_id",
+        "CREATE INDEX IF NOT EXISTS ix_cash_sessions_organization_id ON cash_sessions (organization_id);",
+    ),
+    (
+        "ix_employees_organization_id",
+        "CREATE INDEX IF NOT EXISTS ix_employees_organization_id ON employees (organization_id);",
+    ),
+    # Track 1 (POS bug-fix)
+    (
+        "ix_sales_documents_cash_session_id",
+        "CREATE INDEX IF NOT EXISTS ix_sales_documents_cash_session_id ON sales_documents (cash_session_id);",
+    ),
+    # Track 4 (POS bug-fix)
+    (
+        "ix_print_jobs_device_id",
+        "CREATE INDEX IF NOT EXISTS ix_print_jobs_device_id ON print_jobs (device_id);",
+    ),
+    # Platform pack 2026-04-30 — Control Tower / Stats endpoints filtran sales_documents
+    # por created_at en cada request (sales-now, system-health-summary, kpis-extended,
+    # cohort-retention, etc). Sin este índice, full table scan = endpoints cuelgan.
+    (
+        "ix_sales_documents_created_at",
+        "CREATE INDEX IF NOT EXISTS ix_sales_documents_created_at ON sales_documents (created_at);",
+    ),
+    # Cashier perf 2026-05-07 — /cash/summary y /cash/branch-summary filtran por
+    # (seller_id, created_at) cada vez que el cajero refresca el dashboard del turno.
+    # Sin composite, plan = bitmap heap scan sobre miles de filas.
+    (
+        "ix_sales_seller_created",
+        "CREATE INDEX IF NOT EXISTS ix_sales_seller_created ON sales_documents (seller_id, created_at);",
+    ),
+    # Cashier perf 2026-05-07 — cierre de turno scanea parked_tickets por user+branch+created_at
+    # para detectar tickets pausados. Composite acelera tanto el cierre como el polling
+    # del badge de pendientes en POS.
+    (
+        "ix_parked_tickets_user_branch_created",
+        "CREATE INDEX IF NOT EXISTS ix_parked_tickets_user_branch_created ON parked_tickets (user_id, branch_id, created_at);",
+    ),
+    # Appointments MVP 2026-05-18 — critical indexes for availability + lifecycle
+    (
+        "ix_appt_org_branch_starts",
+        "CREATE INDEX IF NOT EXISTS ix_appt_org_branch_starts ON appointments (organization_id, branch_id, starts_at);",
+    ),
+    (
+        "ix_appt_professional_range",
+        "CREATE INDEX IF NOT EXISTS ix_appt_professional_range ON appointments (professional_id, starts_at, ends_at);",
+    ),
+    (
+        "ix_appt_customer",
+        "CREATE INDEX IF NOT EXISTS ix_appt_customer ON appointments (customer_id);",
+    ),
+    (
+        "ix_appt_events",
+        "CREATE INDEX IF NOT EXISTS ix_appt_events ON appointments_events (appointment_id, created_at);",
+    ),
+    (
+        "ix_blocks_prof_range",
+        "CREATE INDEX IF NOT EXISTS ix_blocks_prof_range ON appointments_blocks (professional_id, starts_at, ends_at);",
+    ),
+    # Atribucion por pago (2026-09-02)
+    *INDICES_PAYMENTS_CASH_SESSION,
+    *INDICES_CASH_MOVEMENT_AUTHOR,
+]
+
+
+def aplicar_migraciones_de_columna(conn, migraciones=None):
+    """Aplica los ALTER de columna que falten. Idempotente.
+
+    Se consulta el inspector de SQLAlchemy en vez de `information_schema`
+    porque esta misma funcion corre en PostgreSQL (produccion) y en SQLite
+    (pruebas y los envoltorios `scripts/migrate_*.py`). Devuelve las columnas
+    que efectivamente se crearon, para poder afirmarlo en pruebas.
+    """
+    if migraciones is None:
+        migraciones = COLUMN_MIGRATIONS
+    aplicadas = []
+    for table, column, ddl in migraciones:
+        inspector = inspect(conn)
+        if not inspector.has_table(table):
+            # create_all() ya la habra creado con la columna incluida si el
+            # modelo la declara; no hay nada que ALTERar.
+            print(f"  · {table} no existe todavia — {table}.{column} omitida")
+            continue
+        if column in {c["name"] for c in inspector.get_columns(table)}:
+            print(f"  · {table}.{column} already exists")
+            continue
+        conn.execute(text(ddl))
+        conn.commit()
+        aplicadas.append(f"{table}.{column}")
+        print(f"  ✓ {table}.{column} added")
+    return aplicadas
+
+
+def aplicar_migraciones_de_indice(conn, indices=None):
+    """CREATE INDEX IF NOT EXISTS — idempotente en Postgres y en SQLite."""
+    if indices is None:
+        indices = INDEX_MIGRATIONS
+    for name, ddl in indices:
+        conn.execute(text(ddl))
+        conn.commit()
+        print(f"  ✓ index {name} ensured")
+
+
+def rellenar_payments_cash_session(motor):
+    """Relleno historico de `payments.cash_session_id`.
+
+    Hasta la rama que introdujo la columna, el pago se creaba en la misma
+    transaccion que la venta, asi que la caja del DOCUMENTO si era la que
+    recibio el dinero. Se hereda esa atribucion, nunca se pisa una ya escrita
+    y no se inventa sesion donde el documento tampoco la tiene.
+
+    Corre en cada despliegue y es seguro que lo haga: el filtro
+    `session_payments_filter` ya trata un pago sin atribucion como perteneciente
+    a la sesion de su documento (rama de respaldo), asi que escribirla no mueve
+    ningun numero — solo la vuelve explicita. Devuelve (rellenados, pendientes).
+    """
+    with motor.begin() as conn:
+        resultado = conn.execute(text("""
+            UPDATE payments
+            SET cash_session_id = (
+                SELECT s.cash_session_id
+                FROM sales_documents s
+                WHERE s.id = payments.sales_document_id
+            )
+            WHERE payments.cash_session_id IS NULL
+              AND payments.sales_document_id IS NOT NULL
+              AND EXISTS (
+                  SELECT 1 FROM sales_documents s
+                  WHERE s.id = payments.sales_document_id
+                    AND s.cash_session_id IS NOT NULL
+              )
+        """))
+        rellenados = resultado.rowcount
+        pendientes = conn.execute(text(
+            "SELECT COUNT(*) FROM payments WHERE cash_session_id IS NULL"
+        )).scalar()
+    return rellenados, pendientes
+
 
 def run_migrations():
     """Run incremental column migrations (idempotent)."""
@@ -46,53 +299,6 @@ def run_migrations():
                 f"ALTER TYPE industrytype ADD VALUE IF NOT EXISTS '{member.value}'"
             ))
     print(f"  ✓ industrytype enum synced ({len(list(IndustryType))} values)")
-
-    migrations = [
-        # (table, column, ddl)
-        ("products", "image_url",      "ALTER TABLE products ADD COLUMN image_url VARCHAR;"),
-        ("product_variants", "has_iva", "ALTER TABLE product_variants ADD COLUMN has_iva BOOLEAN DEFAULT FALSE;"),
-        ("brands",   "logo_url",       "ALTER TABLE brands ADD COLUMN logo_url VARCHAR;"),
-        ("branches", "paper_width_mm", "ALTER TABLE branches ADD COLUMN paper_width_mm INTEGER DEFAULT 80;"),
-        ("branches", "printer_cols",   "ALTER TABLE branches ADD COLUMN printer_cols INTEGER;"),
-        ("branches", "open_drawer_on_print", "ALTER TABLE branches ADD COLUMN open_drawer_on_print BOOLEAN NOT NULL DEFAULT TRUE;"),
-        # Cashier Cockpit (PR #165) — Branch.daily_sales_goal and Branch.closing_time
-        ("branches", "daily_sales_goal", "ALTER TABLE branches ADD COLUMN daily_sales_goal NUMERIC(12,2);"),
-        ("branches", "closing_time",     "ALTER TABLE branches ADD COLUMN closing_time TIME;"),
-        # Branch logo (E#2) — per-branch ticket logo override
-        ("branches", "logo_url",         "ALTER TABLE branches ADD COLUMN logo_url VARCHAR;"),
-        ("cash_sessions", "total_change_given", "ALTER TABLE cash_sessions ADD COLUMN total_change_given NUMERIC(10,2) DEFAULT 0.00;"),
-        ("sales_lines", "discount_percent", "ALTER TABLE sales_lines ADD COLUMN discount_percent NUMERIC(5,2) DEFAULT 0.00;"),
-        # Sprint 2 — multi-tenancy completa (S2.2)
-        ("cash_sessions", "organization_id", "ALTER TABLE cash_sessions ADD COLUMN organization_id INTEGER REFERENCES organization(id);"),
-        ("employees", "organization_id", "ALTER TABLE employees ADD COLUMN organization_id INTEGER REFERENCES organization(id);"),
-        # Track 1 (POS bug-fix) — vincular venta a sesión de caja
-        ("sales_documents", "cash_session_id", "ALTER TABLE sales_documents ADD COLUMN cash_session_id INTEGER REFERENCES cash_sessions(id);"),
-        # Fase 1.3 — vuelto entregado por venta (persistido al crear, leído al cuadrar).
-        # NULL = venta legada → reconciliación recomputa con la lógica antigua.
-        ("sales_documents", "change_given", "ALTER TABLE sales_documents ADD COLUMN change_given NUMERIC(12,2);"),
-        # Track 4 (POS bug-fix) — tracking per-PC en print_jobs
-        ("print_jobs", "device_id",          "ALTER TABLE print_jobs ADD COLUMN device_id VARCHAR(64);"),
-        ("print_jobs", "device_fingerprint", "ALTER TABLE print_jobs ADD COLUMN device_fingerprint VARCHAR(128);"),
-        ("print_jobs", "client_ip",          "ALTER TABLE print_jobs ADD COLUMN client_ip VARCHAR(64);"),
-        # CAJERO audit 2026-04-29 (H-2) — descuento global persistido para reportes.
-        # No se agrega al modelo ORM; solo lectura defensiva via setattr.
-        ("sales_documents", "global_discount_pct", "ALTER TABLE sales_documents ADD COLUMN global_discount_pct NUMERIC(5,2) DEFAULT 0;"),
-        # CAJERO audit 2026-04-29 (M-3) — lifecycle de parked tickets. status='ACTIVE' default;
-        # se setea a 'CONVERTED' cuando el ticket se materializa en una venta. converted_to_sale_id
-        # da trazabilidad parked → sale.
-        ("parked_tickets", "status",                "ALTER TABLE parked_tickets ADD COLUMN status VARCHAR(16) NOT NULL DEFAULT 'ACTIVE';"),
-        ("parked_tickets", "converted_to_sale_id",  "ALTER TABLE parked_tickets ADD COLUMN converted_to_sale_id VARCHAR(36) REFERENCES sales_documents(id);"),
-        # Atlas One presets expansion 2026-05-13 — upsell metadata per module.
-        # Populated by scripts/init_presets_v2.py (run manually post-deploy).
-        ("modules", "upsell_metadata", "ALTER TABLE modules ADD COLUMN upsell_metadata JSON;"),
-        # Appointments MVP 2026-05-18 — slug for public portal URLs
-        ("organization", "slug", "ALTER TABLE organization ADD COLUMN slug VARCHAR(64);"),
-        # Preset deprecation 2026-06-09 — hide legacy presets from selectors
-        ("industry_presets", "is_deprecated", "ALTER TABLE industry_presets ADD COLUMN is_deprecated BOOLEAN NOT NULL DEFAULT FALSE;"),
-        # Gastro 2026-07-09 — propina cobrada y atribución al mesero (ventas por mesero)
-        ("sales_documents", "tip_amount",     "ALTER TABLE sales_documents ADD COLUMN tip_amount NUMERIC(10,2) DEFAULT 0;"),
-        ("sales_documents", "server_user_id", "ALTER TABLE sales_documents ADD COLUMN server_user_id INTEGER REFERENCES users(id);"),
-    ]
 
     # Track 1 — Audit + cleanup de Payment huérfanos antes de NOT NULL.
     # Listar count en logs; en QA borramos. En prod, ESTA acción se replantea
@@ -130,111 +336,11 @@ def run_migrations():
             print("  · payments.sales_document_id ya era NOT NULL")
 
     with engine.connect() as conn:
-        for table, column, ddl in migrations:
-            res = conn.execute(text(
-                "SELECT column_name FROM information_schema.columns "
-                f"WHERE table_name='{table}' AND column_name='{column}'"
-            ))
-            if not res.fetchone():
-                conn.execute(text(ddl))
-                conn.commit()
-                print(f"  ✓ {table}.{column} added")
-            else:
-                print(f"  · {table}.{column} already exists")
+        aplicar_migraciones_de_columna(conn, COLUMN_MIGRATIONS)
 
     # --- Index migrations (idempotent via CREATE INDEX IF NOT EXISTS) ---
-    index_migrations = [
-        # (name, ddl)
-        # Folio race fix 2026-07-29 — garantía dura contra folios fiscales
-        # duplicados. get_next_folio hace MAX(folio)+1 sin bloqueo; dos ventas
-        # concurrentes de la misma sucursal podían compartir folio. El advisory
-        # lock en app/utils/folios.py lo previene; este índice lo hace imposible.
-        # Verificado 0 duplicados en prod antes de crearlo. Parcial: los folios
-        # son permanentes una vez asignados (soft-delete incluido).
-        (
-            "uq_sales_documents_branch_series_folio",
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS uq_sales_documents_branch_series_folio
-                ON sales_documents (branch_id, series, folio)
-                WHERE folio IS NOT NULL;
-            """,
-        ),
-        (
-            "ix_pbs_branch_active_pos",
-            """
-            CREATE INDEX IF NOT EXISTS ix_pbs_branch_active_pos
-                ON product_branch_status (branch_id, variant_id)
-                WHERE is_active_pos = true;
-            """,
-        ),
-        # Sprint 2 — índices para filtros por organization_id
-        (
-            "ix_cash_sessions_organization_id",
-            "CREATE INDEX IF NOT EXISTS ix_cash_sessions_organization_id ON cash_sessions (organization_id);",
-        ),
-        (
-            "ix_employees_organization_id",
-            "CREATE INDEX IF NOT EXISTS ix_employees_organization_id ON employees (organization_id);",
-        ),
-        # Track 1 (POS bug-fix)
-        (
-            "ix_sales_documents_cash_session_id",
-            "CREATE INDEX IF NOT EXISTS ix_sales_documents_cash_session_id ON sales_documents (cash_session_id);",
-        ),
-        # Track 4 (POS bug-fix)
-        (
-            "ix_print_jobs_device_id",
-            "CREATE INDEX IF NOT EXISTS ix_print_jobs_device_id ON print_jobs (device_id);",
-        ),
-        # Platform pack 2026-04-30 — Control Tower / Stats endpoints filtran sales_documents
-        # por created_at en cada request (sales-now, system-health-summary, kpis-extended,
-        # cohort-retention, etc). Sin este índice, full table scan = endpoints cuelgan.
-        (
-            "ix_sales_documents_created_at",
-            "CREATE INDEX IF NOT EXISTS ix_sales_documents_created_at ON sales_documents (created_at);",
-        ),
-        # Cashier perf 2026-05-07 — /cash/summary y /cash/branch-summary filtran por
-        # (seller_id, created_at) cada vez que el cajero refresca el dashboard del turno.
-        # Sin composite, plan = bitmap heap scan sobre miles de filas.
-        (
-            "ix_sales_seller_created",
-            "CREATE INDEX IF NOT EXISTS ix_sales_seller_created ON sales_documents (seller_id, created_at);",
-        ),
-        # Cashier perf 2026-05-07 — cierre de turno scanea parked_tickets por user+branch+created_at
-        # para detectar tickets pausados. Composite acelera tanto el cierre como el polling
-        # del badge de pendientes en POS.
-        (
-            "ix_parked_tickets_user_branch_created",
-            "CREATE INDEX IF NOT EXISTS ix_parked_tickets_user_branch_created ON parked_tickets (user_id, branch_id, created_at);",
-        ),
-        # Appointments MVP 2026-05-18 — critical indexes for availability + lifecycle
-        (
-            "ix_appt_org_branch_starts",
-            "CREATE INDEX IF NOT EXISTS ix_appt_org_branch_starts ON appointments (organization_id, branch_id, starts_at);",
-        ),
-        (
-            "ix_appt_professional_range",
-            "CREATE INDEX IF NOT EXISTS ix_appt_professional_range ON appointments (professional_id, starts_at, ends_at);",
-        ),
-        (
-            "ix_appt_customer",
-            "CREATE INDEX IF NOT EXISTS ix_appt_customer ON appointments (customer_id);",
-        ),
-        (
-            "ix_appt_events",
-            "CREATE INDEX IF NOT EXISTS ix_appt_events ON appointments_events (appointment_id, created_at);",
-        ),
-        (
-            "ix_blocks_prof_range",
-            "CREATE INDEX IF NOT EXISTS ix_blocks_prof_range ON appointments_blocks (professional_id, starts_at, ends_at);",
-        ),
-    ]
-
     with engine.connect() as conn:
-        for name, ddl in index_migrations:
-            conn.execute(text(ddl))
-            conn.commit()
-            print(f"  ✓ index {name} ensured")
+        aplicar_migraciones_de_indice(conn, INDEX_MIGRATIONS)
 
     # Partial index — only Postgres supports CREATE INDEX ... WHERE
     if engine.dialect.name == "postgresql":
@@ -246,6 +352,16 @@ def run_migrations():
             ))
             conn.commit()
             print("  ✓ index ix_appt_resource_range (partial) ensured")
+
+    # --- Backfill: atribucion historica de payments.cash_session_id ---
+    # Vive aqui, y no en un script suelto, porque un script suelto no lo corre
+    # nadie en un despliegue por push (regla 3 de CLAUDE.md). Repetirlo en cada
+    # arranque es seguro: nunca pisa una atribucion ya escrita y solo vuelve
+    # explicita la que `session_payments_filter` ya deducia por documento.
+    print("\n  Backfill payments.cash_session_id…")
+    rellenados, sin_atribucion = rellenar_payments_cash_session(engine)
+    print(f"  ✓ payments backfill: {rellenados} rellenados, "
+          f"{sin_atribucion} sin atribucion (nulo a proposito)")
 
     # --- Sprint 2 backfill: cash_sessions.organization_id y employees.organization_id ---
     # Derivado de branches.organization_id. Idempotente (solo filas con NULL).
