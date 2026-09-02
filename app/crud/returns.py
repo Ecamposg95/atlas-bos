@@ -345,6 +345,12 @@ def approve_return(db: Session, return_id: str, supervisor_id: int,
             type='OUT',
             amount=db_return.total_refunded,
             reason=f"Devolución #{db_return.id[:8].upper()} - {db_return.reason}{reason_suffix}",
+            # Ronda de correcciones 1 de Task 4: sin esto, cada devolución
+            # en efectivo nace con autor NULL — no es una fila histórica,
+            # es un agujero que se sigue llenando. El autor está a la mano:
+            # `supervisor_id` es quien aprueba la devolución (y por tanto
+            # quien autoriza la salida de efectivo).
+            created_by_user_id=supervisor_id,
         )
         db.add(cash_mov)
         # Re-asociar la devolución a la sesión donde el dinero realmente
