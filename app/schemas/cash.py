@@ -1,15 +1,24 @@
 
 # schemas/cash.py
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Literal
 from decimal import Decimal
 from datetime import datetime
 
 class CashSessionBase(BaseModel):
-    opening_balance: Decimal = Field(ge=0)
+    # Hallazgo (revisión final): `ge=0` vivía aquí, y `CashSessionRead` (más
+    # abajo) hereda de esta clase — Pydantic aplica la cota también al
+    # response_model de /status, /history, /open y /close. Una fila
+    # histórica con `opening_balance` negativo (dato ya persistido, por la
+    # razón que sea) hacía que FastAPI lanzara ResponseValidationError → 500
+    # al leerla, y en /history una sola fila mala tumbaba la lista completa.
+    # La cota solo tiene sentido en la entrada (no dejar CREAR una sesión con
+    # fondo negativo); las respuestas deben poder leer lo que ya esté en BD
+    # tal cual, sin revalidar. Por eso vive en `CashSessionCreate`, no aquí.
+    opening_balance: Decimal
 
 class CashSessionCreate(CashSessionBase):
-    pass # Solo necesitamos el saldo inicial
+    opening_balance: Decimal = Field(ge=0)
 
 class OpeningBalanceCorrection(BaseModel):
     """Correccion del fondo declarado al abrir. No es un movimiento de efectivo."""
@@ -22,7 +31,15 @@ class CashSessionClose(BaseModel):
 
 class CashMovementCreate(BaseModel):
     session_id: int
-    type: str  # 'IN' or 'OUT'
+    # Hallazgo (revisión final): era `str` libre. Un valor como "out" en
+    # minúsculas no bloqueaba la fila en /movements, no pasaba por
+    # `_validar_salida` (sin motivo, sin saldo, sin umbral por rol) porque esa
+    # rama solo se activa con `payload.type == "OUT"` exacto, y el cálculo del
+    # esperado tampoco lo contaba porque `compute_expected_cash` solo
+    # reconoce "IN"/"OUT" exactos — quedaba un retiro sin control y sin
+    # efecto en el corte. `Literal` hace que FastAPI rechace cualquier otro
+    # valor con 422 antes de llegar al router.
+    type: Literal["IN", "OUT"]
     amount: Decimal
     concept: Optional[str] = None
 
