@@ -232,10 +232,18 @@ def corregir_saldo_inicial(
     # atribución que el corte (`session_payments_filter`) para que "la caja
     # tiene dinero" signifique aquí exactamente lo mismo que allá; el outerjoin
     # deja pasar los abonos a cuenta, que no cuelgan de ningún documento.
+    #
+    # Solo el EFECTIVO cuenta: `session_payments_filter` no distingue método
+    # porque el corte necesita atribuir todos los pagos, pero lo que este
+    # guard protege es el cajón. Un abono con tarjeta no mete un peso al
+    # cajón, así que corregir el fondo no puede esconder un faltante — y
+    # bloquearlo le quitaba al cajero la única vía legítima de arreglar un
+    # fondo mal capturado.
     tiene_pagos = db.query(Payment).outerjoin(
         SalesDocument, Payment.sales_document_id == SalesDocument.id
     ).filter(
         Payment.organization_id == org_id,
+        Payment.method == PaymentMethod.CASH,
         session_payments_filter(session),
     ).count() > 0
     if tiene_movimientos or tiene_ventas or tiene_pagos:
