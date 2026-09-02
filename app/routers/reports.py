@@ -104,29 +104,54 @@ def get_cash_discrepancies(
     current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization)
 ):
-    """Lista las últimas sesiones de caja con faltantes o sobrantes significativos."""
+    """Últimos cortes cerrados con su arqueo, recalculado.
+
+    Antes esto filtraba por `CashSession.difference != 0` sobre el valor
+    PERSISTIDO y devolvía `total_cash_sales` bajo la etiqueta `expected_cash`.
+    Dos problemas encadenados:
+
+    - `total_cash_sales` es el efectivo NETO de ventas, no el esperado
+      (`apertura + neto + entradas − salidas − reembolsos`), así que la fila
+      mostraba Esperado/Contado/Diferencia sin que la resta cuadrara.
+    - Filtrar por la diferencia persistida ocultaba los cortes cuadrados en
+      0.00, que es exactamente lo que producía el auto-cuadre del conteo
+      pre-llenado: la pantalla decía "sin diferencias" cuando nadie había
+      contado nada.
+
+    Ahora se listan TODOS los cortes cerrados recientes con el esperado
+    recalculado por la fuente canónica, y se marca cuáles cuadran exacto para
+    que un 0.00 deje de leerse como tranquilidad automática.
+    """
     from sqlalchemy.orm import joinedload
-    discrepancies = db.query(CashSession).options(
+
+    from app.services.cash_reconciliation import compute_expected_cash
+
+    sesiones = db.query(CashSession).options(
         joinedload(CashSession.user),
         joinedload(CashSession.branch),
     ).join(CashSession.branch).filter(
         Branch.organization_id == org_id,
-        CashSession.difference != 0
+        CashSession.closed_at.isnot(None),
     ).order_by(desc(CashSession.closed_at)).limit(limit).all()
 
-    return [
-        {
+    salida = []
+    for s in sesiones:
+        esperado = Decimal(str(compute_expected_cash(db, s).expected))
+        contado = Decimal(str(s.closing_balance or 0))
+        diferencia = contado - esperado
+        salida.append({
             "session_id": s.id,
             "branch_name": s.branch.name if s.branch else "—",
             "opened_by": s.user.full_name or s.user.username if s.user else "—",
             "opening_amount": float(s.opening_balance or 0),
-            "expected_cash": float(s.total_cash_sales or 0),
-            "closing_amount": float(s.closing_balance or 0),
-            "difference": float(s.difference or 0),
+            "cash_sales": float(s.total_cash_sales or 0),
+            "expected_cash": float(esperado),
+            "closing_amount": float(contado),
+            "difference": float(diferencia),
+            "exact_match": diferencia == 0,
             "closed_at": s.closed_at.isoformat() if s.closed_at else None,
-        }
-        for s in discrepancies
-    ]
+        })
+    return salida
 
 @router.get("/aging-report", response_model=AgingReportResponse)
 def get_aging_report(

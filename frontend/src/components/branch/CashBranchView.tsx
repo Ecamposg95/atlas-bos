@@ -587,9 +587,14 @@ export function CashBranchView() {
             icon="fa-scale-balanced"
             label={current ? COPY.cashKpis.expected : 'Cierre reportado'}
             value={
-              summary?.expected_cash != null
-                ? (shouldShowExpectedKpi(current != null) ? fmtMoney(String(summary.expected_cash)) : BLIND_MASK)
-                : (todayClosedSession ? fmtMoney(String(todayClosedSession.closing_balance)) : '—')
+              // Con turno abierto: el esperado, enmascarado por conteo ciego.
+              // Con turno cerrado la etiqueta dice "Cierre reportado", asi que
+              // debe mostrar lo que el cajero CONTO, no lo que el sistema esperaba.
+              current
+                ? (shouldShowExpectedKpi(true) ? fmtMoney(String(summary?.expected_cash ?? 0)) : BLIND_MASK)
+                : (todayClosedSession?.closing_balance != null
+                    ? fmtMoney(String(todayClosedSession.closing_balance))
+                    : '—')
             }
             sub={
               current

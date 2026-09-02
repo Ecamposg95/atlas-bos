@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { BLIND_MASK, BLIND_LABEL, isValidCount, shouldRevealExpected } from '../../utils/blindCash'
 import { useIsBranchUser } from '../../components/branch/useIsBranchUser'
 import { CashBranchView } from '../../components/branch/CashBranchView'
 import { cashApi, type CashSummary } from '../../api/cash'
@@ -57,13 +58,17 @@ function MovementModal({ type, onClose, onConfirm }: { type: 'IN' | 'OUT'; onClo
 }
 
 function CloseModal({ summary, onClose, onConfirm }: { summary: CashSummary; onClose: () => void; onConfirm: (amount: number) => Promise<void> }) {
-  const [closing, setClosing] = useState(String(summary.expected_cash.toFixed(2)))
+  // Conteo ciego: NO pre-llenar con el esperado. Esta pantalla se habia quedado
+  // fuera del arreglo de CashBranchView, asi que aqui se seguia cerrando con un
+  // clic y diferencia 0.00.
+  const [closing, setClosing] = useState('')
   const [loading, setLoading] = useState(false)
 
   const diff = parseFloat(closing) - summary.expected_cash
 
   const submit = async () => {
     setLoading(true)
+    if (!isValidCount(closing)) return
     try { await onConfirm(parseFloat(closing)) } finally { setLoading(false) }
   }
 
@@ -83,7 +88,10 @@ function CloseModal({ summary, onClose, onConfirm }: { summary: CashSummary; onC
             </div>
           )}
           <div className="flex justify-between font-bold text-white border-t border-slate-700/50 pt-2">
-            <span>Esperado en caja</span><span>{formatCurrency(summary.expected_cash)}</span>
+            <span>Esperado en caja</span>
+            <span title={`${BLIND_LABEL} — cuenta el efectivo y captúralo abajo`}>
+              {shouldRevealExpected(closing) ? formatCurrency(summary.expected_cash) : BLIND_MASK}
+            </span>
           </div>
         </div>
         <div>
