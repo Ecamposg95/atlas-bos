@@ -752,6 +752,21 @@ def create_sale(
         sales_doc.requires_invoice = sale_in.requires_invoice
         sales_doc.change_given = change_given
         sales_doc.tip_amount = tip_amount
+
+        # El dinero entra al cajon de HOY, no al del dia en que se abrio la
+        # venta a credito. Si el turno que la abrio ya cerro, ese efectivo
+        # quedaria fuera de todo corte (ver CASH_INCLUDED_STATUSES arriba: sin
+        # esta reasignacion, el Payment recien creado seguiria colgado del
+        # cash_session_id viejo, que puede pertenecer a una sesion ya cerrada
+        # cuyo `expected` ya quedo fijo en el cierre).
+        if doc_status == DocumentStatus.PAID:
+            active_cash = db.query(CashSession.id).filter(
+                CashSession.user_id == current_user.id,
+                CashSession.branch_id == current_user.branch_id,
+                CashSession.status == CashSessionStatus.OPEN,
+            ).first()
+            if active_cash:
+                sales_doc.cash_session_id = active_cash[0]
     else:
         current_series = "A"
         next_folio = get_next_folio(db, branch_id=current_user.branch_id, series=current_series)

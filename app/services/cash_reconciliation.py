@@ -70,6 +70,12 @@ CASH_INCLUDED_STATUSES = (
     DocumentStatus.PAID,
     DocumentStatus.REFUNDED_PARTIAL,
     DocumentStatus.REFUNDED_TOTAL,
+    # Una venta a credito con abono parcial en efectivo tiene ese dinero en el
+    # cajon aunque el documento siga PENDING (deuda restante). El esperado se
+    # construye desde las filas Payment (lo realmente cobrado, verificado en
+    # `compute_expected_cash` abajo), NO desde `total_amount` — incluir
+    # PENDING no infla el esperado con dinero que todavia no entra.
+    DocumentStatus.PENDING,
 )
 
 
