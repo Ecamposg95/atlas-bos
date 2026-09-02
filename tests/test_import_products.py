@@ -44,6 +44,10 @@ class TestImportacion:
 
         v = db.query(ProductVariant).filter(ProductVariant.product_id == p.id).one()
         assert v.sku == "FOL-01"
+        assert v.variant_name == "Estándar", (
+            "toda ruta de creacion de la aplicacion asigna 'Estándar'; dejarlo "
+            "en NULL tumbaba el cobro con un 500 en sales.py"
+        )
         assert float(v.price) == 15.0
         assert float(v.cost) == 7.0
         assert v.organization_id == org.id

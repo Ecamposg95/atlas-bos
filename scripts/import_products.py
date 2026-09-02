@@ -195,6 +195,10 @@ def import_products(
         variante = ProductVariant(
             product_id=producto.id,
             sku=sku,
+            # Todas las rutas de creacion de la aplicacion asignan "Estándar";
+            # dejarlo en NULL tumbaba el cobro con un 500 al armar la
+            # descripcion del renglon de venta.
+            variant_name="Estándar",
             price=precio,
             cost=costo,
             organization_id=org_id,

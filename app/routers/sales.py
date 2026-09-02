@@ -342,6 +342,17 @@ def read_sales(
     return {"items": items, "total": total, "page": skip // limit if limit else 0, "pages": pages}
 
 @router.post("", response_model=Dict[str, Any], include_in_schema=False)
+def _line_description(variant) -> str:
+    """Descripcion del renglon de venta: nombre del producto y, si la variante
+    tiene un nombre propio distinto del estandar, ese nombre entre parentesis.
+    """
+    nombre = variant.product.name or ""
+    variante = (variant.variant_name or "").strip()
+    if variante and variante != "Estándar":
+        return f"{nombre} ({variante})"
+    return nombre
+
+
 @router.post("/", response_model=Dict[str, Any])
 def create_sale(
     sale_in: SaleCreate,
@@ -562,7 +573,10 @@ def create_sale(
 
         new_line = SalesLineItem(
             variant_id=variant.id,
-            description=f"{variant.product.name}{' ('+variant.variant_name+')' if variant.variant_name != 'Estándar' else ''}",
+            # `variant_name` puede venir NULL en catalogos cargados fuera de la
+            # aplicacion: sin el `or ''` la condicion era verdadera y se
+            # intentaba concatenar None, tumbando el cobro con un 500.
+            description=_line_description(variant),
             quantity=item.quantity,
             unit_price=unit_price,
             unit_cost=variant.cost,
