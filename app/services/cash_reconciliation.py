@@ -157,6 +157,39 @@ def session_sales_filter(session: CashSession):
     return or_(SalesDocument.cash_session_id == session.id, legacy)
 
 
+def session_payments_filter(session: CashSession):
+    """SQL filter para asociar `Payment` a una sesión — atribución por pago.
+
+    Ronda de correcciones 1 (revisión de Task 5): `compute_expected_cash`
+    arma este mismo OR en línea, como variable local `pago_de_esta_sesion`
+    (ver más abajo). Se extrae aquí para que `get_session_audit_data` y
+    `get_branch_cash_summary` (`app/routers/cash.py`) dejen de calcular el
+    desglose por método de pago con `session_sales_filter` a nivel
+    DOCUMENTO — el mismo defecto que motivó esta rama, reintroducido por
+    Task 5 en esos dos consumidores al reactivar `DocumentStatus.PENDING`:
+    un abono cobrado en el turno 1 y una liquidación en el turno 2 volvían a
+    reportarse los dos bajo la sesión (vieja, cerrada) del `SalesDocument`.
+
+    Un pago cuenta en una sesión si (a) trae `Payment.cash_session_id`
+    explícito apuntando a ella (Task 1: el abono de un crédito, cobrado hoy,
+    pertenece al cajón de hoy sin importar en qué turno nació la venta ni
+    en cuál se liquide el resto), o (b) no tiene atribución propia y su
+    documento cae en `session_sales_filter` (respaldo por documento: pagos
+    anteriores a la columna `Payment.cash_session_id`, o cobrados sin caja
+    abierta). Las dos ramas son mutuamente excluyentes por construcción —
+    (b) exige `cash_session_id IS NULL` — así que un pago nunca satisface
+    ambas y nunca se cuenta dos veces.
+
+    No se tocó `compute_expected_cash` para que llame a este helper (queda
+    protegida explícitamente por la revisión); si se edita el criterio aquí
+    o allá, hay que revisar el otro lado para que no diverjan.
+    """
+    return or_(
+        Payment.cash_session_id == session.id,
+        and_(Payment.cash_session_id.is_(None), session_sales_filter(session)),
+    )
+
+
 def _compute_change_given(db: Session, session: CashSession) -> Decimal:
     """Vuelto total entregado en ventas con pago efectivo en esta sesión.
 

@@ -528,6 +528,7 @@ def get_session_audit_data(db: Session, session_id: int):
     from app.services.cash_reconciliation import (
         compute_expected_cash,
         session_sales_filter,
+        session_payments_filter,
         CASH_INCLUDED_STATUSES,
         SALES_REPORT_STATUSES,
     )
@@ -536,23 +537,32 @@ def get_session_audit_data(db: Session, session_id: int):
     close_limit = session.closed_at or datetime.now(timezone.utc)
 
     # 1. Desglose detallado por Métodos de Pago (Pagadas + Devueltas).
+    #
+    # Ronda de correcciones 1 (revisión de Task 5): este query filtraba por
+    # `_session_filter` (documento) en vez de `session_payments_filter`
+    # (pago) — exactamente el defecto que esta rama existe para cerrar,
+    # reintroducido aquí al reactivar PENDING. Un abono cobrado en el turno
+    # 1 y liquidado en el turno 2 se re-mostraba entero (total Y count) bajo
+    # la sesión (vieja, ya cerrada) del `SalesDocument`, sin importar que
+    # `Payment.cash_session_id` ya trajera la atribución correcta. Ahora usa
+    # el mismo criterio de `compute_expected_cash` — ver
+    # `session_payments_filter` en app/services/cash_reconciliation.py.
+    #
     # CASH_INCLUDED_STATUSES aquí: esto suma `Payment.amount`, lo realmente
-    # cobrado por método, no `total_amount`. NO incluye PENDING (venta a
-    # crédito con abono) — ver el comentario junto a la definición de
-    # CASH_INCLUDED_STATUSES en app/services/cash_reconciliation.py: hoy un
-    # abono en efectivo de una venta a crédito no aparece en ningún corte,
-    # hueco latente y aceptado mientras ningún cliente use crédito.
-    # Incluimos REFUNDED_PARTIAL/TOTAL por la misma razón de siempre: las
-    # Payment rows reflejan la entrada física al cajón en su momento, y los
-    # refunds salen como CashMovement OUT separados. Excluirlas aquí "borra"
-    # la entrada original mientras se sigue restando el OUT → expected_cash
-    # negativo en días con devoluciones.
+    # cobrado por método, no `total_amount`. Incluye PENDING (venta a
+    # crédito con abono) desde Task 5: el abono ya está atribuido al pago
+    # que lo cobró, no al documento completo. Incluimos REFUNDED_PARTIAL/
+    # TOTAL por la misma razón de siempre: las Payment rows reflejan la
+    # entrada física al cajón en su momento, y los refunds salen como
+    # CashMovement OUT separados. Excluirlas aquí "borra" la entrada
+    # original mientras se sigue restando el OUT → expected_cash negativo en
+    # días con devoluciones.
     payment_stats = db.query(
         Payment.method,
         func.count(Payment.id).label("count"),
         func.sum(Payment.amount).label("total")
     ).join(SalesDocument).filter(
-        _session_filter,
+        session_payments_filter(session),
         SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
     ).group_by(Payment.method).all()
 
@@ -593,11 +603,12 @@ def get_session_audit_data(db: Session, session_id: int):
     # Ventas Totales NETAS post-refund — sale.total_amount está actualizado
     # por approve_return. Incluir REFUNDED_* para que el ticket muestre el
     # revenue real del día (PAID-only saltearía las ventas con devoluciones).
-    # SALES_REPORT_STATUSES (NO PENDING): una venta a crédito con abono
-    # parcial todavía no es ingreso reconocido por el total completo. Nota:
-    # hoy `payment_stats` arriba tampoco incluye PENDING (ver
-    # CASH_INCLUDED_STATUSES) — ambas tuplas coinciden por ahora, ver el
-    # comentario de esa tupla para por qué no deben fusionarse.
+    # SALES_REPORT_STATUSES (NO PENDING, y así se queda): una venta a
+    # crédito con abono parcial todavía no es ingreso reconocido por el
+    # total completo. Nota: desde Task 5, `payment_stats` arriba SÍ incluye
+    # PENDING (vía CASH_INCLUDED_STATUSES) — las dos tuplas ya NO coinciden
+    # a propósito, ver el comentario de SALES_REPORT_STATUSES en
+    # app/services/cash_reconciliation.py.
     total_sales_query = db.query(func.sum(SalesDocument.total_amount)).filter(
         _session_filter,
         SalesDocument.status.in_(SALES_REPORT_STATUSES),
@@ -1022,19 +1033,29 @@ def get_branch_cash_summary(
     #     viejo en sesiones cerradas antes del fix de devoluciones).
     # Ahora todo deriva de compute_expected_cash + session_sales_filter.
     #
-    # sales_total/ticket_count (SALES_REPORT_STATUSES) y payment_stats
-    # (CASH_INCLUDED_STATUSES) hoy son la misma tupla — PENDING quedó fuera
-    # de ambas (crédito no soportado hoy, ver el comentario junto a
-    # `CASH_INCLUDED_STATUSES` en app/services/cash_reconciliation.py). Se
-    # mantienen como dos tuplas separadas a propósito, no fusionadas: son
-    # dos preguntas distintas ("dinero en el cajón" vs. "venta ya
-    # reconocida como ingreso") que solo coinciden hoy porque PENDING no
-    # entra en ninguna de las dos por motivos independientes.
+    # sales_total/ticket_count (SALES_REPORT_STATUSES, a nivel DOCUMENTO vía
+    # session_sales_filter) y payment_stats (CASH_INCLUDED_STATUSES) son dos
+    # tuplas separadas a propósito: responden preguntas distintas ("venta ya
+    # reconocida como ingreso" vs. "dinero en el cajón") y desde Task 5 ya
+    # no coinciden — CASH_INCLUDED_STATUSES sí incluye PENDING. Ver el
+    # comentario de ambas tuplas en app/services/cash_reconciliation.py.
+    #
+    # Ronda de correcciones 1 (revisión de Task 5): `payment_stats` abajo
+    # filtraba por `sales_filter` (documento) igual que `sales_total`, en
+    # vez de `session_payments_filter` (pago) — mismo defecto que en
+    # `get_session_audit_data`: un abono cobrado en el turno 1 y liquidado
+    # en el turno 2 inflaba `card`/`transfer` del turno (ya cerrado) que
+    # solo cobró el abono. `cash` no se veía porque ese total sale de
+    # `breakdown.net_cash` (ya corregido), pero `card`/`transfer` sí venían
+    # de este query. `sales_total`/`ticket_count` SÍ se dejan con
+    # `sales_filter` — están fuera de esta corrección (SALES_REPORT_STATUSES
+    # no cambia, y `session_sales_filter` está protegido).
     from app.services.cash_reconciliation import (
         CASH_INCLUDED_STATUSES,
         SALES_REPORT_STATUSES,
         compute_expected_cash,
         session_sales_filter,
+        session_payments_filter,
     )
 
     # Perf 2026-05-07: pre-cargar todos los Users de las sesiones en 1 query
@@ -1062,7 +1083,7 @@ def get_branch_cash_summary(
             Payment.method,
             func.sum(Payment.amount).label("total")
         ).join(SalesDocument).filter(
-            sales_filter,
+            session_payments_filter(s),
             SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
         ).group_by(Payment.method).all()
 
