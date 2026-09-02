@@ -452,6 +452,10 @@ def create_sale(
 
     # --- 0. Verificar si es una actualización de una venta existente ---
     existing_sale = None
+    # Dinero ya cobrado sobre este documento antes de esta llamada (rama
+    # `existing_sale`). Ver el bloque "Limpiar líneas" más abajo.
+    pagos_previos = Decimal("0.00")
+    deuda_previa = Decimal("0.00")
     if sale_in.id:
         existing_sale = db.query(SalesDocument).filter(
             SalesDocument.id == sale_in.id,
@@ -473,9 +477,28 @@ def create_sale(
                     stock_old.qty_on_hand += Decimal(str(old_line.quantity))
                     # Omitimos movimiento de reversión para no ensuciar el kardex si es un update inmediato
             
-            # Limpiar líneas y pagos anteriores
+            # Limpiar líneas anteriores (se recrean abajo desde `items`).
             db.query(SalesLineItem).filter(SalesLineItem.document_id == existing_sale.id).delete()
-            db.query(Payment).filter(Payment.sales_document_id == existing_sale.id).delete()
+
+            # Los `Payment` NO se borran. Antes se borraban y se recreaban con
+            # la sesión de quien cobra hoy: eso movía el efectivo de un abono
+            # ya cobrado —dinero que entró físicamente a otro cajón, en un
+            # turno que ya cerró y cuadró— al corte de hoy. El turno viejo
+            # quedaba con sobrante fantasma y el de hoy con faltante. Un pago
+            # ya cobrado no se reprocesa: se conserva tal cual, con su
+            # atribución, y `sale_in.payments` son los pagos NUEVOS que se
+            # suman a lo que ya llevaba el documento.
+            pagos_previos = sum(
+                (Decimal(str(p.amount)) for p in existing_sale.payments),
+                Decimal("0.00"),
+            )
+            # Deuda que este documento ya le cargó al cliente (misma fórmula
+            # que usa la cancelación de venta): sirve para ajustar el saldo
+            # por la DIFERENCIA y no volver a cargarle la venta entera.
+            deuda_previa = max(
+                Decimal("0.00"),
+                Decimal(str(existing_sale.total_amount or 0)) - pagos_previos,
+            )
 
     # --- 1. Cálculos de Stock y Precios ---
     total_sale = Decimal("0.00")
@@ -672,7 +695,11 @@ def create_sale(
     # cuando `total_paid.quantize(...)` truena con `AttributeError` porque
     # `int` no tiene `.quantize()` — 500 después de mutar todo. `Decimal("0")`
     # como valor inicial evita el `int 0`.
-    total_paid = sum((Decimal(str(p.amount)) for p in sale_in.payments), Decimal("0"))
+    total_nuevo_paid = sum((Decimal(str(p.amount)) for p in sale_in.payments), Decimal("0"))
+    # `pagos_previos` es 0 salvo en la rama `existing_sale`, donde representa
+    # abonos ya cobrados que siguen vivos: cubren parte del total y no hay que
+    # volver a pedirlos.
+    total_paid = pagos_previos + total_nuevo_paid
 
     # Fase 1.3: cambio entregado al cliente. Se calcula al crear la venta y se
     # persiste para que el cuadre de turno NO recompute (evita drift si la
@@ -687,7 +714,9 @@ def create_sale(
         (Decimal(str(p.amount)) for p in sale_in.payments if p.method != PaymentMethod.CASH),
         Decimal(0),
     )
-    cash_needed = max(Decimal(0), total_sale - non_cash_paid)
+    # Lo que el efectivo de ESTA llamada tiene que cubrir: el total, menos lo
+    # ya cobrado antes, menos los métodos no-cash de este mismo cobro.
+    cash_needed = max(Decimal(0), total_sale - pagos_previos - non_cash_paid)
     change_given = max(Decimal(0), cash_paid - cash_needed) if cash_paid > 0 else Decimal(0)
 
     # --- H-1: Server-side recompute + payment validation ---
@@ -735,17 +764,27 @@ def create_sale(
     if balance_diff > Decimal("0.05"):
         remaining_debt = balance_diff
         doc_status = DocumentStatus.PENDING
-        # Crédito Cliente
-        if sale_in.customer_id:
-            customer = db.query(Customer).filter(Customer.id == sale_in.customer_id, Customer.organization_id == org_id).first()
-            if customer and customer.has_credit:
-                customer.current_balance += remaining_debt
-                db.add(CustomerLedgerEntry(
-                    customer_id=customer.id,
-                    amount=remaining_debt,
-                    description=f"Crédito por Venta",
-                    organization_id=org_id
-                ))
+
+    # Crédito Cliente. Se mueve el saldo por la DIFERENCIA entre la deuda que
+    # este documento deja ahora y la que ya le tenía cargada (0 en una venta
+    # nueva). Antes se sumaba `remaining_debt` completo cada vez, así que
+    # reprocesar la venta volvía a cargarle la deuda; y liquidarla por aquí no
+    # le abonaba nada, dejándole un saldo que ya había pagado.
+    ajuste_deuda = remaining_debt - deuda_previa
+    if sale_in.customer_id and ajuste_deuda != Decimal("0.00"):
+        customer = db.query(Customer).filter(Customer.id == sale_in.customer_id, Customer.organization_id == org_id).first()
+        if customer and customer.has_credit:
+            customer.current_balance += ajuste_deuda
+            db.add(CustomerLedgerEntry(
+                customer_id=customer.id,
+                sales_document_id=existing_sale.id if existing_sale else None,
+                amount=ajuste_deuda,
+                description=(
+                    "Crédito por Venta" if ajuste_deuda > 0
+                    else "Liquidación de venta a crédito"
+                ),
+                organization_id=org_id
+            ))
 
     # --- 3. Guardar / Actualizar Cabecera ---
     if existing_sale:

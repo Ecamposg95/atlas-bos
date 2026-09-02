@@ -7,11 +7,14 @@ prueba que el checkout (`POST /api/sales/`) lo puebla en las dos ramas que
 resuelven la sesion de caja en `app/routers/sales.py`:
 
 1. Venta nueva: el `Payment` se crea con la sesion OPEN del cajero.
-2. `existing_sale` (completar una venta PENDING): los pagos viejos se borran
-   y se recrean -- los nuevos deben quedar en la sesion de HOY, no en la
-   sesion (probablemente ya cerrada) que abrio la venta a credito. Este es
-   justo el defecto que motivo todo el plan (ver cabecera de
-   `tests/test_cash_credito_y_abonos.py`).
+2. `existing_sale` (completar una venta PENDING): los pagos nuevos deben
+   quedar en la sesion de HOY, no en la sesion (probablemente ya cerrada) que
+   abrio la venta a credito. Este es justo el defecto que motivo todo el plan
+   (ver cabecera de `tests/test_cash_credito_y_abonos.py`).
+
+   Ronda de correcciones final (MAYOR-1): esa rama ya no borra y recrea los
+   `Payment` del documento. Los abonos ya cobrados se conservan con su propia
+   atribucion y `sale_in.payments` son solo los pagos nuevos.
 """
 from decimal import Decimal
 
@@ -114,3 +117,84 @@ def test_pagos_recreados_al_completar_venta_pendiente_quedan_en_la_sesion_nueva(
         "cerrada) -- ese es justo el defecto que este plan existe para cerrar"
     )
     assert pago.cash_session_id != sesion_1.id
+
+
+def test_liquidar_en_otro_turno_conserva_la_atribucion_del_abono_previo(
+    client, db, org, branch_a, cajero_a, auth_cajero_a, products_setup
+):
+    """Ronda de correcciones final (MAYOR-1): la prueba de arriba siembra la
+    venta PENDING SIN pagos, asi que el `delete()` de la rama `existing_sale`
+    no destruye nada y el caso que motivo el plan —abono cobrado en el turno 1
+    y liquidacion en el turno 2— nunca se ejercitaba.
+
+    Con un abono previo, borrar y recrear los `Payment` movia los $40 ya
+    cobrados del turno 1 al turno 2: el turno 1, cerrado y cuadrado, aparecia
+    con un sobrante fantasma de +$40 y el turno 2 con un faltante de -$40.
+    La atribucion de un pago ya cobrado no puede perderse al reprocesar el
+    documento.
+    """
+    from app.modules.customers.models import Customer
+    from app.services.cash_reconciliation import compute_expected_cash
+
+    _habilitar_pos(db, org)
+    _, variant = products_setup["product_a"]
+
+    cliente = Customer(
+        name="Cliente a credito", organization_id=org.id,
+        has_credit=True, credit_limit=Decimal("1000"), current_balance=Decimal("100"),
+    )
+    db.add(cliente); db.flush()
+
+    sesion_1 = _abrir_caja(db, org, branch_a, cajero_a)
+    venta = _venta_pendiente(db, org, branch_a, cajero_a, sesion_1, folio=4001)
+    venta.customer_id = cliente.id
+    db.commit(); db.refresh(venta); db.refresh(cliente)
+
+    # Turno 1: el cliente abona 40 de los 100, en efectivo, con caja abierta.
+    abono = client.post(
+        f"/api/customers/{cliente.id}/pay",
+        json={"amount": "40", "method": "CASH", "sales_document_id": venta.id},
+        headers=auth_cajero_a,
+    )
+    assert abono.status_code == 200, abono.text
+    assert Decimal(str(compute_expected_cash(db, sesion_1).expected)) == Decimal("40.00")
+
+    # El turno 1 cierra contando los 40 reales: cuadra.
+    cierre = client.post(
+        "/api/cash/close", json={"closing_balance": "40.00"},
+        headers={**auth_cajero_a, "X-Organization-ID": str(org.id)},
+    )
+    assert cierre.status_code in (200, 201), cierre.text
+    db.refresh(sesion_1)
+    assert Decimal(str(sesion_1.difference)) == Decimal("0.00")
+
+    # Turno 2: se liquida el resto (60) por `/api/sales/`.
+    sesion_2 = _abrir_caja(db, org, branch_a, cajero_a)
+    resp = client.post("/api/sales/", json={
+        "id": venta.id,
+        "doc_type": "ORDER",
+        "customer_id": cliente.id,
+        "items": [{"sku": variant.sku, "quantity": 1}],
+        "payments": [{"method": "CASH", "amount": "60.00"}],
+    }, headers={**auth_cajero_a, "X-Organization-ID": str(org.id)})
+    assert resp.status_code in (200, 201), resp.text
+
+    pagos = db.query(Payment).filter(Payment.sales_document_id == venta.id).all()
+    por_monto = {Decimal(str(p.amount)): p.cash_session_id for p in pagos}
+    assert por_monto == {Decimal("40.00"): sesion_1.id, Decimal("60.00"): sesion_2.id}, (
+        f"el abono de 40 debe seguir vivo y en el turno que lo recibio; hay {por_monto}"
+    )
+
+    # Ningun corte se mueve: cada turno ve solo el dinero que entro en el.
+    assert Decimal(str(compute_expected_cash(db, sesion_1).expected)) == Decimal("40.00"), (
+        "el turno 1, cerrado y cuadrado, no puede quedar con sobrante fantasma"
+    )
+    assert Decimal(str(compute_expected_cash(db, sesion_2).expected)) == Decimal("60.00"), (
+        "el turno 2 solo recibio los 60 de la liquidacion"
+    )
+
+    db.refresh(venta); db.refresh(cliente)
+    assert venta.status == DocumentStatus.PAID
+    assert cliente.current_balance == Decimal("0.00"), (
+        "el cliente pago 40 + 60 por una venta de 100: no le puede quedar saldo"
+    )
