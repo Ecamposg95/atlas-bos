@@ -22,11 +22,19 @@ def test_el_abono_cuenta_en_la_caja_de_hoy(
     # `CASH_INCLUDED_STATUSES` excluye PENDING de forma incondicional (no
     # importa que el Payment ya traiga cash_session_id explicito) -- es
     # exactamente el mismo hueco, ya conocido y deliberadamente fuera de
-    # alcance, que test_cash_credito_y_abonos.py fija con tres xfail(strict).
-    # Tocar esa tupla esta prohibido para esta tarea (pertenece a Task 2,
-    # revisada y aprobada). Con PAID, esta prueba SI ejercita lo que su
+    # alcance, que test_cash_credito_y_abonos.py fijaba entonces con tres
+    # xfail(strict). Tocar esa tupla estaba prohibido para esa tarea
+    # (pertenecia a Task 2). Con PAID, esta prueba SI ejercitaba lo que su
     # proposito declara: que compute_expected_cash prefiere la sesion del
     # Payment sobre la sesion (vieja, cerrada) del documento.
+    #
+    # Actualizacion (Task 5): `CASH_INCLUDED_STATUSES` ya incluye PENDING de
+    # nuevo (ver app/services/cash_reconciliation.py), asi que este mismo
+    # escenario con la venta en PENDING (abono parcial de verdad, no
+    # liquidacion total) ya se puede escribir sin xfail -- ver
+    # `test_abono_parcial_sobre_venta_pendiente_cuenta_en_el_turno_que_lo_recibe`
+    # mas abajo. Esta prueba se deja como esta (PAID) porque sigue siendo
+    # valida y cubre el caso de liquidacion total.
     s_vieja = CashSession(user_id=cajero_a.id, branch_id=branch_a.id, organization_id=org.id,
                           opening_balance=Decimal("0"), status="CLOSED")
     db.add(s_vieja); db.flush()
@@ -140,3 +148,71 @@ def test_endpoint_de_abono_sin_sesion_abierta_registra_pago_sin_atribucion(
     payment = db.query(Payment).filter(Payment.customer_id == customer.id).first()
     assert payment is not None
     assert payment.cash_session_id is None
+
+
+def test_abono_parcial_sobre_venta_pendiente_cuenta_en_el_turno_que_lo_recibe(
+    client, db, org, branch_a, cajero_a, auth_cajero_a
+):
+    """Contraparte PENDING de `test_el_abono_cuenta_en_la_caja_de_hoy`.
+
+    Esa prueba se escribio con la venta en PAID porque, cuando se redacto,
+    `DocumentStatus.PENDING` seguia excluido de `CASH_INCLUDED_STATUSES`
+    (ver tests/test_cash_credito_y_abonos.py) y una venta PENDING no podia
+    ejercitar la atribucion por pago. Con la Task 5 (reactivacion de credito)
+    PENDING ya cuenta, asi que esta version SI prueba el caso real: un abono
+    PARCIAL (la venta se queda a credito, no se liquida) cobrado en un turno
+    distinto al de la venta debe contar en el esperado de quien lo cobro.
+    """
+    from app.modules.customers.models import Customer
+
+    # Venta a credito de un turno anterior, ya cerrado.
+    s_vieja = CashSession(user_id=cajero_a.id, branch_id=branch_a.id, organization_id=org.id,
+                          opening_balance=Decimal("0"), status="CLOSED")
+    db.add(s_vieja); db.flush()
+
+    customer = Customer(
+        name="Cliente a credito parcial", organization_id=org.id,
+        has_credit=True, credit_limit=Decimal("1000"), current_balance=Decimal("300"),
+    )
+    db.add(customer); db.flush()
+
+    venta = SalesDocument(
+        organization_id=org.id, branch_id=branch_a.id, seller_id=cajero_a.id,
+        customer_id=customer.id,
+        folio=3, series="A", subtotal=Decimal("300"), tax_amount=Decimal("0"),
+        total_amount=Decimal("300"), status=DocumentStatus.PENDING, doc_type="ORDER",
+        cash_session_id=s_vieja.id,
+    )
+    db.add(venta); db.commit(); db.refresh(venta); db.refresh(customer)
+
+    # Turno de hoy, abierto, distinto al de la venta.
+    s_hoy = CashSession(user_id=cajero_a.id, branch_id=branch_a.id, organization_id=org.id,
+                        opening_balance=Decimal("0"), status="OPEN")
+    db.add(s_hoy); db.commit(); db.refresh(s_hoy)
+
+    # Abono PARCIAL: 120 de los 300 -- la venta debe seguir a credito.
+    resp = client.post(
+        f"/api/customers/{customer.id}/pay",
+        json={"amount": "120", "method": "CASH", "sales_document_id": venta.id},
+        headers=auth_cajero_a,
+    )
+    assert resp.status_code == 200, resp.text
+
+    db.refresh(venta); db.refresh(customer)
+    assert venta.status == DocumentStatus.PENDING, (
+        "el abono es parcial (120 de 300); la venta debe seguir a credito"
+    )
+    assert customer.current_balance == Decimal("180")
+
+    payment = db.query(Payment).filter(Payment.sales_document_id == venta.id).first()
+    assert payment is not None
+    assert payment.cash_session_id == s_hoy.id, (
+        "el abono debe quedar atribuido a la sesion abierta de quien lo cobra"
+    )
+
+    assert Decimal(str(compute_expected_cash(db, s_hoy).expected)) == Decimal("120.00"), (
+        "el abono parcial de una venta PENDING debe contar en el esperado del turno que lo cobro"
+    )
+    assert Decimal(str(compute_expected_cash(db, s_vieja).expected)) == Decimal("0.00"), (
+        "el turno (cerrado) de la venta original no debe verse afectado por un abono cobrado despues"
+    )
