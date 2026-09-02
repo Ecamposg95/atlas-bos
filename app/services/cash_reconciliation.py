@@ -223,11 +223,20 @@ _LARGE_DIFF_RATIO = Decimal("0.5")  # 50%
 def compute_closure_warnings(
     breakdown: ExpectedCashBreakdown,
     closing_balance: Decimal,
+    db: Optional[Session] = None,
+    session: Optional[CashSession] = None,
 ) -> List[dict]:
     """Return a list of warning dicts for a closure.
 
     Each warning is `{code, severity, message, threshold, actual}`.
     Empty list = no warnings.
+
+    `db` y `session` son opcionales y NO forman parte del cálculo de W1-W3
+    (que solo dependen de `breakdown`/`closing_balance`, ver `_apply_close_to_session`,
+    fuente única de la fórmula). Se añadieron para W4 (`SALES_WITHOUT_SESSION`),
+    que necesita consultar ventas huérfanas por organización/sucursal — dato que
+    `ExpectedCashBreakdown` no carga. Los callers existentes, que no los pasan,
+    siguen funcionando igual: W4 simplemente no se calcula sin ellos.
     """
     warnings: List[dict] = []
     closing = Decimal(str(closing_balance or 0))
@@ -276,5 +285,32 @@ def compute_closure_warnings(
             "threshold": float(abs_expected * _LARGE_DIFF_RATIO),
             "actual": float(abs(diff)),
         })
+
+    # W4: efectivo cobrado en esta sucursal desde que abrió la sesión que no
+    # pertenece a NINGÚN corte (cash_session_id NULL). Antes esto era
+    # invisible: ninguna pantalla expone cash_session_id, así que el dinero
+    # quedaba en el cajón pero fuera del esperado sin que nadie lo notara.
+    # Requiere `db` + `session`; sin ellos (callers legacy) no se calcula.
+    if db is not None and session is not None:
+        huerfanas = db.query(
+            func.count(SalesDocument.id), func.coalesce(func.sum(Payment.amount), 0)
+        ).join(Payment, Payment.sales_document_id == SalesDocument.id).filter(
+            SalesDocument.organization_id == session.organization_id,
+            SalesDocument.branch_id == session.branch_id,
+            SalesDocument.cash_session_id.is_(None),
+            SalesDocument.deleted_at.is_(None),
+            Payment.method == PaymentMethod.CASH,
+            SalesDocument.created_at >= session.opened_at,
+        ).first()
+        n_huerfanas, monto_huerfano = (huerfanas or (0, 0))
+        if n_huerfanas:
+            warnings.append({
+                "code": "SALES_WITHOUT_SESSION",
+                "severity": "high",
+                "message": (
+                    f"{n_huerfanas} venta(s) en efectivo por {monto_huerfano} no pertenecen "
+                    f"a ningún corte. Ese dinero está en el cajón pero no en el esperado."
+                ),
+            })
 
     return warnings

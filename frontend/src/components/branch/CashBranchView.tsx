@@ -6,6 +6,7 @@ import { printerApi } from '../../api/printer'
 import { usePOSStore } from '../../store/posStore'
 import { toast } from '../../store/toastStore'
 import { BRANCH_COPY, PAY_METHOD_LABELS } from '../../copy/branchCopy'
+import type { CashWarning } from '../../types/cash'
 import { ui, brand, fmtMoney, fmtDateTime } from './branchUI'
 import { MovementModal } from './MovementModal'
 import { OpenShiftModal } from './OpenShiftModal'
@@ -149,11 +150,22 @@ interface CloseShiftModalProps {
   onCancel: () => void
 }
 
+// Resultado del arqueo ya cerrado — se muestra en pantalla en vez de
+// depender del ticket impreso. Antes, si no había impresora configurada
+// (frecuente en campo), el cajero cerraba turno y nunca veía su faltante.
+interface CloseResult {
+  expected: number
+  counted: number
+  diff: number
+  warnings: CashWarning[]
+}
+
 function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
   const [summary, setSummary] = useState<CashSummary | null>(null)
   const [counted, setCounted] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  const [result, setResult] = useState<CloseResult | null>(null)
 
   useEffect(() => {
     // Conteo ciego: NO pre-llenar "contado" con el esperado. El cajero captura
@@ -189,7 +201,17 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
         toast.error('Turno cerrado. Configura una impresora para imprimir el corte.')
       }
 
-      onClosed()
+      // Mostrar el arqueo en pantalla: es la única garantía de que el cajero
+      // vea su esperado/contado/diferencia cuando no hay impresora (arriba).
+      const expectedFinal = closed?.difference != null
+        ? countedNum - Number(closed.difference)
+        : expected
+      setResult({
+        expected: expectedFinal,
+        counted: countedNum,
+        diff: closed?.difference != null ? Number(closed.difference) : diff,
+        warnings: closed?.warnings ?? [],
+      })
     } catch (e: unknown) {
       const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail
       toast.error(detail ?? 'Error al cerrar turno')
@@ -198,20 +220,29 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
     }
   }
 
+  // Tras cerrar, el modal muta a pantalla de resultado (no se cierra solo):
+  // es el único lugar donde el cajero ve esperado/contado/diferencia si no
+  // hay impresora configurada (ver toast.error de arriba en ese caso).
+  const dismiss = result ? onClosed : onCancel
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onCancel() }}
+      onClick={(e) => { if (e.target === e.currentTarget) dismiss() }}
     >
       <div className={`${ui.card} w-full max-w-md p-6`}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Finalizar turno</h3>
-          <button onClick={onCancel} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1" aria-label="Cancelar">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            {result ? 'Turno cerrado' : 'Finalizar turno'}
+          </h3>
+          <button onClick={dismiss} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1" aria-label="Cerrar">
             <i className="fa-solid fa-xmark text-lg" />
           </button>
         </div>
 
-        {loadError ? (
+        {result ? (
+          <CloseResultPanel result={result} onDone={onClosed} />
+        ) : loadError ? (
           <p className={`text-sm ${ui.muted}`}>No se pudo cargar el resumen del turno.</p>
         ) : !summary ? (
           <p className={`text-sm italic ${ui.muted}`}>Cargando resumen…</p>
@@ -281,6 +312,57 @@ function CloseShiftModal({ onClosed, onCancel }: CloseShiftModalProps) {
           </>
         )}
       </div>
+    </div>
+  )
+}
+
+// Colores por severidad de alerta (SALES_WITHOUT_SESSION = 'high' es la que
+// motivó esta pantalla: efectivo cobrado que no pertenece a ningún corte).
+const SEVERITY_STYLE: Record<string, string> = {
+  critical: 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300',
+  high: 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-300',
+  warning: 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
+}
+
+function CloseResultPanel({ result, onDone }: { result: CloseResult; onDone: () => void }) {
+  const { expected, counted, diff, warnings } = result
+  const diffClass = diff === 0 ? '' : diff > 0 ? brand.greenText : 'text-rose-600 dark:text-rose-400'
+  return (
+    <div>
+      <div className="space-y-2 text-sm mb-4">
+        <Row label="Esperado en caja" value={fmtMoney(String(expected))} />
+        <Row label="Contado" value={fmtMoney(String(counted))} />
+        <div className="border-t border-stone-200 dark:border-slate-700 pt-2 flex justify-between font-bold text-slate-900 dark:text-slate-100">
+          <span>Diferencia</span>
+          <span className={`tabular-nums ${diffClass}`}>
+            {diff > 0 ? '+' : ''}{fmtMoney(String(diff))}
+          </span>
+        </div>
+      </div>
+
+      {warnings.length > 0 && (
+        <div className="space-y-2 mb-4">
+          {warnings.map((w, i) => (
+            <div
+              key={`${w.code}-${i}`}
+              className={`rounded-lg border px-3 py-2 text-xs ${SEVERITY_STYLE[w.severity] ?? SEVERITY_STYLE.warning}`}
+            >
+              <p className="font-semibold mb-0.5">
+                <i className="fa-solid fa-triangle-exclamation mr-1" />
+                {w.code}
+              </p>
+              <p>{w.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button
+        onClick={onDone}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white text-base font-semibold px-6 py-4 shadow-lg shadow-rose-900/20 transition-colors"
+      >
+        Listo
+      </button>
     </div>
   )
 }

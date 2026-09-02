@@ -269,7 +269,7 @@ def _apply_close_to_session(
     current_user: User,
     closing_balance: Decimal,
     notes: Optional[str],
-) -> CashSession:
+) -> CashSessionRead:
     if closing_balance is None or closing_balance < 0:
         raise HTTPException(400, "El saldo de cierre debe ser mayor o igual a cero.")
 
@@ -302,13 +302,19 @@ def _apply_close_to_session(
     diff = Decimal(str(closing_balance)) - breakdown.expected
 
     # F2: structured warnings (non-blocking — cajero ya decidió contar) +
-    # logged for audit. Returned in HTTP response so UI puede mostrarlas.
-    closure_warnings = compute_closure_warnings(breakdown, Decimal(str(closing_balance)))
+    # logged for audit. Se devuelven en la respuesta HTTP (ver el
+    # `CashSessionRead` que arma cada endpoint /close) para que la UI las
+    # muestre. db/session habilitan W4 (SALES_WITHOUT_SESSION).
+    closure_warnings = compute_closure_warnings(
+        breakdown, Decimal(str(closing_balance)), db=db, session=session,
+    )
     if closure_warnings:
         for w in closure_warnings:
+            # .get(): no todas las alertas traen actual/threshold (p.ej.
+            # SALES_WITHOUT_SESSION, que no compara contra un umbral numérico).
             logger.warning(
                 "CASH_CLOSE_WARNING: session_id=%s code=%s severity=%s actual=%s threshold=%s",
-                session.id, w["code"], w["severity"], w["actual"], w["threshold"],
+                session.id, w["code"], w["severity"], w.get("actual"), w.get("threshold"),
             )
 
     # Actualizar y Cerrar
@@ -361,7 +367,14 @@ def _apply_close_to_session(
         session.id, current_user.id, current_user.username,
         current_user.branch_id, closing_balance, breakdown.expected, diff
     )
-    return session
+    # Defecto del brief original: `close_session` declaraba response_model=
+    # CashSessionRead pero devolvía el ORM `session` crudo, que no tiene
+    # campo `warnings` — closure_warnings se calculaba y solo quedaba en el
+    # audit payload de arriba, nunca llegaba al cajero. Se construye la
+    # respuesta explícitamente para que sí viaje en el HTTP response.
+    return CashSessionRead.model_validate(session).model_copy(
+        update={"warnings": closure_warnings}
+    )
 
 
 @router.post("/close", response_model=CashSessionRead)

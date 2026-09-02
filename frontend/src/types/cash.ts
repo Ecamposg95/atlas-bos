@@ -1,5 +1,15 @@
 export type CashSessionStatus = 'OPEN' | 'CLOSED'
 
+// Alerta de cierre (Task 6): antes se calculaba en el backend y se descartaba
+// sin llegar nunca al HTTP response. Ver app/schemas/cash.py::CashSessionRead.
+export interface CashWarning {
+  code: string
+  severity: string
+  message: string
+  threshold?: number
+  actual?: number
+}
+
 export interface CashSession {
   id: number
   branch_id: number
@@ -14,6 +24,7 @@ export interface CashSession {
   opened_at: string
   closed_at: string | null
   notes?: string | null
+  warnings?: CashWarning[]         // solo poblado por /cash/close y /cash/sessions/{id}/close-guided
 }
 
 export interface CashMovement {

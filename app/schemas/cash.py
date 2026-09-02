@@ -1,7 +1,7 @@
 
 # schemas/cash.py
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from decimal import Decimal
 from datetime import datetime
 
@@ -56,6 +56,12 @@ class CashSessionRead(CashSessionBase):
     closing_balance: Optional[Decimal] = None
     total_cash_sales: Decimal = Decimal(0) # Ventas en efectivo calculadas
     difference: Decimal = Decimal(0)       # Sobrante o Faltante
+
+    # Alertas del cierre (código/severidad/mensaje), pobladas solo al cerrar
+    # (`_apply_close_to_session` en app/routers/cash.py). Vacío en /status,
+    # /history, /open: esos endpoints devuelven CashSession sin pasar por el
+    # cálculo de warnings, así que el default [] es correcto ahí.
+    warnings: List[dict] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
