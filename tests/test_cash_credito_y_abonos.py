@@ -4,7 +4,25 @@ Ni Novedades Kaory ni Novedades Ginebra usan credito a clientes todavia -- este
 riesgo esta latente, no manifestado -- pero se activa el dia que den la primera
 venta a plazos: hoy el efectivo de una venta a credito con abono parcial NO
 entra al esperado de NINGUNA caja, aunque los billetes esten fisicamente en el
-cajon (`DocumentStatus.PENDING` estaba fuera de `CASH_INCLUDED_STATUSES`).
+cajon (`DocumentStatus.PENDING` esta fuera de `CASH_INCLUDED_STATUSES`).
+
+REVERTIDO (revision final de esta rama, hallazgo ALTA): una version anterior
+de este archivo agregaba `DocumentStatus.PENDING` a `CASH_INCLUDED_STATUSES`
+para tapar justo ese hueco -- y los tres tests marcados `xfail` abajo lo
+probaban. Se revirtio porque el mecanismo generaba un bug peor: al liquidar
+el resto de una venta a credito en un turno *posterior*, el documento entero
+se reatribuye al `cash_session_id` de la sesion nueva (rama `existing_sale`
+en `app/routers/sales.py`) -- lo que arrastraba consigo el abono que ya se
+habia cobrado en el turno viejo, VACIANDO retroactivamente el esperado de un
+corte que un gerente ya pudo haber cerrado y dado por bueno. Corromper un
+cuadre ya cerrado es peor que el hueco original.
+
+El arreglo correcto no es de este archivo: exige atribuir la sesion de caja
+al `Payment` (que turno recibio cada abono), no al `SalesDocument` completo
+-- es un cambio de modelo de datos (agregar `cash_session_id` a `Payment` y
+recalcular `compute_expected_cash` desde ahi), no una correccion puntual de
+esta pasada. Hasta que eso exista, habilitar venta a credito con abonos deja
+este hueco latente a proposito.
 
 Nota de diseño -- por que las ventas PENDING se siembran directo en BD (como
 ya hace `test_cash_warning_ventas_sin_corte.py`) en vez de vía POST completo a
@@ -13,9 +31,13 @@ cuyo `total_paid` no cubra el total con tolerancia de 1 centavo, y una venta a
 credito puro (`payments: []`) dispara un bug preexistente y ajeno a esta tarea
 -- `sum()` de una lista vacia devuelve `int 0` en vez de `Decimal(0)`, y
 `total_paid.quantize(...)` truena luego con `AttributeError` -- asi que ese
-camino no sirve hoy para sembrar el estado que este test necesita. Se deja
-documentado en el reporte de la tarea como hallazgo aparte; no se toca aqui.
+camino no sirve hoy para sembrar el estado que este test necesita. Ese bug se
+corrigio por separado en `app/routers/sales.py` (hallazgo #7 de la misma
+revision), pero se dejo aqui la nota porque explica por que estos tests
+siguen sembrando PENDING directo en BD en vez de vía POST.
 """
+import pytest
+
 from decimal import Decimal
 
 from app.models.cash import CashSession
@@ -54,6 +76,14 @@ def _venta_pendiente(db, org, branch, user, sesion, total="100.00", folio=999):
     return s
 
 
+@pytest.mark.xfail(
+    reason=(
+        "Revertido: PENDING ya no esta en CASH_INCLUDED_STATUSES (ver cabecera "
+        "del archivo). Requiere atribuir cash_session_id al Payment, no al "
+        "SalesDocument, antes de poder habilitarse."
+    ),
+    strict=True,
+)
 def test_abono_parcial_en_efectivo_entra_al_esperado(db, org, branch_a, cajero_a):
     """Venta a credito con abono en efectivo: los pesos estan en el cajon."""
     sesion = _abrir_caja(db, org, branch_a, cajero_a)
@@ -129,6 +159,15 @@ def test_completar_venta_pendiente_en_turno_posterior_reasigna_la_sesion(
 # todavia no termina de pagar. Ver `SALES_REPORT_STATUSES` en
 # app/services/cash_reconciliation.py.
 
+@pytest.mark.xfail(
+    reason=(
+        "Revertido: PENDING ya no esta en CASH_INCLUDED_STATUSES (ver cabecera "
+        "del archivo). El abono en efectivo de la venta PENDING ya no aparece "
+        "en payments/expected (payments['cash']['total'] y "
+        "expected['cash_physical'] vuelven a dar 0.0)."
+    ),
+    strict=True,
+)
 def test_venta_pendiente_no_infla_kpis_del_corte_de_sesion(db, org, branch_a, cajero_a):
     """Un abono en efectivo SI debe sumar al esperado y al desglose de pagos,
     pero la venta (PENDING, con deuda restante) NO debe aparecer como ingreso
@@ -160,6 +199,14 @@ def test_venta_pendiente_no_infla_kpis_del_corte_de_sesion(db, org, branch_a, ca
     )
 
 
+@pytest.mark.xfail(
+    reason=(
+        "Revertido: PENDING ya no esta en CASH_INCLUDED_STATUSES (ver cabecera "
+        "del archivo). El abono en efectivo de la venta PENDING ya no aparece "
+        "en totals['cash'] ni en expected_cash del cajero (vuelven a dar 0.0)."
+    ),
+    strict=True,
+)
 def test_venta_pendiente_no_infla_el_corte_de_sucursal(
     client, db, org, branch_a, cajero_a, gerente_a, auth_gerente_a
 ):

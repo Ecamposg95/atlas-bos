@@ -70,22 +70,39 @@ CASH_INCLUDED_STATUSES = (
     DocumentStatus.PAID,
     DocumentStatus.REFUNDED_PARTIAL,
     DocumentStatus.REFUNDED_TOTAL,
-    # Una venta a credito con abono parcial en efectivo tiene ese dinero en el
-    # cajon aunque el documento siga PENDING (deuda restante). El esperado se
-    # construye desde las filas Payment (lo realmente cobrado, verificado en
-    # `compute_expected_cash` abajo), NO desde `total_amount` — incluir
-    # PENDING no infla el esperado con dinero que todavia no entra.
-    DocumentStatus.PENDING,
 )
+# REVERTIDO (revisión final, hallazgo ALTA): una versión anterior de esta
+# rama agregaba DocumentStatus.PENDING aquí para que un abono parcial en
+# efectivo de una venta a crédito contara en el esperado del turno que lo
+# recibió. La intención era correcta pero el mecanismo estaba mal: al
+# liquidarse el resto de la venta en un turno posterior, el documento entero
+# (incluido el abono ya cobrado en el turno anterior) se reatribuía a la
+# sesión nueva vía `cash_session_id` — lo que VACIABA retroactivamente el
+# esperado de un corte YA CERRADO. Eso corrompe cuadres que un gerente ya dio
+# por buenos, algo peor que el hueco que esto pretendía tapar.
+#
+# El arreglo correcto no es de este archivo: exige atribuir la sesión de
+# caja al `Payment` (qué turno recibió cada abono), no al `SalesDocument`
+# completo — es un cambio de modelo de datos, no una corrección puntual.
+# Ningún cliente usa venta a crédito hoy (ver cabecera de
+# tests/test_cash_credito_y_abonos.py), así que revertir a PAID/REFUNDED_*
+# devuelve un hueco latente (abonos a crédito no visibles en ningún corte)
+# en vez de dejar vivo un defecto que corrompe cortes ya cerrados.
 
 
 # Statuses that count as "revenue to report" (ventas totales, tickets,
 # impuestos/subtotal en el ticket de corte y el resumen de sucursal).
 #
-# NO uses CASH_INCLUDED_STATUSES para esto. Son dos preguntas distintas:
+# Hoy esta tupla coincide byte a byte con CASH_INCLUDED_STATUSES — es
+# TENTADOR fusionarlas en una sola. No lo hagas: responden preguntas
+# distintas y coinciden solo porque PENDING está fuera de ambas por motivos
+# diferentes.
 #   - CASH_INCLUDED_STATUSES responde "¿ese dinero está físicamente en el
-#     cajón?" — se construye desde `Payment.amount` (lo realmente cobrado),
-#     así que PENDING encaja: un abono parcial en efectivo SÍ entró.
+#     cajón?" — se construye desde `Payment.amount` (lo realmente cobrado).
+#     PENDING está fuera por el bug de reatribución retroactiva explicado
+#     arriba, no porque el abono no haya entrado físicamente — el día que se
+#     resuelva ese bug (atribuyendo la sesión al Payment), PENDING debería
+#     volver aquí.
 #   - SALES_REPORT_STATUSES responde "¿esta venta ya es ingreso reconocido?"
 #     — los consumidores de esta tupla (`get_session_audit_data` y
 #     `get_branch_cash_summary` en app/routers/cash.py) suman
@@ -93,16 +110,18 @@ CASH_INCLUDED_STATUSES = (
 #     filas de `SalesDocument`. Para PAID/REFUNDED_* eso es seguro porque
 #     `approve_return` reescribe `total_amount` al neto tras la devolución.
 #     PENDING NO tiene ese ajuste: su `total_amount` es la venta completa,
-#     deuda incluida. Si se le agregara PENDING aquí, una venta a crédito de
-#     $5,000 con $200 de abono inflaría "ventas totales" en $5,000 y sumaría
-#     un ticket que el cliente todavía no terminó de pagar — dinero fantasma
-#     en un reporte que el dueño lee.
+#     deuda incluida. PENDING está fuera aquí porque, aunque se arregle el
+#     bug de arriba, una venta a crédito con abono parcial NUNCA debe
+#     inflar "ventas totales" con la deuda todavía no cobrada — esta
+#     exclusión es permanente, no un side-effect del revert.
 #
-# Es tentador "simplificar" esto de vuelta a una sola tupla — no lo hagas sin
-# releer el párrafo de arriba. Los usos de `Payment.amount` (desglose por
-# método de pago, en ambas funciones) SÍ deben seguir usando
-# CASH_INCLUDED_STATUSES: ese dinero también entró físicamente si el método
-# es efectivo, y agruparlo aparte rompería la coherencia con `net_cash` de
+# En resumen: que hoy sean iguales es coincidencia de este momento del
+# código, no una invariante. Fusionarlas ata sus futuros a la misma razón y
+# la próxima persona que reactive crédito con el fix de Payment tendrá que
+# volver a separarlas. Los usos de `Payment.amount` (desglose por método de
+# pago, en ambas funciones) SÍ deben seguir usando CASH_INCLUDED_STATUSES:
+# ese dinero también entró físicamente si el método es efectivo, y
+# agruparlo aparte rompería la coherencia con `net_cash` de
 # `compute_expected_cash`.
 SALES_REPORT_STATUSES = (
     DocumentStatus.PAID,
