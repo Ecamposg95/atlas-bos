@@ -79,6 +79,38 @@ CASH_INCLUDED_STATUSES = (
 )
 
 
+# Statuses that count as "revenue to report" (ventas totales, tickets,
+# impuestos/subtotal en el ticket de corte y el resumen de sucursal).
+#
+# NO uses CASH_INCLUDED_STATUSES para esto. Son dos preguntas distintas:
+#   - CASH_INCLUDED_STATUSES responde "¿ese dinero está físicamente en el
+#     cajón?" — se construye desde `Payment.amount` (lo realmente cobrado),
+#     así que PENDING encaja: un abono parcial en efectivo SÍ entró.
+#   - SALES_REPORT_STATUSES responde "¿esta venta ya es ingreso reconocido?"
+#     — los consumidores de esta tupla (`get_session_audit_data` y
+#     `get_branch_cash_summary` en app/routers/cash.py) suman
+#     `SalesDocument.total_amount` / `tax_amount` / `subtotal`, o cuentan
+#     filas de `SalesDocument`. Para PAID/REFUNDED_* eso es seguro porque
+#     `approve_return` reescribe `total_amount` al neto tras la devolución.
+#     PENDING NO tiene ese ajuste: su `total_amount` es la venta completa,
+#     deuda incluida. Si se le agregara PENDING aquí, una venta a crédito de
+#     $5,000 con $200 de abono inflaría "ventas totales" en $5,000 y sumaría
+#     un ticket que el cliente todavía no terminó de pagar — dinero fantasma
+#     en un reporte que el dueño lee.
+#
+# Es tentador "simplificar" esto de vuelta a una sola tupla — no lo hagas sin
+# releer el párrafo de arriba. Los usos de `Payment.amount` (desglose por
+# método de pago, en ambas funciones) SÍ deben seguir usando
+# CASH_INCLUDED_STATUSES: ese dinero también entró físicamente si el método
+# es efectivo, y agruparlo aparte rompería la coherencia con `net_cash` de
+# `compute_expected_cash`.
+SALES_REPORT_STATUSES = (
+    DocumentStatus.PAID,
+    DocumentStatus.REFUNDED_PARTIAL,
+    DocumentStatus.REFUNDED_TOTAL,
+)
+
+
 @dataclass
 class ExpectedCashBreakdown:
     """Desglose del efectivo esperado en caja al final del turno."""

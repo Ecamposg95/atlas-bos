@@ -114,3 +114,81 @@ def test_completar_venta_pendiente_en_turno_posterior_reasigna_la_sesion(
         f"la venta liquidada por completo hoy debe contar entera en el corte de hoy; "
         f"el esperado dice {esperado_2}"
     )
+
+
+# ── Ronda de correcciones 1 ──────────────────────────────────────────────────
+#
+# `CASH_INCLUDED_STATUSES` no es privado de `compute_expected_cash`: tambien
+# lo reusan `get_session_audit_data` y `get_branch_cash_summary` en
+# app/routers/cash.py, pero ahi suman `SalesDocument.total_amount` (no
+# `Payment.amount`). Para PAID/REFUNDED_* eso es seguro porque
+# `approve_return` reescribe `total_amount` al neto. PENDING NO tiene ese
+# ajuste: su `total_amount` es la venta completa, deuda incluida -- agregar
+# PENDING a esa misma tupla (como hizo la primera version de esta tarea)
+# inflaba "ventas totales" y "tickets" del corte con dinero que el cliente
+# todavia no termina de pagar. Ver `SALES_REPORT_STATUSES` en
+# app/services/cash_reconciliation.py.
+
+def test_venta_pendiente_no_infla_kpis_del_corte_de_sesion(db, org, branch_a, cajero_a):
+    """Un abono en efectivo SI debe sumar al esperado y al desglose de pagos,
+    pero la venta (PENDING, con deuda restante) NO debe aparecer como ingreso
+    reconocido en total_sales/total_tickets -- ese dinero fantasma llegaria al
+    ticket termico, al PDF y al dashboard de sesion que el dueño lee.
+    """
+    from app.routers.cash import get_session_audit_data
+
+    sesion = _abrir_caja(db, org, branch_a, cajero_a)
+    venta = _venta_pendiente(db, org, branch_a, cajero_a, sesion, total="5000.00")
+    db.add(Payment(sales_document_id=venta.id, amount=Decimal("200.00"),
+                   method=PaymentMethod.CASH, organization_id=org.id))
+    db.commit()
+
+    audit = get_session_audit_data(db, sesion.id)
+
+    assert audit["kpis"]["total_sales"] == 0.0, (
+        f"la venta PENDING (deuda de 4800 sin cobrar) no debe contarse en "
+        f"ventas totales; kpis={audit['kpis']}"
+    )
+    assert audit["kpis"]["total_tickets"] == 0, (
+        f"un ticket sin liquidar no debe contarse como ticket vendido; kpis={audit['kpis']}"
+    )
+    assert audit["payments"]["cash"]["total"] == 200.0, (
+        "los 200 del abono si deben aparecer en el desglose de efectivo cobrado por metodo"
+    )
+    assert audit["expected"]["cash_physical"] == 200.0, (
+        "el efectivo fisico esperado si debe incluir el abono"
+    )
+
+
+def test_venta_pendiente_no_infla_el_corte_de_sucursal(
+    client, db, org, branch_a, cajero_a, gerente_a, auth_gerente_a
+):
+    """Mismo defecto, endpoint de resumen de sucursal (`get_branch_cash_summary`,
+    consumido por gerentes/admin para ver el corte consolidado del dia)."""
+    sesion = _abrir_caja(db, org, branch_a, cajero_a)
+    venta = _venta_pendiente(db, org, branch_a, cajero_a, sesion, total="5000.00")
+    db.add(Payment(sales_document_id=venta.id, amount=Decimal("200.00"),
+                   method=PaymentMethod.CASH, organization_id=org.id))
+    db.commit()
+
+    resp = client.get(
+        f"/api/cash/branch-summary?branch_id={branch_a.id}",
+        headers={**auth_gerente_a, "X-Organization-ID": str(org.id)},
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+
+    assert data["totals"]["sales"] == 0.0, (
+        f"la venta PENDING no debe contarse en las ventas totales de sucursal; totals={data['totals']}"
+    )
+    assert data["totals"]["tickets"] == 0, (
+        f"un ticket sin liquidar no debe contarse en el corte de sucursal; totals={data['totals']}"
+    )
+    assert data["totals"]["cash"] == 200.0, (
+        "los 200 del abono si deben sumar al efectivo consolidado de la sucursal"
+    )
+
+    cajero_row = next(c for c in data["cashiers"] if c["session_id"] == sesion.id)
+    assert cajero_row["sales"] == 0.0
+    assert cajero_row["tickets"] == 0
+    assert cajero_row["expected_cash"] == 200.0

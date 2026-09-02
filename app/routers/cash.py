@@ -517,13 +517,18 @@ def get_session_audit_data(db: Session, session_id: int):
         compute_expected_cash,
         session_sales_filter,
         CASH_INCLUDED_STATUSES,
+        SALES_REPORT_STATUSES,
     )
 
     _session_filter = session_sales_filter(session)
     close_limit = session.closed_at or datetime.now(timezone.utc)
 
-    # 1. Desglose detallado por Métodos de Pago (Pagadas + Devueltas).
-    # Incluimos REFUNDED_PARTIAL/TOTAL: las Payment rows reflejan la entrada
+    # 1. Desglose detallado por Métodos de Pago (Pagadas + Devueltas + a
+    # crédito con abono). CASH_INCLUDED_STATUSES aquí (incluye PENDING): esto
+    # suma `Payment.amount`, lo realmente cobrado por método, no
+    # `total_amount` — un abono en efectivo de una venta a crédito SÍ entró al
+    # cajón aunque el documento siga PENDING. Incluimos REFUNDED_PARTIAL/TOTAL
+    # por la misma razón de siempre: las Payment rows reflejan la entrada
     # física al cajón en su momento, y los refunds salen como CashMovement
     # OUT separados. Excluirlas aquí "borra" la entrada original mientras se
     # sigue restando el OUT → expected_cash negativo en días con devoluciones.
@@ -539,16 +544,20 @@ def get_session_audit_data(db: Session, session_id: int):
     methods_map = {p.method: {"total": float(p.total), "count": p.count} for p in payment_stats}
 
     # 2. Impuestos y Subtotal (NETOS post-refund).
-    # approve_return reescribe sale.tax_amount y sale.subtotal al valor neto
-    # tras la devolución, así que sumar incluyendo REFUNDED_* da el revenue
-    # neto del día. PAID-only "perdería" la contribución parcial de las ventas
-    # devueltas → ticket muestra impuestos < real cuando hay refunds.
+    # SALES_REPORT_STATUSES aquí (NO PENDING): esto suma `tax_amount`/
+    # `subtotal` del SalesDocument completo, no lo realmente cobrado. Para
+    # PAID/REFUNDED_* es seguro porque `approve_return` reescribe esos campos
+    # al valor neto tras la devolución — incluir REFUNDED_* da el revenue neto
+    # real del día (PAID-only perdería la contribución parcial de ventas
+    # devueltas). PENDING no tiene ese ajuste: su tax_amount/subtotal es el de
+    # la venta completa, deuda incluida — incluirlo aquí infla estos totales
+    # con impuestos de dinero que todavía no se cobra.
     invoice_stats = db.query(
         func.sum(SalesDocument.tax_amount).label("taxes"),
         func.sum(SalesDocument.subtotal).label("subtotal")
     ).filter(
         _session_filter,
-        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+        SalesDocument.status.in_(SALES_REPORT_STATUSES),
     ).first()
 
     total_taxes = float(invoice_stats.taxes or 0)
@@ -569,19 +578,24 @@ def get_session_audit_data(db: Session, session_id: int):
     # Ventas Totales NETAS post-refund — sale.total_amount está actualizado
     # por approve_return. Incluir REFUNDED_* para que el ticket muestre el
     # revenue real del día (PAID-only saltearía las ventas con devoluciones).
+    # SALES_REPORT_STATUSES (NO PENDING): una venta a crédito con abono
+    # parcial todavía no es ingreso reconocido por el total completo — solo
+    # lo que ya se cobró (eso ya se refleja en `cash`/`card`/`transfer` vía
+    # `payment_stats` arriba, que sí incluye PENDING).
     total_sales_query = db.query(func.sum(SalesDocument.total_amount)).filter(
         _session_filter,
-        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+        SalesDocument.status.in_(SALES_REPORT_STATUSES),
     ).scalar()
     grand_total_sales = float(total_sales_query or 0)
 
     # Tickets: sí cuentan ventas con devolución parcial (sigue siendo un ticket
     # vendido). REFUNDED_TOTAL técnicamente es venta cancelada pero el cliente
     # SÍ recorrió el flujo de checkout — para fines de "tickets atendidos" en
-    # el corte cuenta como ticket. Coherente con grand_total_sales.
+    # el corte cuenta como ticket. Coherente con grand_total_sales. PENDING NO
+    # cuenta: el cliente todavía no terminó de pagar, no es un ticket cerrado.
     total_tickets = db.query(func.count(SalesDocument.id)).filter(
         _session_filter,
-        SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+        SalesDocument.status.in_(SALES_REPORT_STATUSES),
     ).scalar() or 0
     avg_ticket = grand_total_sales / total_tickets if total_tickets > 0 else 0
 
@@ -991,8 +1005,17 @@ def get_branch_cash_summary(
     #   - difference se leía de s.difference persistido (stale del cálculo
     #     viejo en sesiones cerradas antes del fix de devoluciones).
     # Ahora todo deriva de compute_expected_cash + session_sales_filter.
+    #
+    # sales_total/ticket_count SÍ divergen deliberadamente de payment_stats en
+    # un solo status: PENDING. Ver el comentario junto a `SALES_REPORT_STATUSES`
+    # en app/services/cash_reconciliation.py — "dinero en el cajón" y "venta
+    # ya reconocida como ingreso" son preguntas distintas para una venta a
+    # crédito con abono parcial. Esto NO reintroduce el bug de arriba: ambas
+    # tuplas siguen coincidiendo en PAID/REFUNDED_*, la única diferencia es
+    # PENDING.
     from app.services.cash_reconciliation import (
         CASH_INCLUDED_STATUSES,
+        SALES_REPORT_STATUSES,
         compute_expected_cash,
         session_sales_filter,
     )
@@ -1010,12 +1033,12 @@ def get_branch_cash_summary(
 
         sales_total = db.query(func.sum(SalesDocument.total_amount)).filter(
             sales_filter,
-            SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+            SalesDocument.status.in_(SALES_REPORT_STATUSES),
         ).scalar() or Decimal(0)
 
         ticket_count = db.query(func.count(SalesDocument.id)).filter(
             sales_filter,
-            SalesDocument.status.in_(CASH_INCLUDED_STATUSES),
+            SalesDocument.status.in_(SALES_REPORT_STATUSES),
         ).scalar() or 0
 
         payment_stats = db.query(
