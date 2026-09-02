@@ -33,6 +33,29 @@ MIN_REASON_LENGTH = 10
 ROLES_SALIDA_ALTA = {"ADMINISTRADOR", "DUEÑO", "GERENTE"}
 
 
+def _lock_cash_session_query(query):
+    """Aplica FOR UPDATE a la consulta de CashSession antes de leerla.
+
+    Ronda de correcciones 1 (hallazgo Importante): sin este bloqueo, dos
+    salidas concurrentes contra la misma sesion (mismo cajero operando
+    varias terminales — ver `open_session` arriba) pueden leer el mismo
+    `disponible` en `_validar_salida` antes de que ninguna haga commit,
+    pasar ambas el chequeo de 409 y dejar la caja en negativo, que es
+    justo lo que esta tarea promete impedir.
+
+    Mismo patron que `app/crud/returns.py:144` (`with_for_update()` sobre
+    la fila antes de decidir) y `app/modules/kitchen/services.py::_lock_ticket`.
+    El bloqueo cubre el intervalo desde esta lectura hasta el commit que
+    hace el endpoint tras insertar el `CashMovement`, porque es la misma
+    sesion de SQLAlchemy/transaccion. No hace falta condicionarlo por
+    dialecto (a diferencia del advisory lock de `app/utils/folios.py`):
+    `with_for_update()` es un no-op silencioso en SQLite (no lanza error,
+    solo no serializa — igual que documenta `_lock_ticket`), y sí bloquea
+    la fila en Postgres, que es donde corre producción.
+    """
+    return query.with_for_update()
+
+
 def _validar_salida(db: Session, session: CashSession, current_user: User, amount: Decimal, reason: str) -> None:
     """Guardas de una salida de efectivo. Lanza HTTPException si no procede.
 
@@ -306,11 +329,17 @@ def register_cash_movement(
     current_user: User = Depends(get_current_user)
 ):
     """Registra una entrada (IN) o salida (OUT) de efectivo en la sesión activa."""
-    session = db.query(CashSession).filter(
+    query = db.query(CashSession).filter(
         CashSession.id == payload.session_id,
         CashSession.user_id == current_user.id,
         CashSession.status == CashSessionStatus.OPEN
-    ).first()
+    )
+    # Bloqueo de fila solo para salidas (OUT): es la rama que decide un
+    # saldo disponible y luego escribe — la que puede correr en carrera.
+    # `payload.type` ya esta disponible aqui, antes de tocar la BD.
+    if payload.type == "OUT":
+        query = _lock_cash_session_query(query)
+    session = query.first()
 
     if not session:
         raise HTTPException(status_code=404, detail="Sesión de caja no encontrada o cerrada")
@@ -621,11 +650,12 @@ def register_outflow(
 ):
     if amount <= 0:
         raise HTTPException(400, "El monto debe ser mayor a cero.")
-    session = db.query(CashSession).filter(
+    # Bloqueo de fila: toda /outflow decide sobre `disponible` y escribe.
+    session = _lock_cash_session_query(db.query(CashSession).filter(
         CashSession.user_id == current_user.id,
         CashSession.branch_id == current_user.branch_id,
         CashSession.status == CashSessionStatus.OPEN
-    ).first()
+    )).first()
     if not session:
         raise HTTPException(400, "No hay sesión de caja abierta.")
 

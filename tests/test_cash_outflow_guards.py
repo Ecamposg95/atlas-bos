@@ -8,8 +8,10 @@ umbral explicito y confirmacion forzada.
 from decimal import Decimal
 
 import pytest
+from sqlalchemy.dialects import postgresql
 
 from app.models.cash import CashMovement, CashSession
+from app.routers import cash as cash_router
 from app.services.cash_reconciliation import compute_expected_cash
 
 
@@ -80,3 +82,90 @@ class TestGuardasDeSalida:
         assert resp.status_code == 200, resp.text
         db.refresh(sesion)
         assert Decimal(str(compute_expected_cash(db, sesion).expected)) == Decimal("800.00")
+
+
+class TestBloqueoDeFilaEnSalidas:
+    """Ronda de correcciones 1 (hallazgo Importante): dos salidas
+    concurrentes contra la misma sesion pueden leer el mismo `disponible`
+    antes de que ninguna haga commit y las dos pasar el 409 — la caja
+    termina en negativo. `_lock_cash_session_query` aplica FOR UPDATE
+    sobre la fila de CashSession antes de decidir (mismo patron que
+    `app/crud/returns.py:144`).
+
+    SQLite (el motor de estos tests) hace de `with_for_update()` un
+    no-op silencioso — no hay error, pero tampoco serializa nada — asi
+    que reproducir la carrera con hilos reales sobre SQLite no probaria
+    nada. En su lugar: (1) se compila la consulta contra el dialecto de
+    Postgres para verificar que el SQL resultante lleva FOR UPDATE, y
+    (2) se espia el helper para confirmar que las rutas de escritura
+    realmente lo invocan antes de leer el saldo.
+    """
+
+    def test_helper_agrega_for_update_a_la_consulta(self, db):
+        base = db.query(CashSession).filter(CashSession.id == 1)
+        bloqueada = cash_router._lock_cash_session_query(
+            db.query(CashSession).filter(CashSession.id == 1)
+        )
+        sql_normal = str(base.statement.compile(dialect=postgresql.dialect()))
+        sql_bloqueada = str(bloqueada.statement.compile(dialect=postgresql.dialect()))
+        assert "FOR UPDATE" not in sql_normal
+        assert "FOR UPDATE" in sql_bloqueada
+
+    def test_outflow_bloquea_la_fila_antes_de_leer_el_saldo(
+        self, client, db, org, branch_a, cajero_a, auth_cajero_a, monkeypatch
+    ):
+        _abrir_caja(db, org, branch_a, cajero_a, "1000.00")
+        llamadas = []
+        original = cash_router._lock_cash_session_query
+
+        def _espia(query):
+            llamadas.append(query)
+            return original(query)
+
+        monkeypatch.setattr(cash_router, "_lock_cash_session_query", _espia)
+
+        resp = client.post(
+            "/api/cash/outflow?amount=50&reason=compra de insumos varios",
+            headers={**auth_cajero_a, "X-Organization-ID": str(org.id)},
+        )
+        assert resp.status_code == 200, resp.text
+        assert len(llamadas) == 1, (
+            "/outflow debe bloquear la fila de la sesion antes de leer el disponible"
+        )
+
+    def test_movements_bloquea_solo_en_la_rama_out(
+        self, client, db, org, branch_a, cajero_a, auth_cajero_a, monkeypatch
+    ):
+        sesion = _abrir_caja(db, org, branch_a, cajero_a, "1000.00")
+        llamadas = []
+        original = cash_router._lock_cash_session_query
+
+        def _espia(query):
+            llamadas.append(query)
+            return original(query)
+
+        monkeypatch.setattr(cash_router, "_lock_cash_session_query", _espia)
+
+        resp_in = client.post(
+            "/api/cash/movements",
+            json={
+                "session_id": sesion.id, "type": "IN", "amount": 50,
+                "concept": "reposicion de fondo de caja",
+            },
+            headers={**auth_cajero_a, "X-Organization-ID": str(org.id)},
+        )
+        assert resp_in.status_code == 200, resp_in.text
+        assert len(llamadas) == 0, "una entrada (IN) no necesita bloquear la fila"
+
+        resp_out = client.post(
+            "/api/cash/movements",
+            json={
+                "session_id": sesion.id, "type": "OUT", "amount": 50,
+                "concept": "compra de insumos varios",
+            },
+            headers={**auth_cajero_a, "X-Organization-ID": str(org.id)},
+        )
+        assert resp_out.status_code == 200, resp_out.text
+        assert len(llamadas) == 1, (
+            "una salida (OUT) por /movements debe bloquear la fila antes de leer el disponible"
+        )
