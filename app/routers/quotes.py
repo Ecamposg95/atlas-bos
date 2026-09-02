@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Dict, Any, Optional
 
@@ -412,7 +412,7 @@ def get_quote_pdf_file(
 @router.post("/{quote_id}/convert-to-sale")
 def convert_quote_to_sale(
     quote_id: str,
-    payment_method: str = "CASH",
+    payment_method: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization),
@@ -426,7 +426,7 @@ def convert_quote_to_sale(
 
     if not quote:
         raise HTTPException(404, "Documento no encontrado")
-    
+
     if quote.status == DocumentStatus.PAID:
         raise HTTPException(400, "Ya fue procesado")
 
@@ -436,15 +436,33 @@ def convert_quote_to_sale(
             StockOnHand.variant_id == line.variant_id,
             StockOnHand.branch_id == current_user.branch_id
         ).first()
-        
+
         if not stock or stock.qty_on_hand < line.quantity:
             raise HTTPException(400, f"Sin stock para {line.description}")
+
+    from app.models.cash import CashSession, CashSessionStatus
+
+    # Mismo criterio que create_sale: el efectivo exige una caja que responda.
+    sesion_activa = None
+    if current_user.branch_id:
+        sesion_activa = db.query(CashSession).filter(
+            CashSession.user_id == current_user.id,
+            CashSession.branch_id == current_user.branch_id,
+            CashSession.status == CashSessionStatus.OPEN,
+        ).first()
+        if payment_method.upper() == "CASH" and sesion_activa is None:
+            raise HTTPException(
+                status_code=409,
+                detail="Debes abrir caja antes de cobrar en efectivo",
+            )
 
     # Convertir a ORDER (Pagado) - Mantiene el documento en el módulo de Cotizaciones/Pedidos
     quote.doc_type = DocumentType.ORDER
     quote.status = DocumentStatus.PAID
-    quote.created_at = datetime.now()
-    
+    quote.created_at = datetime.now(timezone.utc)
+    quote.cash_session_id = sesion_activa.id if sesion_activa else None
+    quote.seller_id = current_user.id
+
     # Mantener serie P (o asignar si era cotización Q)
     # Si ya era ORDER (P), conserva P. Si era QUOTE (Q), cambia a P.
     if quote.series == "Q":
