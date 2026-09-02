@@ -48,4 +48,8 @@ class CashMovement(Base):
     reason = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Autoria del hecho, no del log: un movimiento sin autor no es auditable.
+    # Nullable porque las filas creadas antes de esta columna no lo tienen.
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+
     session = relationship("CashSession", back_populates="movements")

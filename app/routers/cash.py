@@ -368,9 +368,27 @@ def register_cash_movement(
         session_id=session.id,
         type=payload.type,
         amount=payload.amount,
-        reason=payload.concept or ("Entrada de efectivo" if payload.type == "IN" else "Salida de efectivo")
+        reason=payload.concept or ("Entrada de efectivo" if payload.type == "IN" else "Salida de efectivo"),
+        created_by_user_id=current_user.id,
     )
     db.add(movement)
+    db.flush()
+    # Task 4: esta ruta era la unica de las tres que no dejaba rastro en el
+    # audit log (/inflow y /outflow ya lo hacian). Mismo patron que ambas.
+    from app.services.cash_audit import audit_cash_event
+    from app.models.cash_audit import CashAuditEvent
+    audit_cash_event(
+        db,
+        event_type=CashAuditEvent.MANUAL_OUTFLOW if payload.type == "OUT" else CashAuditEvent.MANUAL_INFLOW,
+        organization_id=session.organization_id,
+        session_id=session.id,
+        branch_id=session.branch_id,
+        user_id=current_user.id,
+        amount=payload.amount,
+        related_table="cash_movements",
+        related_id=str(movement.id),
+        payload={"reason": movement.reason},
+    )
     db.commit()
     db.refresh(movement)
     return movement
@@ -623,7 +641,8 @@ def register_inflow(
         type="IN",
         amount=Decimal(str(amount)),
         reason=motivo_in,
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
+        created_by_user_id=current_user.id,
     )
     db.add(new_move)
     db.flush()
@@ -667,7 +686,8 @@ def register_outflow(
         type="OUT",
         amount=monto,
         reason=reason.strip(),
-        created_at=datetime.now(timezone.utc)
+        created_at=datetime.now(timezone.utc),
+        created_by_user_id=current_user.id,
     )
     db.add(new_move)
     db.flush()
