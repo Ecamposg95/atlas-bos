@@ -123,12 +123,16 @@ def test_endpoint_de_abono_atribuye_la_caja_abierta_del_cobrador(
     assert Decimal(str(compute_expected_cash(db, s_hoy).expected)) == Decimal("200.00")
 
 
-def test_endpoint_de_abono_sin_sesion_abierta_registra_pago_sin_atribucion(
+def test_endpoint_de_abono_sin_sesion_abierta_solo_admite_lo_que_no_es_efectivo(
     client, db, org, branch_a, cajero_a, auth_cajero_a
 ):
-    """Retrocompatibilidad: si NO hay sesion OPEN, el abono en efectivo se
-    sigue registrando igual, solo que con cash_session_id nulo. Este endpoint
-    no forma parte del guard de "efectivo exige caja abierta".
+    """Ronda de correcciones final (CRITICO-2): antes, sin sesion OPEN el abono
+    en efectivo se registraba igual con `cash_session_id` nulo — y de ahi caia a
+    la rama de respaldo por documento, que lo sumaba al esperado de la sesion
+    (cerrada) de la venta original. Ese pago ya no se acepta: el efectivo exige
+    caja abierta, igual que el checkout. Lo que no toca el cajon sigue
+    permitido sin turno y sin atribucion (ver
+    tests/test_abono_en_efectivo_exige_caja.py para el escenario completo).
     """
     from app.modules.customers.models import Customer
 
@@ -138,15 +142,22 @@ def test_endpoint_de_abono_sin_sesion_abierta_registra_pago_sin_atribucion(
     )
     db.add(customer); db.commit(); db.refresh(customer)
 
-    resp = client.post(
+    efectivo = client.post(
         f"/api/customers/{customer.id}/pay",
         json={"amount": "100", "method": "CASH"},
         headers=auth_cajero_a,
     )
-    assert resp.status_code == 200, resp.text
+    assert efectivo.status_code == 409, efectivo.text
+    assert db.query(Payment).filter(Payment.customer_id == customer.id).count() == 0
 
-    payment = db.query(Payment).filter(Payment.customer_id == customer.id).first()
-    assert payment is not None
+    transferencia = client.post(
+        f"/api/customers/{customer.id}/pay",
+        json={"amount": "100", "method": "TRANSFER"},
+        headers=auth_cajero_a,
+    )
+    assert transferencia.status_code == 200, transferencia.text
+
+    payment = db.query(Payment).filter(Payment.customer_id == customer.id).one()
     assert payment.cash_session_id is None
 
 
