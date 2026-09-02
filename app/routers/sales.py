@@ -353,6 +353,28 @@ def _line_description(variant) -> str:
     return nombre
 
 
+def _respuesta_de_venta_existente(db: Session, sale: SalesDocument) -> Dict[str, Any]:
+    """Respuesta del checkout para una venta que ya existía (reenvío idempotente).
+
+    Misma forma que el alta normal, para que el POS no tenga que distinguir
+    entre "se registró ahora" y "ya estaba registrada".
+    """
+    pagado = db.query(
+        func.coalesce(func.sum(Payment.amount), Decimal("0"))
+    ).filter(Payment.sales_document_id == sale.id).scalar() or Decimal("0")
+    total = Decimal(str(sale.total_amount or 0)).quantize(Decimal("0.01"))
+    return {
+        "status": "success",
+        "sale_id": sale.id,
+        "folio": f"{sale.series}-{sale.folio}",
+        "total": float(total),
+        "paid": float(Decimal(str(pagado)).quantize(Decimal("0.01"))),
+        "change": float(Decimal(str(sale.change_given or 0)).quantize(Decimal("0.01"))),
+        "credit_debt": 0.0,
+        "duplicate_ignored": True,
+    }
+
+
 @router.post("/", response_model=Dict[str, Any])
 def create_sale(
     sale_in: SaleCreate,
@@ -366,6 +388,18 @@ def create_sale(
     """
     if not sale_in.items:
         raise HTTPException(status_code=400, detail="El ticket está vacío")
+
+    # Idempotencia del checkout. El POS guarda las ventas que no pudo confirmar
+    # y las reenvía con el MISMO client_uuid; si la venta sí entró y solo se
+    # perdió la respuesta, aquí se devuelve la original en vez de cobrar y
+    # descontar inventario por segunda vez.
+    if sale_in.client_uuid:
+        previa = db.query(SalesDocument).filter(
+            SalesDocument.organization_id == org_id,
+            SalesDocument.client_uuid == sale_in.client_uuid,
+        ).first()
+        if previa is not None:
+            return _respuesta_de_venta_existente(db, previa)
 
     # --- Guard 2: Branch required for sales with payments ---
     if sale_in.payments and not current_user.branch_id:
@@ -727,6 +761,7 @@ def create_sale(
             cash_session_id=cash_session_id_value,
             change_given=change_given,
             tip_amount=tip_amount,
+            client_uuid=sale_in.client_uuid,
         )
         db.add(sales_doc)
     

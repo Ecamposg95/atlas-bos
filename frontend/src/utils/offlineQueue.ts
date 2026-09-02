@@ -4,10 +4,14 @@
  * Cuando `POST /api/sales` falla por error de red (no por 4xx/5xx del backend),
  * la venta se persiste aquí y se reintenta al reconectar.
  *
- * IDEMPOTENCIA: el backend no expone idempotency key hoy. Para minimizar el
- * riesgo de duplicados, `flushPending` ignora entradas con menos de 2 min de
- * antigüedad, dando tiempo a que el POST original (que pudo haber llegado al
- * servidor justo antes de que la red se corte) complete.
+ * IDEMPOTENCIA: cada intento de cobro lleva un `client_uuid` en el payload
+ * (ver POS.tsx). Como aquí el payload se guarda y se reenvía tal cual, el
+ * reintento llega con el MISMO valor y el backend devuelve la venta original
+ * en vez de crear un ticket duplicado.
+ *
+ * La espera de 2 min de `flushPending` se conserva como segunda barrera: cubre
+ * los payloads encolados por versiones anteriores del POS, que no traen
+ * `client_uuid`.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

@@ -27,6 +27,9 @@ class PaymentCreate(BaseModel):
 
 class SaleCreate(BaseModel):
     id: Optional[str] = None # permite que el cliente móvil envíe su UUID (DRAFT)
+    # Idempotencia del checkout: el POS lo genera una vez por intento de cobro
+    # y lo reenvía igual en cada reintento. Ver app/routers/sales.py.
+    client_uuid: Optional[str] = None
     doc_type: Optional[str] = "QUOTE" # QUOTE or ORDER
     customer_id: Optional[int] = None
     customer_name: Optional[str] = None # Nuevo campo libre

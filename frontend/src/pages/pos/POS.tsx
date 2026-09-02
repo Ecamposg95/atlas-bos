@@ -167,7 +167,15 @@ export function POS() {
     const shouldPrint = opts.print ?? true
     if (store.isProcessing || store.cart.length === 0) return
     store.setIsProcessing(true)
+    // Idempotencia: un identificador por INTENTO de cobro. La cola offline
+    // reenvia este mismo payload, asi que un reintento llega con el mismo
+    // valor y el backend devuelve la venta original en vez de duplicarla.
+    const clientUuid =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`
     const payload = {
+      client_uuid: clientUuid,
       customer_id: store.customerId ?? undefined,
       items: buildSaleItems(),
       payments,

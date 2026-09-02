@@ -76,6 +76,10 @@ class SalesDocument(Base, UUIDMixin, AuditMixin, TenantMixin):
     tip_amount = Column(Numeric(10, 2), default=0)
     server_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
+    # Identificador que genera el POS por intento de cobro. Si el cajero
+    # reintenta (cola offline / boton "Reintentar ahora") llega el MISMO
+    # valor y el checkout devuelve la venta original en vez de duplicarla.
+    client_uuid = Column(String(64), nullable=True, index=True)
     notes = Column(String, nullable=True)
 
     # Relaciones
