@@ -441,8 +441,26 @@ def convert_quote_to_sale(
             raise HTTPException(400, f"Sin stock para {line.description}")
 
     from app.models.cash import CashSession, CashSessionStatus
+    from app.routers.sales import _is_hq_role
 
-    # Mismo criterio que create_sale: el efectivo exige una caja que responda.
+    # Hallazgo ALTA (revisión final): el comentario decía "mismo criterio que
+    # create_sale" pero solo replicaba la mitad — exigía caja únicamente si
+    # el método era efectivo, y perdió la otra mitad ("todo usuario con
+    # sucursal necesita turno abierto para operar, cobre o no en efectivo").
+    # Con eso, `payment_method=CARD` sin caja abierta producía una venta con
+    # `cash_session_id=None` — la venta huérfana que esta rama existe para
+    # impedir. Replicamos el criterio completo de create_sale
+    # (app/routers/sales.py, guard H-5): se exige caja si el usuario tiene
+    # sucursal Y (cobra efectivo O no es rol HQ). Los roles HQ
+    # (ADMINISTRADOR/DUEÑO) siguen exentos para lo que no toca el cajón.
+    cobra_efectivo = payment_method.upper() == "CASH"
+    requiere_caja = bool(current_user.branch_id) and (
+        cobra_efectivo or not _is_hq_role(current_user)
+    )
+    # Igual que create_sale: se busca la sesión abierta siempre que haya
+    # sucursal (para adoptarla si existe, aunque no sea obligatoria — p.ej.
+    # rol HQ cobrando con tarjeta) y solo se exige (409 si falta) cuando
+    # `requiere_caja` es True.
     sesion_activa = None
     if current_user.branch_id:
         sesion_activa = db.query(CashSession).filter(
@@ -450,10 +468,14 @@ def convert_quote_to_sale(
             CashSession.branch_id == current_user.branch_id,
             CashSession.status == CashSessionStatus.OPEN,
         ).first()
-        if payment_method.upper() == "CASH" and sesion_activa is None:
+        if requiere_caja and sesion_activa is None:
             raise HTTPException(
                 status_code=409,
-                detail="Debes abrir caja antes de cobrar en efectivo",
+                detail=(
+                    "Debes abrir caja antes de cobrar en efectivo"
+                    if cobra_efectivo
+                    else "Debes abrir caja antes de registrar ventas"
+                ),
             )
 
     # Convertir a ORDER (Pagado) - Mantiene el documento en el módulo de Cotizaciones/Pedidos

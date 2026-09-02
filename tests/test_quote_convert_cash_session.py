@@ -10,7 +10,7 @@ import pytest
 
 from app.models.cash import CashSession
 from app.models.modules import Module, OrganizationModule
-from app.models.sales import SalesDocument
+from app.models.sales import DocumentStatus, SalesDocument
 
 
 def _habilitar_modulo(db, org, key):
@@ -75,6 +75,33 @@ class TestConversionDeCotizacion:
         assert resp.status_code in (200, 201), resp.text
         venta = db.query(SalesDocument).filter(SalesDocument.id == qid).one()
         assert venta.cash_session_id == sesion.id
+
+    def test_tarjeta_sin_caja_tambien_se_rechaza(
+        self, client, db, org, branch_a, cajero_a, auth_cajero_a, products_setup
+    ):
+        """Hallazgo ALTA (revisión final): el guard solo exigía caja para
+        CASH -- perdió la mitad "todo usuario con sucursal necesita turno"
+        que sí tiene create_sale (H-5). Con eso, `payment_method=CARD` sin
+        caja abierta producía la venta huérfana (cash_session_id=None) que
+        esta rama existe para impedir. Ahora replica el criterio completo:
+        se exige caja si el usuario tiene sucursal Y (cobra efectivo O no es
+        rol HQ) -- un CAJERO cae en el segundo brazo aunque cobre con
+        tarjeta."""
+        _habilitar_modulo(db, org, "quotes")
+        _, variant = products_setup["product_a"]
+        h = {**auth_cajero_a, "X-Organization-ID": str(org.id)}
+        qid = _crear_cotizacion(client, h, variant.sku)
+
+        resp = client.post(f"/api/quotes/{qid}/convert-to-sale?payment_method=CARD", headers=h)
+        assert resp.status_code == 409, (
+            f"un CAJERO sin caja abierta no debe poder convertir ni cobrando "
+            f"con tarjeta: {resp.status_code}"
+        )
+        venta = db.query(SalesDocument).filter(SalesDocument.id == qid).one()
+        assert venta.status == DocumentStatus.PENDING, (
+            "el rechazo debe evitar la conversion; la cotizacion no debe quedar PAID"
+        )
+        assert venta.cash_session_id is None
 
     def test_el_metodo_de_pago_es_obligatorio(
         self, client, db, org, branch_a, cajero_a, auth_cajero_a, products_setup
