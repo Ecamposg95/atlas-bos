@@ -127,10 +127,16 @@ _CORS_ORIGINS = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_CORS_ORIGINS,
-    # Cubre localhost (cualquier puerto) + CUALQUIER subdominio *.up.railway.app.
-    # El rebrand a Atlas One puede cambiar el host de Railway; este regex evita
-    # romper CORS cada vez. Dominios propios se agregan por ATLAS_AGENT_ORIGINS.
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?|https://[a-z0-9-]+\.up\.railway\.app",
+    # Cubre localhost (cualquier puerto), *.up.railway.app y el dominio propio
+    # atlasone.com.mx con o sin subdominio. Este ultimo es imprescindible: la
+    # produccion se sirve en app.atlasone.com.mx, y sin el, el navegador bloquea
+    # al agente y la tienda se queda sin tickets. Otros dominios propios siguen
+    # agregandose por ATLAS_AGENT_ORIGINS.
+    allow_origin_regex=(
+        r"https?://(localhost|127\.0\.0\.1)(:\d+)?"
+        r"|https://[a-z0-9-]+\.up\.railway\.app"
+        r"|https://([a-z0-9-]+\.)?atlasone\.com\.mx"
+    ),
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     # Access-Control-Request-Private-Network must be in allow_headers so Chrome
