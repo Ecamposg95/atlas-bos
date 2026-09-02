@@ -766,14 +766,22 @@ def create_sale(
         # esta reasignacion, el Payment recien creado seguiria colgado del
         # cash_session_id viejo, que puede pertenecer a una sesion ya cerrada
         # cuyo `expected` ya quedo fijo en el cierre).
-        if doc_status == DocumentStatus.PAID:
-            active_cash = db.query(CashSession.id).filter(
-                CashSession.user_id == current_user.id,
-                CashSession.branch_id == current_user.branch_id,
-                CashSession.status == CashSessionStatus.OPEN,
-            ).first()
-            if active_cash:
-                sales_doc.cash_session_id = active_cash[0]
+        #
+        # `cash_session_id_value` se resuelve SIEMPRE aqui (no solo cuando
+        # doc_status == PAID): es la sesion OPEN de quien esta cobrando ahora
+        # mismo, y los `Payment` que se recrean abajo (Task 3) deben llevarla
+        # sin importar si esta liquidacion deja la venta en PAID o si, con un
+        # abono parcial, se queda en PENDING. La reasignacion del documento
+        # completo (`sales_doc.cash_session_id`) sigue condicionada a PAID,
+        # sin cambios de comportamiento respecto a antes de esta tarea.
+        active_cash = db.query(CashSession.id).filter(
+            CashSession.user_id == current_user.id,
+            CashSession.branch_id == current_user.branch_id,
+            CashSession.status == CashSessionStatus.OPEN,
+        ).first()
+        cash_session_id_value = active_cash[0] if active_cash else None
+        if doc_status == DocumentStatus.PAID and cash_session_id_value:
+            sales_doc.cash_session_id = cash_session_id_value
     else:
         current_series = "A"
         next_folio = get_next_folio(db, branch_id=current_user.branch_id, series=current_series)
@@ -836,9 +844,16 @@ def create_sale(
         if p.amount < 0:
             raise HTTPException(status_code=400, detail=f"Monto de pago inválido: {p.amount}")
         if p.amount > 0:
+            # Task 3: el pago nace atribuido a la caja de quien cobra
+            # (`cash_session_id_value`, resuelta arriba en ambas ramas —
+            # venta nueva y `existing_sale`). Si no hay sesion OPEN (venta
+            # sin cajero, rol HQ exento, etc.) queda en None y el pago cae al
+            # respaldo por documento (`session_sales_filter`, Task 2) —
+            # retrocompatible con el comportamiento de hoy.
             db.add(Payment(
                 sales_document_id=sales_doc.id, amount=p.amount, method=p.method,
-                created_by_id=current_user.id, reference=p.reference, organization_id=org_id
+                created_by_id=current_user.id, reference=p.reference, organization_id=org_id,
+                cash_session_id=cash_session_id_value,
             ))
 
     # --- M-3: Mark parked ticket as CONVERTED (atómico con la venta) ---
