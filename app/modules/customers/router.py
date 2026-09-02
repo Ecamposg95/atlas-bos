@@ -471,6 +471,21 @@ def register_customer_payment(
     except (ValueError, AttributeError):
         method_enum = SalesPaymentMethod.CASH
 
+    # El abono debe acreditarse a la caja de QUIEN LO COBRA hoy, no a la
+    # del documento de venta original (que puede llevar semanas cerrada).
+    # Mismo criterio que el checkout (app/routers/sales.py ~linea 783):
+    # sesion OPEN de current_user por user_id + branch_id. Si no hay sesion
+    # abierta (incluso pagando en efectivo) el abono se registra igual, con
+    # cash_session_id en NULL -- este endpoint no forma parte del guard de
+    # "efectivo exige caja abierta" y no se le agrega aqui.
+    from app.models.cash import CashSession, CashSessionStatus
+    active_cash = db.query(CashSession.id).filter(
+        CashSession.user_id == current_user.id,
+        CashSession.branch_id == current_user.branch_id,
+        CashSession.status == CashSessionStatus.OPEN,
+    ).first()
+    cash_session_id_value = active_cash[0] if active_cash else None
+
     payment_record = SalesPayment(
         sales_document_id=payment_in.sales_document_id,
         customer_id=customer.id,
@@ -478,7 +493,8 @@ def register_customer_payment(
         amount=payment_in.amount,
         method=method_enum,
         reference=payment_in.reference,
-        organization_id=org_id
+        organization_id=org_id,
+        cash_session_id=cash_session_id_value,
     )
     db.add(payment_record)
 
