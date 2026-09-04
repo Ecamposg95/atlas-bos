@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { estiloCajon } from './cajonLateral'
+import { estiloCajon, cajonEsInerte } from './cajonLateral'
 
 describe('estiloCajon', () => {
   it('en escritorio no posiciona nada: el sidebar es un hermano en el flujo', () => {
@@ -21,5 +21,20 @@ describe('estiloCajon', () => {
   it('en movil siempre queda por encima del contenido', () => {
     expect(Number(estiloCajon(true, false).zIndex)).toBeGreaterThan(0)
     expect(Number(estiloCajon(true, true).zIndex)).toBeGreaterThan(0)
+  })
+})
+
+describe('cajonEsInerte', () => {
+  it('en escritorio nunca es inerte, abierto o cerrado', () => {
+    expect(cajonEsInerte(false, false)).toBe(false)
+    expect(cajonEsInerte(false, true)).toBe(false)
+  })
+
+  it('en movil cerrado es inerte: no debe alcanzarse con Tab ni lector de pantalla', () => {
+    expect(cajonEsInerte(true, false)).toBe(true)
+  })
+
+  it('en movil abierto deja de ser inerte', () => {
+    expect(cajonEsInerte(true, true)).toBe(false)
   })
 })

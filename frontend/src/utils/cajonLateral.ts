@@ -17,3 +17,14 @@ export function estiloCajon(esMovil: boolean, abierto: boolean): CSSProperties {
     transition: 'transform 200ms ease',
   }
 }
+
+/**
+ * Si el cajón debe quedar fuera del árbol de accesibilidad y del orden de
+ * tabulación. `translateX(-100%)` solo lo saca de la vista: un lector de
+ * pantalla o un Tab desde el teclado igual lo recorren. Solo aplica cerrado
+ * en móvil — en escritorio el sidebar sigue siendo un hermano normal en el
+ * flujo, plenamente navegable.
+ */
+export function cajonEsInerte(esMovil: boolean, abierto: boolean): boolean {
+  return esMovil && !abierto
+}
