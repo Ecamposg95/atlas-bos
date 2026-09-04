@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resumirDia } from './panelDia'
+import { resumirDia, barrasPorHora, estadoDelCorte } from './panelDia'
 
 const respuestaReal = {
   date: '2026-09-03',
@@ -39,5 +39,52 @@ describe('resumirDia', () => {
     const r = resumirDia({ ...respuestaReal, payments: undefined, top_selling_items: undefined } as never)
     expect(r.pagos).toEqual([])
     expect(r.masVendidos).toEqual([])
+  })
+})
+
+describe('barrasPorHora', () => {
+  it('escala cada barra contra la franja mas alta', () => {
+    const b = barrasPorHora({
+      date: '2026-09-03', current_hour: 19, current_hour_amount: 0, current_hour_tickets: 0,
+      hourly: [{ hour: 17, amount: 446, tickets: 8 }, { hour: 18, amount: 223, tickets: 7 }],
+    })
+    expect(b[0].porcentaje).toBe(100)
+    expect(b[1].porcentaje).toBe(50)
+  })
+
+  it('descarta las franjas sin ventas', () => {
+    const b = barrasPorHora({
+      date: '2026-09-03', current_hour: 19, current_hour_amount: 0, current_hour_tickets: 0,
+      hourly: [{ hour: 9, amount: 0, tickets: 0 }, { hour: 17, amount: 100, tickets: 1 }],
+    })
+    expect(b).toHaveLength(1)
+    expect(b[0].hora).toBe(17)
+  })
+
+  it('no divide entre cero en un dia sin ventas', () => {
+    expect(barrasPorHora({
+      date: '2026-09-03', current_hour: 9, current_hour_amount: 0, current_hour_tickets: 0, hourly: [],
+    })).toEqual([])
+  })
+})
+
+describe('estadoDelCorte', () => {
+  it('sin caja abierta lo dice, sin inventar cifras', () => {
+    expect(estadoDelCorte(null, 992.78).situacion).toBe('SIN_CAJA')
+  })
+
+  it('con la caja abierta calcula cuanto deberia haber', () => {
+    const e = estadoDelCorte(
+      { id: 97, status: 'OPEN', opening_balance: 0.01, closing_balance: null } as never, 992.78)
+    expect(e.situacion).toBe('ABIERTA')
+    expect(e.deberiaHaber).toBeCloseTo(992.79, 2)
+  })
+
+  it('cerrada reporta el contado y la diferencia tal como quedaron', () => {
+    const e = estadoDelCorte(
+      { id: 97, status: 'CLOSED', opening_balance: 0.01, closing_balance: 1020, difference: 27.21 } as never, 992.78)
+    expect(e.situacion).toBe('CERRADA')
+    expect(e.contado).toBe(1020)
+    expect(e.diferencia).toBeCloseTo(27.21, 2)
   })
 })

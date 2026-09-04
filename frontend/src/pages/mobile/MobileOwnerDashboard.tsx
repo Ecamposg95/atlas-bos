@@ -1,178 +1,215 @@
 import { useCallback, useEffect, useState } from 'react'
-import { reportsApi, type DashboardData } from '../../api/reports'
+import { reportsApi } from '../../api/reports'
+import { cashApi } from '../../api/cash'
 import { useAuthStore } from '../../store/authStore'
-import { ErrorState } from '../../components/ui/ErrorState'
+import { Spinner } from '../../components/ui/Spinner'
 import { formatCurrency } from '../../utils/currency'
-import { todayStr, daysAgoStr } from '../../utils/dates'
+import { todayStr } from '../../utils/dates'
+import {
+  resumirDia,
+  barrasPorHora,
+  estadoDelCorte,
+  type ResumenDia,
+  type BarraHora,
+  type EstadoCorte,
+} from '../../utils/panelDia'
 
+/**
+ * Panel del dueño en móvil: cómo va el día, ritmo por hora, más vendidos y el
+ * estado del corte. Tres fuentes en paralelo con `Promise.allSettled` — si una
+ * falla, las demás se muestran igual y el panel dice qué no pudo cargar.
+ */
 export function MobileOwnerDashboard() {
-  const user = useAuthStore((s) => s.user)
   const org = useAuthStore((s) => s.org)
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [loadError, setLoadError] = useState(false)
-  // Período realmente mostrado: hoy, o el fallback de últimos 7 días.
-  const [period, setPeriod] = useState<'today' | 'last7'>('today')
+  const [resumen, setResumen] = useState<ResumenDia | null>(null)
+  const [barras, setBarras] = useState<BarraHora[] | null>(null)
+  const [corte, setCorte] = useState<EstadoCorte | null>(null)
+  const [fallas, setFallas] = useState<string[]>([])
+  const [cargando, setCargando] = useState(true)
 
-  const load = useCallback(() => {
-    setLoading(true)
-    setLoadError(false)
-    setPeriod('today')
-    reportsApi.dashboard({ start_date: todayStr(), end_date: todayStr() })
-      .then((d) => setData(d))
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false))
+  const cargar = useCallback(async () => {
+    setCargando(true)
+    setFallas([])
+    const hoy = todayStr()
+    const [rs, rh, rc] = await Promise.allSettled([
+      reportsApi.dailySummary(hoy),
+      reportsApi.salesByHour({ date: hoy }),
+      cashApi.getStatus(),
+    ])
+
+    const fallidas: string[] = []
+    if (rs.status === 'fulfilled') setResumen(resumirDia(rs.value))
+    else fallidas.push('la venta del día')
+    if (rh.status === 'fulfilled') setBarras(barrasPorHora(rh.value))
+    else fallidas.push('el ritmo por hora')
+
+    const efectivo = rs.status === 'fulfilled' ? (rs.value.payments?.CASH ?? 0) : 0
+    if (rc.status === 'fulfilled') setCorte(estadoDelCorte(rc.value, efectivo))
+    else fallidas.push('el corte de caja')
+
+    setFallas(fallidas)
+    setCargando(false)
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { cargar() }, [cargar])
 
-  // Last-7-days fallback if today has no data yet.
-  useEffect(() => {
-    if (!data) return
-    const k = data.kpis
-    const empty = !k || (Number(k.sales ?? 0) === 0 && Number(k.orders ?? 0) === 0)
-    if (empty && period === 'today') {
-      reportsApi.dashboard({ start_date: daysAgoStr(7), end_date: todayStr() })
-        .then((d) => { setData(d); setPeriod('last7') })
-        .catch(() => {})
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.kpis?.sales, data?.kpis?.orders])
-
-  if (loading) {
+  if (cargando) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400 dark:text-slate-500">
-        Cargando…
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Spinner text="Cargando el día…" />
       </div>
     )
   }
-  if (loadError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <ErrorState message="No se pudo cargar el resumen del negocio. Verifica tu conexión." onRetry={load} />
-      </div>
-    )
-  }
-
-  const k = data?.kpis
-  const recent = data?.recent_sales ?? []
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-slate-950 max-w-lg mx-auto px-4 py-6 space-y-4">
-      {/* Hero */}
-      <div className="rounded-3xl bg-purple-600 dark:bg-purple-700 text-white p-5 shadow-2xl shadow-purple-900/20">
-        <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">Mi negocio</p>
-        <h1 className="text-2xl font-bold">{org?.name ?? 'Organización'}</h1>
-        <p className="text-white/80 text-sm mt-1">{user?.full_name ?? user?.username}</p>
+    <div className="pb-6">
+      {/* Cabecera */}
+      <div className="px-4 py-3">
+        <p className="text-xs text-slate-400">Resumen de hoy</p>
+        <h1 className="text-xl font-black text-white truncate">{org?.name ?? 'Mi negocio'}</h1>
       </div>
 
-      {/* Período mostrado — el fallback de 7 días NUNCA debe pasar por datos de hoy */}
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-          Resumen
-        </p>
-        <span
-          className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full ${
-            period === 'last7'
-              ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400'
-              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400'
-          }`}
-        >
-          {period === 'last7' ? 'Últimos 7 días' : 'Hoy'}
-        </span>
-      </div>
-
-      {/* KPI grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <KpiCard
-          label="Ventas"
-          value={formatCurrency(Number(k?.sales ?? 0))}
-          icon="fa-coins"
-          color="text-emerald-600 dark:text-emerald-400"
-        />
-        <KpiCard
-          label="Tickets"
-          value={String(k?.orders ?? 0)}
-          icon="fa-receipt"
-          color="text-purple-600 dark:text-purple-400"
-        />
-        <KpiCard
-          label="Ticket promedio"
-          value={formatCurrency(Number(k?.avg_ticket ?? 0))}
-          icon="fa-chart-bar"
-          color="text-indigo-600 dark:text-indigo-400"
-        />
-        <KpiCard
-          label="Productos"
-          value={String(k?.total_products ?? '—')}
-          icon="fa-box"
-          color="text-amber-600 dark:text-amber-400"
-        />
-      </div>
-
-      {/* Top products */}
-      {data?.top_products && data.top_products.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-lg shadow-slate-900/5 dark:shadow-black/30 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
-            Top productos
+      {/* Franja de fallas parciales */}
+      {fallas.length > 0 && (
+        <div className="mx-4 mb-1 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3 py-2 flex items-center justify-between gap-3">
+          <p className="text-xs text-amber-300 min-w-0">
+            No se pudo cargar: {fallas.join(', ')}.
           </p>
-          <div className="space-y-2">
-            {data.top_products.slice(0, 5).map((p, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
+          <button
+            type="button"
+            onClick={cargar}
+            className="shrink-0 text-xs font-bold text-amber-300 underline min-h-[32px] px-1"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* Bloque 1: cómo va el día */}
+      {resumen && (
+        <section className="px-4 py-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+            Cómo va el día
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Ventas</p>
+              <p className="text-lg font-black text-emerald-400 tabular-nums truncate">{formatCurrency(resumen.venta)}</p>
+            </div>
+            <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Tickets</p>
+              <p className="text-lg font-black text-white tabular-nums truncate">{resumen.tickets}</p>
+            </div>
+            <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Utilidad</p>
+              <p className="text-lg font-black text-indigo-400 tabular-nums truncate">{formatCurrency(resumen.utilidad)}</p>
+            </div>
+            <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Ticket prom.</p>
+              <p className="text-lg font-black text-white tabular-nums truncate">{formatCurrency(resumen.ticketPromedio)}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Bloque 2: ritmo por hora */}
+      {barras && barras.length > 0 && (
+        <section className="px-4 py-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+            Ritmo del día
+          </h2>
+          <div className="flex flex-col gap-2">
+            {barras.map((b) => (
+              <div key={b.hora} className="grid grid-cols-[3rem_1fr_auto] items-center gap-3">
+                <span className="text-xs tabular-nums text-slate-400">{b.hora}h</span>
+                <div className="h-5 rounded bg-slate-700/40 overflow-hidden">
+                  <div className="h-full rounded bg-emerald-500" style={{ width: `${b.porcentaje}%` }} />
+                </div>
+                <span className="text-xs tabular-nums text-slate-300">
+                  {formatCurrency(b.importe)} · {b.tickets}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Bloque 3: más vendidos */}
+      {resumen && resumen.masVendidos.length > 0 && (
+        <section className="px-4 py-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+            Más vendidos
+          </h2>
+          <div className="flex flex-col gap-2">
+            {resumen.masVendidos.map((p, i) => (
+              <div key={i} className="flex items-center justify-between text-sm gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-slate-400 dark:text-slate-600 text-xs w-4 shrink-0">{i + 1}.</span>
-                  <span className="text-slate-700 dark:text-slate-300 truncate">{p.name}</span>
+                  <span className="text-slate-600 text-xs w-4 shrink-0">{i + 1}.</span>
+                  <span className="text-slate-300 truncate">{p.nombre}</span>
                 </div>
-                <span className="text-slate-500 dark:text-slate-400 text-xs tabular-nums shrink-0 ml-2">
-                  {p.qty} uds
-                </span>
+                <span className="text-slate-500 text-xs tabular-nums shrink-0">{p.piezas} uds</span>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Recent sales */}
-      {recent.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-lg shadow-slate-900/5 dark:shadow-black/30 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
-            Ventas recientes
-          </p>
-          <div className="space-y-2">
-            {recent.slice(0, 5).map((s, i) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <div className="flex flex-col min-w-0">
-                  <span className="text-slate-700 dark:text-slate-300 font-medium truncate">{s.folio}</span>
-                  <span className="text-slate-400 dark:text-slate-500 text-xs truncate">
-                    {s.customer || 'Mostrador'}
-                  </span>
-                </div>
-                <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0 ml-2">
-                  {formatCurrency(Number(s.total ?? 0))}
-                </span>
+      {/* Bloque 4: estado del corte */}
+      {corte && (
+        <section className="px-4 py-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
+            Estado del corte
+          </h2>
+
+          {corte.situacion === 'SIN_CAJA' && (
+            <p className="text-sm text-slate-400">No hay caja abierta.</p>
+          )}
+
+          {corte.situacion === 'ABIERTA' && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Fondo</p>
+                <p className="text-lg font-black text-white tabular-nums truncate">{formatCurrency(corte.fondo ?? 0)}</p>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Debería haber</p>
+                <p className="text-lg font-black text-emerald-400 tabular-nums truncate">
+                  {formatCurrency(corte.deberiaHaber ?? 0)}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {corte.situacion === 'CERRADA' && (
+            <div className="grid grid-cols-3 gap-2">
+              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Fondo</p>
+                <p className="text-sm font-black text-white tabular-nums truncate">{formatCurrency(corte.fondo ?? 0)}</p>
+              </div>
+              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Contado</p>
+                <p className="text-sm font-black text-white tabular-nums truncate">{formatCurrency(corte.contado ?? 0)}</p>
+              </div>
+              <div
+                className={`min-w-0 rounded-xl p-3 ${
+                  corte.diferencia !== 0
+                    ? 'bg-rose-500/15 border border-rose-500/40'
+                    : 'bg-slate-800/60'
+                }`}
+              >
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Diferencia</p>
+                <p
+                  className={`text-sm font-black tabular-nums truncate ${
+                    corte.diferencia !== 0 ? 'text-rose-400' : 'text-white'
+                  }`}
+                >
+                  {formatCurrency(corte.diferencia ?? 0)}
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
       )}
-
-      <p className="text-xs text-slate-500 dark:text-slate-400 text-center pt-4">
-        Vista de solo lectura. Para acciones, usa la versión de escritorio.
-      </p>
-    </div>
-  )
-}
-
-function KpiCard({ label, value, icon, color }: { label: string; value: string; icon: string; color: string }) {
-  return (
-    <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-lg shadow-slate-900/5 dark:shadow-black/30 p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <i className={`fa-solid ${icon} text-sm ${color}`} />
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          {label}
-        </span>
-      </div>
-      <p className={`text-xl font-bold tabular-nums ${color}`}>{value}</p>
     </div>
   )
 }
