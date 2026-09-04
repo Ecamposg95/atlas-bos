@@ -110,3 +110,54 @@ def test_daily_summary_descuenta_el_vuelto_del_efectivo(
 
     assert data["total_revenue"] == 100.0
     assert data["payments"]["CASH"] == 100.0
+
+
+def test_rol_de_oficina_ve_toda_la_organizacion_con_branch_cero(
+    client, db, org, branch_a, branch_b, admin_user, auth_admin, products_setup
+):
+    """`branch_id=0` es la convención que ya usa sales-by-hour: toda la org."""
+    _venta(db, org, branch_a, admin_user, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, admin_user, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get("/api/reports/daily-summary?branch_id=0", headers=auth_admin).json()
+
+    assert data["total_revenue"] == 800.0
+    assert data["transactions_count"] == 2
+
+
+def test_rol_de_oficina_puede_pedir_otra_sucursal(
+    client, db, org, branch_a, branch_b, admin_user, auth_admin, products_setup
+):
+    _venta(db, org, branch_a, admin_user, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, admin_user, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get(
+        f"/api/reports/daily-summary?branch_id={branch_b.id}", headers=auth_admin
+    ).json()
+
+    assert data["total_revenue"] == 700.0
+
+
+def test_un_cajero_no_puede_mirar_otra_sucursal(
+    client, db, org, branch_a, branch_b, cajero_a, auth_cajero_a, products_setup
+):
+    """Aunque mande el branch_id de otra sucursal, sigue viendo la suya."""
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get(
+        f"/api/reports/daily-summary?branch_id={branch_b.id}", headers=auth_cajero_a
+    ).json()
+
+    assert data["total_revenue"] == 100.0
+
+
+def test_sin_parametro_el_comportamiento_no_cambia(
+    client, db, org, branch_a, branch_b, cajero_a, auth_cajero_a, products_setup
+):
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get("/api/reports/daily-summary", headers=auth_cajero_a).json()
+
+    assert data["total_revenue"] == 100.0
