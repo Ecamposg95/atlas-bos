@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { industryIconV2 } from './industryIcon'
 import { formatCurrency } from '../../../utils/currency'
 
+import { TablaDesplazable } from '../../ui/TablaDesplazable'
+
 export interface TopOrgRow {
   id: number | string
   name: string
@@ -25,39 +27,41 @@ export function TopOrgsTable({ data, compact = false }: Props) {
     )
   }
   return (
-    <table className="tbl">
-      <thead>
-        <tr>
-          <th style={{ width: 40 }}>#</th>
-          <th>Org</th>
-          {!compact && <th>Industry</th>}
-          <th className="right">Ventas mes</th>
-          <th className="right">Ticket prom.</th>
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((o, i) => {
-          const avg = o.transactions > 0 ? o.revenue / o.transactions : 0
-          return (
-            <tr key={o.id} onClick={() => navigate(`/platform/organizations/${o.id}`)}>
-              <td><span className="rank">{String(i + 1).padStart(2, '0')}</span></td>
-              <td>
-                <span className="org">
-                  <span className="ico">
-                    <i className={'fa-solid ' + industryIconV2(o.industry_type)} />
+    <TablaDesplazable>
+      <table className="tbl">
+        <thead>
+          <tr>
+            <th style={{ width: 40 }}>#</th>
+            <th>Org</th>
+            {!compact && <th>Industry</th>}
+            <th className="right">Ventas mes</th>
+            <th className="right">Ticket prom.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((o, i) => {
+            const avg = o.transactions > 0 ? o.revenue / o.transactions : 0
+            return (
+              <tr key={o.id} onClick={() => navigate(`/platform/organizations/${o.id}`)}>
+                <td><span className="rank">{String(i + 1).padStart(2, '0')}</span></td>
+                <td>
+                  <span className="org">
+                    <span className="ico">
+                      <i className={'fa-solid ' + industryIconV2(o.industry_type)} />
+                    </span>
+                    <span className="nm">{o.name}</span>
                   </span>
-                  <span className="nm">{o.name}</span>
-                </span>
-              </td>
-              {!compact && (
-                <td><span className="ind">{o.industry_type || '—'}</span></td>
-              )}
-              <td className="right num">{formatCurrency(o.revenue)}</td>
-              <td className="right num">{formatCurrency(avg)}</td>
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+                </td>
+                {!compact && (
+                  <td><span className="ind">{o.industry_type || '—'}</span></td>
+                )}
+                <td className="right num">{formatCurrency(o.revenue)}</td>
+                <td className="right num">{formatCurrency(avg)}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </TablaDesplazable>
   )
 }

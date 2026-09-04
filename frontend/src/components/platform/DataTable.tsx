@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 
+import { TablaDesplazable } from '../ui/TablaDesplazable'
+
 export interface DataTableColumn<T> {
   key: string
   label: string
@@ -284,125 +286,127 @@ export function DataTable<T>({
           )}
         </div>
       ))}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'separate',
-        borderSpacing: 0,
-        fontSize: 13,
-      }}>
-        <thead>
-          <tr>
-            {selectable && (
-              <th style={{
-                padding: '10px 14px',
-                width: 40,
-                borderBottom: '1px solid var(--p-border)',
-                background: 'transparent',
-                textAlign: 'left',
-              }}>
-                <input
-                  type="checkbox"
-                  aria-label="Seleccionar todo"
-                  checked={allPageSelected}
-                  ref={el => { if (el) el.indeterminate = somePageSelected }}
-                  onChange={toggleAllPage}
-                  onClick={e => e.stopPropagation()}
-                  style={checkboxStyle}
-                />
-              </th>
-            )}
-            {columns.map(c => (
-              <th
-                key={c.key}
-                onClick={() => c.sortable && toggleSort(c.key)}
-                style={{
-                  padding: '10px 16px',
-                  textAlign: 'left',
-                  color: 'var(--p-hint)',
-                  fontSize: 10,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.12em',
-                  fontWeight: 500,
-                  cursor: c.sortable ? 'pointer' : 'default',
-                  userSelect: 'none',
-                  borderBottom: '1px solid var(--p-border)',
-                  width: c.width,
-                  background: 'transparent',
-                }}
-              >
-                {c.label}
-                {sortKey === c.key && (
-                  <span style={{ marginLeft: 6, color: 'var(--p-accent)' }}>
-                    {sortDir === 'asc' ? '↑' : '↓'}
-                  </span>
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {pageRows.length === 0 ? (
+      <TablaDesplazable>
+        <table style={{
+          width: '100%',
+          borderCollapse: 'separate',
+          borderSpacing: 0,
+          fontSize: 13,
+        }}>
+          <thead>
             <tr>
-              <td
-                colSpan={columns.length + (selectable ? 1 : 0)}
-                style={{ padding: 32, textAlign: 'center', color: 'var(--p-muted)', fontSize: 13 }}
-              >
-                {emptyMessage}
-              </td>
-            </tr>
-          ) : pageRows.map((r, i) => {
-            const id = rowKey(r)
-            const isSelected = selectable && selectedSet.has(id)
-            return (
-              <tr
-                key={id}
-                onClick={() => onRowClick?.(r)}
-                style={{
-                  cursor: onRowClick ? 'pointer' : 'default',
-                  transition: 'background 0.12s ease',
-                  background: isSelected ? 'var(--p-surface-2)' : 'transparent',
-                }}
-                onMouseEnter={(e) => { if (onRowClick) e.currentTarget.style.background = 'var(--p-surface-2)' }}
-                onMouseLeave={(e) => { if (onRowClick) e.currentTarget.style.background = isSelected ? 'var(--p-surface-2)' : 'transparent' }}
-              >
-                {selectable && (
-                  <td
+              {selectable && (
+                <th style={{
+                  padding: '10px 14px',
+                  width: 40,
+                  borderBottom: '1px solid var(--p-border)',
+                  background: 'transparent',
+                  textAlign: 'left',
+                }}>
+                  <input
+                    type="checkbox"
+                    aria-label="Seleccionar todo"
+                    checked={allPageSelected}
+                    ref={el => { if (el) el.indeterminate = somePageSelected }}
+                    onChange={toggleAllPage}
                     onClick={e => e.stopPropagation()}
-                    style={{
-                      padding: '14px 14px',
-                      borderBottom: i === pageRows.length - 1 ? 'none' : '1px solid var(--p-border-2)',
-                      width: 40,
-                      verticalAlign: 'middle',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      aria-label="Seleccionar fila"
-                      checked={selectedSet.has(id)}
-                      onChange={() => toggleRow(id)}
-                      onClick={e => e.stopPropagation()}
-                      style={checkboxStyle}
-                    />
-                  </td>
-                )}
-                {columns.map(c => (
-                  <td
-                    key={c.key}
-                    style={{
-                      padding: '14px 16px',
-                      borderBottom: i === pageRows.length - 1 ? 'none' : '1px solid var(--p-border-2)',
-                      color: 'var(--p-text)',
-                      verticalAlign: 'middle',
-                    }}
-                  >
-                    {c.accessor(r)}
-                  </td>
-                ))}
+                    style={checkboxStyle}
+                  />
+                </th>
+              )}
+              {columns.map(c => (
+                <th
+                  key={c.key}
+                  onClick={() => c.sortable && toggleSort(c.key)}
+                  style={{
+                    padding: '10px 16px',
+                    textAlign: 'left',
+                    color: 'var(--p-hint)',
+                    fontSize: 10,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.12em',
+                    fontWeight: 500,
+                    cursor: c.sortable ? 'pointer' : 'default',
+                    userSelect: 'none',
+                    borderBottom: '1px solid var(--p-border)',
+                    width: c.width,
+                    background: 'transparent',
+                  }}
+                >
+                  {c.label}
+                  {sortKey === c.key && (
+                    <span style={{ marginLeft: 6, color: 'var(--p-accent)' }}>
+                      {sortDir === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {pageRows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (selectable ? 1 : 0)}
+                  style={{ padding: 32, textAlign: 'center', color: 'var(--p-muted)', fontSize: 13 }}
+                >
+                  {emptyMessage}
+                </td>
               </tr>
-            )
-          })}
-        </tbody>
-      </table>
+            ) : pageRows.map((r, i) => {
+              const id = rowKey(r)
+              const isSelected = selectable && selectedSet.has(id)
+              return (
+                <tr
+                  key={id}
+                  onClick={() => onRowClick?.(r)}
+                  style={{
+                    cursor: onRowClick ? 'pointer' : 'default',
+                    transition: 'background 0.12s ease',
+                    background: isSelected ? 'var(--p-surface-2)' : 'transparent',
+                  }}
+                  onMouseEnter={(e) => { if (onRowClick) e.currentTarget.style.background = 'var(--p-surface-2)' }}
+                  onMouseLeave={(e) => { if (onRowClick) e.currentTarget.style.background = isSelected ? 'var(--p-surface-2)' : 'transparent' }}
+                >
+                  {selectable && (
+                    <td
+                      onClick={e => e.stopPropagation()}
+                      style={{
+                        padding: '14px 14px',
+                        borderBottom: i === pageRows.length - 1 ? 'none' : '1px solid var(--p-border-2)',
+                        width: 40,
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      <input
+                        type="checkbox"
+                        aria-label="Seleccionar fila"
+                        checked={selectedSet.has(id)}
+                        onChange={() => toggleRow(id)}
+                        onClick={e => e.stopPropagation()}
+                        style={checkboxStyle}
+                      />
+                    </td>
+                  )}
+                  {columns.map(c => (
+                    <td
+                      key={c.key}
+                      style={{
+                        padding: '14px 16px',
+                        borderBottom: i === pageRows.length - 1 ? 'none' : '1px solid var(--p-border-2)',
+                        color: 'var(--p-text)',
+                        verticalAlign: 'middle',
+                      }}
+                    >
+                      {c.accessor(r)}
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </TablaDesplazable>
       {pages > 1 && (
         <div style={{
           padding: '12px 18px',
