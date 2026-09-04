@@ -44,6 +44,7 @@ router = APIRouter()
 @router.get("/daily-summary")
 def get_daily_summary(
     target_date: date = None,
+    branch_id: int = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
     org_id: int = Depends(get_current_active_organization)
@@ -52,6 +53,22 @@ def get_daily_summary(
     if not target_date:
         target_date = _today_mx()
 
+    # Resolución de sucursal: calcada de get_sales_by_hour (mismo archivo).
+    # branch_id=0 significa "toda la organización" y solo lo honra un rol de
+    # oficina central; para cualquier otro rol el parámetro se ignora y se
+    # queda en su propia sucursal.
+    is_hq_user = current_user.role in ["ADMINISTRADOR", "GERENTE", "DUEÑO"]
+    target_branch_id = current_user.branch_id
+    if is_hq_user:
+        if branch_id == 0:
+            target_branch_id = None
+        elif branch_id:
+            target_branch_id = branch_id
+
+    filtros_sucursal = (
+        [SalesDocument.branch_id == target_branch_id] if target_branch_id else []
+    )
+
     # 1. Ventas Totales por Estatus
     sales_query = db.query(
         func.count(SalesDocument.id).label("count"),
@@ -59,7 +76,7 @@ def get_daily_summary(
     ).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id,
+        *filtros_sucursal,
         SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).first()
 
@@ -70,7 +87,7 @@ def get_daily_summary(
     ).join(SalesDocument).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(Payment.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id,
+        *filtros_sucursal,
         SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).group_by(Payment.method).all()
 
@@ -81,7 +98,7 @@ def get_daily_summary(
     ).join(SalesDocument).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id,
+        *filtros_sucursal,
         SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).group_by(SalesLineItem.description).order_by(desc("qty")).limit(5).all()
 
@@ -96,7 +113,7 @@ def get_daily_summary(
     ).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id,
+        *filtros_sucursal,
         SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).scalar() or Decimal(0)
 
@@ -110,7 +127,7 @@ def get_daily_summary(
     ).join(SalesDocument).filter(
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == target_date,
-        SalesDocument.branch_id == current_user.branch_id,
+        *filtros_sucursal,
         SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).scalar() or Decimal(0)
 
