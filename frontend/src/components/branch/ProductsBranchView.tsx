@@ -1164,8 +1164,8 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
           </div>
 
           {preview.preview.length > 0 && (
-            <div className={`${ui.card} p-3 max-h-64 overflow-y-auto mb-4`}>
-              <TablaDesplazable>
+            <div className={`${ui.card} p-3 mb-4`}>
+              <TablaDesplazable className="max-h-64 overflow-y-auto">
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-white dark:bg-slate-900">
                     <tr>
