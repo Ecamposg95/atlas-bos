@@ -7,61 +7,24 @@
  * una columna tipo teléfono para que comanda/portal sigan siendo usables
  * desde la tablet o el escritorio.
  */
+import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
+import { useEnabledModulesStore } from '../../store/enabledModulesStore'
 import { Toaster } from '../ui/Toast'
 import { confirm as confirmDialog } from '../ui/ConfirmDialog'
 import { AtlasMark } from '../atlas-one'
-
-interface NavItem {
-  label: string
-  icon: string
-  to: string
-  end?: boolean
-}
-
-function navForRole(role: string | undefined): NavItem[] {
-  switch (role) {
-    case 'VENDEDOR':
-    case 'SOPORTE_OPERATIVO':
-      return [
-        { label: 'Inicio', icon: 'fa-house', to: '/mobile/dashboard' },
-        { label: 'Cotizar', icon: 'fa-file-invoice', to: '/mobile/sales' },
-        { label: 'Consultar', icon: 'fa-magnifying-glass', to: '/mobile/query' },
-        { label: 'Perfil', icon: 'fa-user', to: '/mobile/profile' },
-      ]
-    case 'CAJERO':
-    case 'GERENTE':
-      return [
-        { label: 'Inicio', icon: 'fa-house', to: '/', end: true },
-        { label: 'Comanda', icon: 'fa-utensils', to: '/mobile/comanda' },
-        { label: 'Consultar', icon: 'fa-magnifying-glass', to: '/mobile/query' },
-        { label: 'Perfil', icon: 'fa-user', to: '/mobile/profile' },
-      ]
-    case 'DUEÑO':
-    case 'ADMINISTRADOR':
-      return [
-        { label: 'Inicio', icon: 'fa-house', to: '/', end: true },
-        { label: 'Resumen', icon: 'fa-chart-line', to: '/mobile/owner' },
-        { label: 'Comanda', icon: 'fa-utensils', to: '/mobile/comanda' },
-        { label: 'Perfil', icon: 'fa-user', to: '/mobile/profile' },
-      ]
-    case 'CLIENTE':
-      return [{ label: 'Mi cuenta', icon: 'fa-id-card', to: '/portal' }]
-    default:
-      return [
-        { label: 'Inicio', icon: 'fa-house', to: '/', end: true },
-        { label: 'Perfil', icon: 'fa-user', to: '/mobile/profile' },
-      ]
-  }
-}
+import { navMovilPorRol } from '../../utils/navMovil'
 
 export function MobileLayout() {
   const navigate = useNavigate()
   const user = useAuthStore((s) => s.user)
   const org = useAuthStore((s) => s.org)
   const logout = useAuthStore((s) => s.logout)
-  const items = navForRole(user?.role)
+  // El destino de "Menú" depende del preset, igual que en escritorio.
+  const { preset, loaded, load } = useEnabledModulesStore()
+  useEffect(() => { if (!loaded) load() }, [loaded, load])
+  const items = navMovilPorRol(user?.role, preset)
 
   const handleLogout = async () => {
     const ok = await confirmDialog({
