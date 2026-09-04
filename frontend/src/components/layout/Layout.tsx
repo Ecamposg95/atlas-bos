@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BranchSwitcher } from './BranchSwitcher'
@@ -7,6 +7,8 @@ import { AnnouncementBanner } from './AnnouncementBanner'
 import { Toaster } from '../ui/Toast'
 import { useAuthStore } from '../../store/authStore'
 import { useTheme } from '../../context/ThemeContext'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { estiloCajon, cajonEsInerte } from '../../utils/cajonLateral'
 import type { Role } from '../../types/auth'
 
 const ROUTE_TITLES: Record<string, string> = {
@@ -66,6 +68,39 @@ export function Layout() {
   const { theme } = useTheme()
   const role = (user?.role ?? 'CAJERO') as Role
 
+  const esMovil = useIsMobile()
+  const [cajonAbierto, setCajonAbierto] = useState(false)
+  const cajonRef = useRef<HTMLDivElement>(null)
+
+  // El cajón se cierra al navegar. Sin esto queda abierto sobre la pantalla
+  // nueva y se siente roto.
+  useEffect(() => { setCajonAbierto(false) }, [location.pathname])
+
+  // ...y con Escape, como cualquier diálogo.
+  useEffect(() => {
+    if (!cajonAbierto) return
+    const alTeclear = (e: KeyboardEvent) => { if (e.key === 'Escape') setCajonAbierto(false) }
+    window.addEventListener('keydown', alTeclear)
+    return () => window.removeEventListener('keydown', alTeclear)
+  }, [cajonAbierto])
+
+  // `translateX(-100%)` solo saca el cajón cerrado de la vista, no del árbol
+  // de accesibilidad ni del orden de tabulación: un Tab desde el teclado o un
+  // lector de pantalla lo recorren igual. `inert` sí lo excluye de ambos. No
+  // se pasa como prop de JSX porque @types/react 18 no lo tipa y react-dom 18
+  // no lo reconoce como atributo booleano — `inert={false}` terminaría
+  // escribiendo `inert="false"`, que el navegador sigue leyendo como
+  // presente. Se aplica directo sobre el nodo para evitar esa ambigüedad.
+  useEffect(() => {
+    const el = cajonRef.current
+    if (!el) return
+    if (cajonEsInerte(esMovil, cajonAbierto)) {
+      el.setAttribute('inert', '')
+    } else {
+      el.removeAttribute('inert')
+    }
+  }, [esMovil, cajonAbierto])
+
   const pageTitle = useMemo(() => {
     const exact = ROUTE_TITLES[location.pathname]
     if (exact) return exact
@@ -84,7 +119,27 @@ export function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--dax-bg)' }}>
-      <Sidebar collapsed={collapsed} />
+      <div
+        ref={cajonRef}
+        style={estiloCajon(esMovil, cajonAbierto)}
+        role={esMovil ? 'dialog' : undefined}
+        aria-modal={esMovil && cajonAbierto ? true : undefined}
+        aria-label={esMovil ? 'Menú principal' : undefined}
+        id="cajon-lateral"
+      >
+        <Sidebar collapsed={!esMovil && collapsed} />
+      </div>
+
+      {esMovil && cajonAbierto && (
+        <div
+          onClick={() => setCajonAbierto(false)}
+          aria-hidden="true"
+          style={{
+            position: 'fixed', inset: 0, zIndex: 40,
+            background: 'rgba(0,0,0,0.5)',
+          }}
+        />
+      )}
 
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
         <ImpersonationBanner />
@@ -102,12 +157,14 @@ export function Layout() {
           {/* LEFT — hamburger + page context */}
           <div className="flex items-center gap-3 min-w-0">
             <button
-              onClick={() => setCollapsed(c => !c)}
+              onClick={() => (esMovil ? setCajonAbierto(a => !a) : setCollapsed(c => !c))}
+              aria-expanded={esMovil ? cajonAbierto : undefined}
+              aria-controls={esMovil ? 'cajon-lateral' : undefined}
               className="transition-colors p-1.5 rounded-lg flex-shrink-0"
               style={{ color: 'rgba(148,163,184,0.6)' }}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'white')}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(148,163,184,0.6)')}
-              title="Toggle sidebar"
+              title={esMovil ? 'Abrir menú' : 'Contraer menú'}
             >
               <i className={`fa-solid ${collapsed ? 'fa-indent' : 'fa-outdent'} text-sm`} />
             </button>
