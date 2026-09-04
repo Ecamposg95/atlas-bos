@@ -1,5 +1,5 @@
 import type { DailySummary, SalesByHourResponse } from '../api/reports'
-import type { CashSession } from '../types/cash'
+import type { CorteDeSucursal } from '../api/cash'
 
 export interface ResumenDia {
   venta: number
@@ -49,38 +49,123 @@ export function barrasPorHora(r: SalesByHourResponse): BarraHora[] {
   }))
 }
 
-export interface EstadoCorte {
-  situacion: 'SIN_CAJA' | 'ABIERTA' | 'CERRADA'
-  fondo?: number
-  deberiaHaber?: number
-  contado?: number
-  diferencia?: number
+/** Roles de oficina central: los únicos que pueden mirar fuera de su sucursal. */
+const ROLES_DE_OFICINA = ['ADMINISTRADOR', 'DUEÑO', 'GERENTE']
+
+/** Lo mínimo que el panel necesita saber de una sucursal. */
+export interface SucursalMinima {
+  id: number
+  name: string
+  can_sell?: boolean
+  is_active?: boolean
+}
+
+export interface AmbitoPanel {
+  /**
+   * Qué mandar en `branch_id` a `daily-summary` y `sales-by-hour`. `0` es la
+   * convención del backend para "toda la organización" y solo la honra un rol
+   * de oficina central; `undefined` deja que el backend se quede con la
+   * sucursal del usuario.
+   */
+  branchId: number | undefined
+  /** Lo que la cabecera dice que está mirando. La cifra debe decir su ámbito. */
+  etiqueta: string
+  /** Sucursales cuyo corte se consulta (`/cash/branch-summary` es por sucursal). */
+  sucursalesDelCorte: number[]
 }
 
 /**
- * Estado del corte para el panel. Con la caja abierta, lo que debería haber es
- * el fondo declarado más el efectivo neto del día — el mismo criterio del corte
- * (`net_cash`, ya sin el vuelto). Con la caja cerrada se reporta lo que quedó.
- *
- * `efectivoDelDia` es `number | null` a propósito: `null` significa "no lo sé"
- * (la fuente de la venta del día falló), no "no hubo efectivo". Confundir
- * ambos casos produciría un `deberiaHaber` plausible pero falso — con la caja
- * abierta, sin el dato no se calcula `deberiaHaber` en absoluto.
+ * De qué habla el panel. Sin esto, un ADMINISTRADOR anclado a la oficina
+ * central —la forma canónica en este repo— veía $0.00 en todo el panel bajo el
+ * nombre de su organización, y un dueño con varias sucursales veía una sola
+ * presentada como el negocio completo.
  */
-export function estadoDelCorte(s: CashSession | null, efectivoDelDia: number | null): EstadoCorte {
-  if (!s) return { situacion: 'SIN_CAJA' }
-  const fondo = Number(s.opening_balance ?? 0)
-  if (s.status === 'CLOSED') {
+export function ambitoDelPanel(
+  rol: string | null | undefined,
+  sucursalDelUsuario: number | null | undefined,
+  sucursales: SucursalMinima[],
+): AmbitoPanel {
+  const activas = sucursales.filter((s) => s.is_active !== false)
+
+  if (!rol || !ROLES_DE_OFICINA.includes(rol)) {
+    // Rol sin oficina central: el backend lo deja en su sucursal mande lo que
+    // mande, así que el panel ni siquiera manda el parámetro.
+    const propia = activas.find((s) => s.id === sucursalDelUsuario)
     return {
-      situacion: 'CERRADA',
-      fondo,
-      contado: Number(s.closing_balance ?? 0),
-      diferencia: Number(s.difference ?? 0),
+      branchId: undefined,
+      etiqueta: propia?.name ?? 'Tu sucursal',
+      sucursalesDelCorte: sucursalDelUsuario ? [sucursalDelUsuario] : [],
     }
   }
+
+  // Las que venden. Si ninguna está marcada así (dato mal capturado), se cae a
+  // todas las activas: es preferible consultar de más que dejar el bloque del
+  // corte vacío sin explicación.
+  const venden = activas.filter((s) => s.can_sell !== false)
+  const delCorte = venden.length > 0 ? venden : activas
+
+  let etiqueta = 'Toda la organización'
+  if (delCorte.length === 1) etiqueta = delCorte[0].name
+  else if (delCorte.length > 1) etiqueta = `Todas las sucursales (${delCorte.length})`
+
   return {
-    situacion: 'ABIERTA',
-    fondo,
-    deberiaHaber: efectivoDelDia === null ? undefined : fondo + efectivoDelDia,
+    branchId: 0,
+    etiqueta,
+    sucursalesDelCorte: delCorte.map((s) => s.id),
+  }
+}
+
+export interface EstadoCorte {
+  sucursal: string
+  /** No hubo ni un turno de caja en esa sucursal ese día. */
+  sinCortes: boolean
+  abiertas: number
+  cerradas: number
+  /** Efectivo esperado de los turnos abiertos. `null` si no hay ninguno. */
+  deberiaHaber: number | null
+  /** Contado al cerrar, sumando los turnos cerrados. `null` si no hay ninguno. */
+  contado: number | null
+  esperadoCerrado: number | null
+  diferencia: number | null
+}
+
+const dosDecimales = (n: number) => Math.round(n * 100) / 100
+
+/**
+ * Estado del corte a partir de `GET /api/cash/branch-summary`.
+ *
+ * Aquí NO se calcula nada del efectivo esperado: `expected_cash` viene de
+ * `compute_expected_cash` (app/services/cash_reconciliation.py), fuente única
+ * del sistema, con el fondo, el efectivo neto, las entradas y salidas manuales
+ * y las devoluciones en efectivo ya aplicadas. La versión anterior replicaba
+ * la fórmula en el frontend como `fondo + efectivo del día`: un retiro de
+ * $3,000 pintaba $5,500 con $2,500 en el cajón.
+ *
+ * Esta función solo agrega: suma turnos de la misma sucursal y los separa en
+ * abiertos (lo que debería haber ahora) y cerrados (lo que se contó y cuánto
+ * se desvió). Los cerrados eran invisibles porque `/cash/status` solo devuelve
+ * sesiones OPEN: el dueño que revisaba su corte a las 21:30 leía "No hay caja
+ * abierta".
+ */
+export function estadoDelCorte(resumen: CorteDeSucursal): EstadoCorte {
+  const cajeros = resumen.cashiers ?? []
+  const abiertas = cajeros.filter((c) => c.status === 'OPEN')
+  const cerradas = cajeros.filter((c) => c.status === 'CLOSED')
+
+  const suma = (xs: number[]) => dosDecimales(xs.reduce((a, b) => a + b, 0))
+
+  return {
+    sucursal: resumen.branch_name,
+    sinCortes: cajeros.length === 0,
+    abiertas: abiertas.length,
+    cerradas: cerradas.length,
+    // Un esperado de $0.00 es una cifra legítima (día sin ventas y sin fondo),
+    // distinta de "no hay turno abierto": por eso `null` solo cuando no hay.
+    deberiaHaber: abiertas.length ? suma(abiertas.map((c) => c.expected_cash)) : null,
+    contado: cerradas.length ? suma(cerradas.map((c) => c.closing_balance)) : null,
+    esperadoCerrado: cerradas.length ? suma(cerradas.map((c) => c.expected_cash)) : null,
+    // `difference` del endpoint se recalcula en vivo contra el esperado
+    // canónico; el `difference` persistido de la sesión no debe leerse.
+    diferencia: cerradas.length ? suma(cerradas.map((c) => c.difference)) : null,
   }
 }

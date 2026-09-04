@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { reportsApi } from '../../api/reports'
 import { cashApi } from '../../api/cash'
+import { organizationApi } from '../../api/organization'
 import { useAuthStore } from '../../store/authStore'
 import { Spinner } from '../../components/ui/Spinner'
 import { formatCurrency } from '../../utils/currency'
@@ -9,49 +10,76 @@ import {
   resumirDia,
   barrasPorHora,
   estadoDelCorte,
+  ambitoDelPanel,
   type ResumenDia,
   type BarraHora,
   type EstadoCorte,
+  type AmbitoPanel,
+  type SucursalMinima,
 } from '../../utils/panelDia'
 
 /**
  * Panel del dueño en móvil: cómo va el día, ritmo por hora, más vendidos y el
- * estado del corte. Tres fuentes en paralelo con `Promise.allSettled` — si una
- * falla, las demás se muestran igual y el panel dice qué no pudo cargar.
+ * estado del corte. Si una fuente falla, las demás se muestran igual y el panel
+ * dice qué no pudo cargar.
+ *
+ * El ámbito se resuelve primero (`ambitoDelPanel`) porque decide dos cosas: qué
+ * `branch_id` mandan los reportes —un rol de oficina central mira toda la
+ * organización, no la sucursal donde está anclado— y de qué sucursales se pide
+ * el corte, que `/cash/branch-summary` entrega de una en una.
  */
 export function MobileOwnerDashboard() {
   const org = useAuthStore((s) => s.org)
+  const user = useAuthStore((s) => s.user)
+  const [ambito, setAmbito] = useState<AmbitoPanel | null>(null)
   const [resumen, setResumen] = useState<ResumenDia | null>(null)
   const [barras, setBarras] = useState<BarraHora[] | null>(null)
-  const [corte, setCorte] = useState<EstadoCorte | null>(null)
+  const [cortes, setCortes] = useState<EstadoCorte[] | null>(null)
   const [fallas, setFallas] = useState<string[]>([])
   const [cargando, setCargando] = useState(true)
+
+  const rol = user?.role
+  const sucursalDelUsuario = user?.branch_id
 
   const cargar = useCallback(async () => {
     setCargando(true)
     setFallas([])
     const hoy = todayStr()
-    const [rs, rh, rc] = await Promise.allSettled([
-      reportsApi.dailySummary(hoy),
-      reportsApi.salesByHour({ date: hoy }),
-      cashApi.getStatus(),
+    const fallidas: string[] = []
+
+    // Sin la lista de sucursales el panel no sabe de qué habla; con la lista
+    // caída sigue adelante con el ámbito degradado, que al menos rotula
+    // "Toda la organización" en vez de mentir con un nombre.
+    let sucursales: SucursalMinima[] = []
+    try {
+      sucursales = await organizationApi.getBranches()
+    } catch {
+      fallidas.push('las sucursales')
+    }
+    const alcance = ambitoDelPanel(rol, sucursalDelUsuario, sucursales)
+    setAmbito(alcance)
+
+    const [rs, rh, ...rc] = await Promise.allSettled([
+      reportsApi.dailySummary(hoy, alcance.branchId),
+      reportsApi.salesByHour({ date: hoy, branch_id: alcance.branchId }),
+      ...alcance.sucursalesDelCorte.map((id) => cashApi.branchSummary(id, hoy)),
     ])
 
-    const fallidas: string[] = []
-    if (rs.status === 'fulfilled') setResumen(resumirDia(rs.value))
-    else fallidas.push('la venta del día')
-    if (rh.status === 'fulfilled') setBarras(barrasPorHora(rh.value))
-    else fallidas.push('el ritmo por hora')
+    // Cada bloque se limpia si su fuente falló: dejar la cifra de la carga
+    // anterior haría que el panel se contradiga a sí mismo tras un reintento.
+    setResumen(rs.status === 'fulfilled' ? resumirDia(rs.value) : null)
+    if (rs.status !== 'fulfilled') fallidas.push('la venta del día')
 
-    // `null` cuando la venta del día falló: es "no lo sé", no "no hubo efectivo" —
-    // con la caja abierta, `estadoDelCorte` no calcula `deberiaHaber` en ese caso.
-    const efectivo = rs.status === 'fulfilled' ? (rs.value.payments?.CASH ?? 0) : null
-    if (rc.status === 'fulfilled') setCorte(estadoDelCorte(rc.value, efectivo))
-    else fallidas.push('el corte de caja')
+    setBarras(rh.status === 'fulfilled' ? barrasPorHora(rh.value) : null)
+    if (rh.status !== 'fulfilled') fallidas.push('el ritmo por hora')
+
+    const logrados = rc.filter((r) => r.status === 'fulfilled')
+    setCortes(logrados.map((r) => estadoDelCorte(r.value)))
+    if (logrados.length < rc.length) fallidas.push('el corte de caja')
 
     setFallas(fallidas)
     setCargando(false)
-  }, [])
+  }, [rol, sucursalDelUsuario])
 
   useEffect(() => { cargar() }, [cargar])
 
@@ -69,6 +97,9 @@ export function MobileOwnerDashboard() {
       <div className="px-4 py-3">
         <p className="text-xs text-slate-400">Resumen de hoy</p>
         <h1 className="text-xl font-black text-white truncate">{org?.name ?? 'Mi negocio'}</h1>
+        {ambito && (
+          <p className="text-xs text-slate-500 truncate">{ambito.etiqueta}</p>
+        )}
       </div>
 
       {/* Franja de fallas parciales */}
@@ -156,64 +187,63 @@ export function MobileOwnerDashboard() {
         </section>
       )}
 
-      {/* Bloque 4: estado del corte */}
-      {corte && (
+      {/* Bloque 4: estado del corte, una tarjeta por sucursal */}
+      {cortes && (
         <section className="px-4 py-3">
           <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">
             Estado del corte
           </h2>
 
-          {corte.situacion === 'SIN_CAJA' && (
-            <p className="text-sm text-slate-400">No hay caja abierta.</p>
-          )}
+          {cortes.length === 0 ? (
+            <p className="text-sm text-slate-400">
+              No hay ninguna sucursal con caja para mostrar.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {cortes.map((c, i) => (
+                <div key={i} className="min-w-0 rounded-xl bg-slate-800/60 p-3">
+                  <p className="text-xs font-bold text-slate-300 truncate mb-2">{c.sucursal}</p>
 
-          {corte.situacion === 'ABIERTA' && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Fondo</p>
-                <p className="text-lg font-black text-white tabular-nums truncate">{formatCurrency(corte.fondo ?? 0)}</p>
-              </div>
-              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Debería haber</p>
-                {corte.deberiaHaber !== undefined ? (
-                  <p className="text-lg font-black text-emerald-400 tabular-nums truncate">
-                    {formatCurrency(corte.deberiaHaber)}
-                  </p>
-                ) : (
-                  <p className="text-xs font-semibold text-amber-400 leading-snug">
-                    Falta la venta del día
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+                  {c.sinCortes && (
+                    <p className="text-sm text-slate-400">Nadie abrió caja hoy.</p>
+                  )}
 
-          {corte.situacion === 'CERRADA' && (
-            <div className="grid grid-cols-3 gap-2">
-              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Fondo</p>
-                <p className="text-sm font-black text-white tabular-nums truncate">{formatCurrency(corte.fondo ?? 0)}</p>
-              </div>
-              <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Contado</p>
-                <p className="text-sm font-black text-white tabular-nums truncate">{formatCurrency(corte.contado ?? 0)}</p>
-              </div>
-              <div
-                className={`min-w-0 rounded-xl p-3 ${
-                  corte.diferencia !== 0
-                    ? 'bg-rose-500/15 border border-rose-500/40'
-                    : 'bg-slate-800/60'
-                }`}
-              >
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Diferencia</p>
-                <p
-                  className={`text-sm font-black tabular-nums truncate ${
-                    corte.diferencia !== 0 ? 'text-rose-400' : 'text-white'
-                  }`}
-                >
-                  {formatCurrency(corte.diferencia ?? 0)}
-                </p>
-              </div>
+                  {c.abiertas > 0 && (
+                    <div className="flex items-end justify-between gap-2">
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider">
+                        Debería haber
+                        {c.abiertas > 1 && ` · ${c.abiertas} turnos abiertos`}
+                      </p>
+                      <p className="text-lg font-black text-emerald-400 tabular-nums truncate">
+                        {formatCurrency(c.deberiaHaber ?? 0)}
+                      </p>
+                    </div>
+                  )}
+
+                  {c.cerradas > 0 && (
+                    <div className={`grid grid-cols-3 gap-2 ${c.abiertas > 0 ? 'mt-3 pt-3 border-t border-slate-700/60' : ''}`}>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Contado</p>
+                        <p className="text-sm font-black text-white tabular-nums truncate">{formatCurrency(c.contado ?? 0)}</p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Esperado</p>
+                        <p className="text-sm font-black text-white tabular-nums truncate">{formatCurrency(c.esperadoCerrado ?? 0)}</p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Diferencia</p>
+                        <p
+                          className={`text-sm font-black tabular-nums truncate ${
+                            c.diferencia !== 0 ? 'text-rose-400' : 'text-white'
+                          }`}
+                        >
+                          {formatCurrency(c.diferencia ?? 0)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </section>
