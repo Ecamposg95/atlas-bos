@@ -1,5 +1,7 @@
 import { formatCurrency } from '../../../utils/currency'
 
+import { TablaDesplazable } from '../../ui/TablaDesplazable'
+
 export interface LeaderboardColumn {
   key: string
   label: string
@@ -33,52 +35,54 @@ export function Leaderboard({ title, rows, columns, loading, onRowClick }: Leade
             Sin datos.
           </div>
         ) : (
-          <table className="lb-table">
-            <thead>
-              <tr>
-                <th style={{ width: 28, textAlign: 'right' }}>#</th>
-                {columns.map((c, i) => (
-                  <th
-                    key={c.key}
-                    style={{
-                      textAlign: c.align ?? (i === 0 ? 'left' : 'right'),
-                    }}
-                  >
-                    {c.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, idx) => (
-                <tr
-                  key={idx}
-                  onClick={onRowClick ? () => onRowClick(r, idx) : undefined}
-                  style={onRowClick ? { cursor: 'pointer' } : undefined}
-                  className={onRowClick ? 'lb-row-clickable' : undefined}
-                >
-                  <td className="rank mono">{idx + 1}</td>
-                  {columns.map((c, ci) => {
-                    const v = r[c.key]
-                    const align = c.align ?? (ci === 0 ? 'left' : 'right')
-                    let display: string
-                    if (c.format) display = c.format(v)
-                    else if (v === null || v === undefined) display = '—'
-                    else display = String(v)
-                    return (
-                      <td
-                        key={c.key}
-                        style={{ textAlign: align }}
-                        className={ci === 0 ? 'first' : align === 'right' ? 'mono' : undefined}
-                      >
-                        {display}
-                      </td>
-                    )
-                  })}
+          <TablaDesplazable>
+            <table className="lb-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 28, textAlign: 'right' }}>#</th>
+                  {columns.map((c, i) => (
+                    <th
+                      key={c.key}
+                      style={{
+                        textAlign: c.align ?? (i === 0 ? 'left' : 'right'),
+                      }}
+                    >
+                      {c.label}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((r, idx) => (
+                  <tr
+                    key={idx}
+                    onClick={onRowClick ? () => onRowClick(r, idx) : undefined}
+                    style={onRowClick ? { cursor: 'pointer' } : undefined}
+                    className={onRowClick ? 'lb-row-clickable' : undefined}
+                  >
+                    <td className="rank mono">{idx + 1}</td>
+                    {columns.map((c, ci) => {
+                      const v = r[c.key]
+                      const align = c.align ?? (ci === 0 ? 'left' : 'right')
+                      let display: string
+                      if (c.format) display = c.format(v)
+                      else if (v === null || v === undefined) display = '—'
+                      else display = String(v)
+                      return (
+                        <td
+                          key={c.key}
+                          style={{ textAlign: align }}
+                          className={ci === 0 ? 'first' : align === 'right' ? 'mono' : undefined}
+                        >
+                          {display}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TablaDesplazable>
         )}
       </div>
     </div>

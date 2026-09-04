@@ -28,6 +28,7 @@ import { SkeletonState } from '../../components/platform/v2/SkeletonState'
 import { Leaderboard } from '../../components/platform/v2/Leaderboard'
 
 import { ActivityHeatmap } from '../../components/platform/v2/ActivityHeatmap'
+import { TablaDesplazable } from '../../components/ui/TablaDesplazable'
 
 // Lazy: cohort retention is the only chart left in "Análisis avanzado".
 const CohortTable = lazy(() =>
@@ -98,59 +99,61 @@ function BranchComparisonTable({
 }) {
   const maxRev = Math.max(...rows.map(r => r.revenue), 1)
   return (
-    <table className="lb-table" style={{ tableLayout: 'fixed' }}>
-      <thead>
-        <tr>
-          <th style={{ width: 28, textAlign: 'right' }}>#</th>
-          <th style={{ textAlign: 'left' }}>Sucursal</th>
-          <th style={{ textAlign: 'right' }}>Revenue</th>
-          <th style={{ textAlign: 'right' }}>Tickets</th>
-          <th style={{ textAlign: 'right' }}>AOV</th>
-          <th style={{ textAlign: 'right' }}>Hora pico</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((r, idx) => (
-          <tr
-            key={r.branch_id}
-            onClick={onRowClick ? () => onRowClick(r) : undefined}
-            style={onRowClick ? { cursor: 'pointer' } : undefined}
-            className={onRowClick ? 'lb-row-clickable' : undefined}
-          >
-            <td className="rank mono">{idx + 1}</td>
-            <td className="first">
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span>{r.branch_name}</span>
-                <span style={{ fontSize: 10, color: 'var(--p-muted)' }}>{r.org_name}</span>
-                <div
-                  style={{
-                    marginTop: 4,
-                    height: 4,
-                    background: 'var(--p-surface-2)',
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                  }}
-                >
+    <TablaDesplazable>
+      <table className="lb-table" style={{ tableLayout: 'fixed' }}>
+        <thead>
+          <tr>
+            <th style={{ width: 28, textAlign: 'right' }}>#</th>
+            <th style={{ textAlign: 'left' }}>Sucursal</th>
+            <th style={{ textAlign: 'right' }}>Revenue</th>
+            <th style={{ textAlign: 'right' }}>Tickets</th>
+            <th style={{ textAlign: 'right' }}>AOV</th>
+            <th style={{ textAlign: 'right' }}>Hora pico</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, idx) => (
+            <tr
+              key={r.branch_id}
+              onClick={onRowClick ? () => onRowClick(r) : undefined}
+              style={onRowClick ? { cursor: 'pointer' } : undefined}
+              className={onRowClick ? 'lb-row-clickable' : undefined}
+            >
+              <td className="rank mono">{idx + 1}</td>
+              <td className="first">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <span>{r.branch_name}</span>
+                  <span style={{ fontSize: 10, color: 'var(--p-muted)' }}>{r.org_name}</span>
                   <div
                     style={{
-                      height: '100%',
-                      width: `${(r.revenue / maxRev) * 100}%`,
-                      background: 'var(--p-accent)',
+                      marginTop: 4,
+                      height: 4,
+                      background: 'var(--p-surface-2)',
+                      borderRadius: 2,
+                      overflow: 'hidden',
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${(r.revenue / maxRev) * 100}%`,
+                        background: 'var(--p-accent)',
+                      }}
+                    />
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td className="mono" style={{ textAlign: 'right' }}>{formatCurrency(r.revenue)}</td>
-            <td className="mono" style={{ textAlign: 'right' }}>{r.sales_count}</td>
-            <td className="mono" style={{ textAlign: 'right' }}>{formatCurrency(r.aov)}</td>
-            <td className="mono" style={{ textAlign: 'right' }}>
-              {r.peak_hour != null ? `${String(r.peak_hour).padStart(2, '0')}:00` : '—'}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+              </td>
+              <td className="mono" style={{ textAlign: 'right' }}>{formatCurrency(r.revenue)}</td>
+              <td className="mono" style={{ textAlign: 'right' }}>{r.sales_count}</td>
+              <td className="mono" style={{ textAlign: 'right' }}>{formatCurrency(r.aov)}</td>
+              <td className="mono" style={{ textAlign: 'right' }}>
+                {r.peak_hour != null ? `${String(r.peak_hour).padStart(2, '0')}:00` : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </TablaDesplazable>
   )
 }
 

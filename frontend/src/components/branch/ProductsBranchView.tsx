@@ -6,6 +6,8 @@ import { toast } from '../../store/toastStore'
 import { ui, brand, fmtMoney } from './branchUI'
 import type { Product, Brand, Department, ProductPrice, PackagingUnit, CatalogKpis, UploadPreviewResponse } from '../../types/products'
 
+import { TablaDesplazable } from '../ui/TablaDesplazable'
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ProductRow extends Product {
@@ -1163,34 +1165,36 @@ function ImportExcelModal({ onClose, onDone }: ImportModalProps) {
 
           {preview.preview.length > 0 && (
             <div className={`${ui.card} p-3 max-h-64 overflow-y-auto mb-4`}>
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-white dark:bg-slate-900">
-                  <tr>
-                    <th className="text-left">Acción</th>
-                    <th className="text-left">SKU</th>
-                    <th className="text-left">Nombre</th>
-                    <th className="text-right">Precio</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {preview.preview.map((r, i) => (
-                    <tr key={i} className="border-t border-stone-100 dark:border-slate-800">
-                      <td>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          r.action === 'NEW' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' :
-                          r.action === 'UPDATE' ? 'bg-purple-500/15 text-purple-700 dark:text-purple-400' :
-                          'bg-rose-500/15 text-rose-700 dark:text-rose-400'
-                        }`}>
-                          {r.action === 'NEW' ? 'NUEVO' : r.action === 'UPDATE' ? 'ACTUALIZA' : 'ERROR'}
-                        </span>
-                      </td>
-                      <td className="font-mono">{r.sku ?? '—'}</td>
-                      <td>{r.name ?? r.error_message ?? '—'}</td>
-                      <td className="text-right tabular-nums">{r.price != null ? fmtMoney(String(r.price)) : '—'}</td>
+              <TablaDesplazable>
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-white dark:bg-slate-900">
+                    <tr>
+                      <th className="text-left">Acción</th>
+                      <th className="text-left">SKU</th>
+                      <th className="text-left">Nombre</th>
+                      <th className="text-right">Precio</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {preview.preview.map((r, i) => (
+                      <tr key={i} className="border-t border-stone-100 dark:border-slate-800">
+                        <td>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            r.action === 'NEW' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' :
+                            r.action === 'UPDATE' ? 'bg-purple-500/15 text-purple-700 dark:text-purple-400' :
+                            'bg-rose-500/15 text-rose-700 dark:text-rose-400'
+                          }`}>
+                            {r.action === 'NEW' ? 'NUEVO' : r.action === 'UPDATE' ? 'ACTUALIZA' : 'ERROR'}
+                          </span>
+                        </td>
+                        <td className="font-mono">{r.sku ?? '—'}</td>
+                        <td>{r.name ?? r.error_message ?? '—'}</td>
+                        <td className="text-right tabular-nums">{r.price != null ? fmtMoney(String(r.price)) : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TablaDesplazable>
               {preview.total_rows > 20 && (
                 <p className={`text-xs ${ui.muted} mt-2 text-center`}>
                   Mostrando 20 de {preview.total_rows} filas. Se aplicará a todas.

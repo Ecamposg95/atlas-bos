@@ -19,6 +19,7 @@ import type {
   CustomerRow,
 } from '../../types/reports'
 import '../../styles/platform-v2.css'
+import { TablaDesplazable } from '../../components/ui/TablaDesplazable'
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
@@ -556,45 +557,47 @@ function ProductsReport({ filters, sort, page, onPageChange, onSortChange, onRow
       <TopChart title="Top 10 productos por revenue" data={chartData} dataKey="value" labelFormatter={(v) => fmtMoney(String(v))} />
       <div style={{ height: 16 }} />
       <div style={{ background: 'var(--p-surface)', border: '1px solid var(--p-border)', borderRadius: 14, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
-          <thead>
-            <tr>
-              <HeaderCell label="SKU" sortKey="sku" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Nombre" sortKey="name" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Marca" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Depto" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Unidades" sortKey="units_sold" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Revenue" sortKey="revenue" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="AOV" sortKey="aov" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="% Dev" sortKey="return_rate_pct" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Margen est." sortKey="estimated_margin_pct" sort={sort} onSortChange={onSortChange} align="right" />
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.items ?? []).map((r) => (
-              <tr
-                key={r.product_id}
-                onClick={() => onRowClick(r.product_id, r.name)}
-                style={{ cursor: 'pointer', transition: 'background 0.12s ease' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                <td style={{ ...cellStyle, fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.sku}</td>
-                <td style={cellStyle}>{r.name}</td>
-                <td style={cellStyle}>{r.brand ?? '—'}</td>
-                <td style={cellStyle}>{r.department ?? '—'}</td>
-                <td style={rightCell}>{r.units_sold.toLocaleString('es-MX')}</td>
-                <td style={rightCell}>{fmtMoney(r.revenue)}</td>
-                <td style={rightCell}>{fmtMoneyDecimal(r.aov)}</td>
-                <td style={rightCell}>{fmtPct(r.return_rate_pct)}</td>
-                <td style={rightCell}>{fmtPct(r.estimated_margin_pct)}</td>
+        <TablaDesplazable>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+            <thead>
+              <tr>
+                <HeaderCell label="SKU" sortKey="sku" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Nombre" sortKey="name" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Marca" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Depto" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Unidades" sortKey="units_sold" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Revenue" sortKey="revenue" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="AOV" sortKey="aov" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="% Dev" sortKey="return_rate_pct" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Margen est." sortKey="estimated_margin_pct" sort={sort} onSortChange={onSortChange} align="right" />
               </tr>
-            ))}
-            {(!data || data.items.length === 0) && !loading && (
-              <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={9}>Sin productos.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(data?.items ?? []).map((r) => (
+                <tr
+                  key={r.product_id}
+                  onClick={() => onRowClick(r.product_id, r.name)}
+                  style={{ cursor: 'pointer', transition: 'background 0.12s ease' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <td style={{ ...cellStyle, fontFamily: 'var(--font-mono)', fontSize: 12 }}>{r.sku}</td>
+                  <td style={cellStyle}>{r.name}</td>
+                  <td style={cellStyle}>{r.brand ?? '—'}</td>
+                  <td style={cellStyle}>{r.department ?? '—'}</td>
+                  <td style={rightCell}>{r.units_sold.toLocaleString('es-MX')}</td>
+                  <td style={rightCell}>{fmtMoney(r.revenue)}</td>
+                  <td style={rightCell}>{fmtMoneyDecimal(r.aov)}</td>
+                  <td style={rightCell}>{fmtPct(r.return_rate_pct)}</td>
+                  <td style={rightCell}>{fmtPct(r.estimated_margin_pct)}</td>
+                </tr>
+              ))}
+              {(!data || data.items.length === 0) && !loading && (
+                <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={9}>Sin productos.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </TablaDesplazable>
         <Pagination page={page} total={data?.total ?? 0} onPageChange={onPageChange} />
       </div>
     </ReportShell>
@@ -623,43 +626,45 @@ function BranchesReport({ filters, sort, page, onPageChange, onSortChange, onRow
       <TopChart title="Top 10 sucursales por revenue" data={chartData} dataKey="value" labelFormatter={(v) => fmtMoney(String(v))} />
       <div style={{ height: 16 }} />
       <div style={{ background: 'var(--p-surface)', border: '1px solid var(--p-border)', borderRadius: 14, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
-          <thead>
-            <tr>
-              <HeaderCell label="Sucursal" sortKey="name" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Org" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Ciudad" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Trans." sortKey="transactions" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Revenue" sortKey="revenue" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Tkt prom." sortKey="avg_ticket" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Cajeros" sortKey="active_cashiers" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="% Dev" sortKey="return_rate_pct" sort={sort} onSortChange={onSortChange} align="right" />
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.items ?? []).map((r) => (
-              <tr
-                key={r.branch_id}
-                onClick={() => onRowClick(r.branch_id, r.name)}
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                <td style={cellStyle}>{r.name}</td>
-                <td style={cellStyle}>{r.org_name}</td>
-                <td style={cellStyle}>{r.city ?? '—'}</td>
-                <td style={rightCell}>{r.transactions.toLocaleString('es-MX')}</td>
-                <td style={rightCell}>{fmtMoney(r.revenue)}</td>
-                <td style={rightCell}>{fmtMoneyDecimal(r.avg_ticket)}</td>
-                <td style={rightCell}>{r.active_cashiers}</td>
-                <td style={rightCell}>{fmtPct(r.return_rate_pct)}</td>
+        <TablaDesplazable>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+            <thead>
+              <tr>
+                <HeaderCell label="Sucursal" sortKey="name" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Org" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Ciudad" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Trans." sortKey="transactions" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Revenue" sortKey="revenue" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Tkt prom." sortKey="avg_ticket" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Cajeros" sortKey="active_cashiers" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="% Dev" sortKey="return_rate_pct" sort={sort} onSortChange={onSortChange} align="right" />
               </tr>
-            ))}
-            {(!data || data.items.length === 0) && !loading && (
-              <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={8}>Sin sucursales.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(data?.items ?? []).map((r) => (
+                <tr
+                  key={r.branch_id}
+                  onClick={() => onRowClick(r.branch_id, r.name)}
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <td style={cellStyle}>{r.name}</td>
+                  <td style={cellStyle}>{r.org_name}</td>
+                  <td style={cellStyle}>{r.city ?? '—'}</td>
+                  <td style={rightCell}>{r.transactions.toLocaleString('es-MX')}</td>
+                  <td style={rightCell}>{fmtMoney(r.revenue)}</td>
+                  <td style={rightCell}>{fmtMoneyDecimal(r.avg_ticket)}</td>
+                  <td style={rightCell}>{r.active_cashiers}</td>
+                  <td style={rightCell}>{fmtPct(r.return_rate_pct)}</td>
+                </tr>
+              ))}
+              {(!data || data.items.length === 0) && !loading && (
+                <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={8}>Sin sucursales.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </TablaDesplazable>
         <Pagination page={page} total={data?.total ?? 0} onPageChange={onPageChange} />
       </div>
     </ReportShell>
@@ -688,43 +693,45 @@ function SellersReport({ filters, sort, page, onPageChange, onSortChange, onRowC
       <TopChart title="Top 10 vendedores por revenue" data={chartData} dataKey="value" labelFormatter={(v) => fmtMoney(String(v))} />
       <div style={{ height: 16 }} />
       <div style={{ background: 'var(--p-surface)', border: '1px solid var(--p-border)', borderRadius: 14, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
-          <thead>
-            <tr>
-              <HeaderCell label="Nombre" sortKey="full_name" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Rol" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Sucursal" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Org" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Trans." sortKey="transactions" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Revenue" sortKey="revenue" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Tkt prom." sortKey="avg_ticket" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Días act." sortKey="active_days" sort={sort} onSortChange={onSortChange} align="right" />
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.items ?? []).map((r) => (
-              <tr
-                key={r.user_id}
-                onClick={() => onRowClick(r.user_id, r.full_name)}
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                <td style={cellStyle}>{r.full_name}</td>
-                <td style={cellStyle}>{r.role}</td>
-                <td style={cellStyle}>{r.branch_name}</td>
-                <td style={cellStyle}>{r.org_name}</td>
-                <td style={rightCell}>{r.transactions.toLocaleString('es-MX')}</td>
-                <td style={rightCell}>{fmtMoney(r.revenue)}</td>
-                <td style={rightCell}>{fmtMoneyDecimal(r.avg_ticket)}</td>
-                <td style={rightCell}>{r.active_days}</td>
+        <TablaDesplazable>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+            <thead>
+              <tr>
+                <HeaderCell label="Nombre" sortKey="full_name" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Rol" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Sucursal" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Org" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Trans." sortKey="transactions" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Revenue" sortKey="revenue" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Tkt prom." sortKey="avg_ticket" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Días act." sortKey="active_days" sort={sort} onSortChange={onSortChange} align="right" />
               </tr>
-            ))}
-            {(!data || data.items.length === 0) && !loading && (
-              <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={8}>Sin vendedores.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(data?.items ?? []).map((r) => (
+                <tr
+                  key={r.user_id}
+                  onClick={() => onRowClick(r.user_id, r.full_name)}
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <td style={cellStyle}>{r.full_name}</td>
+                  <td style={cellStyle}>{r.role}</td>
+                  <td style={cellStyle}>{r.branch_name}</td>
+                  <td style={cellStyle}>{r.org_name}</td>
+                  <td style={rightCell}>{r.transactions.toLocaleString('es-MX')}</td>
+                  <td style={rightCell}>{fmtMoney(r.revenue)}</td>
+                  <td style={rightCell}>{fmtMoneyDecimal(r.avg_ticket)}</td>
+                  <td style={rightCell}>{r.active_days}</td>
+                </tr>
+              ))}
+              {(!data || data.items.length === 0) && !loading && (
+                <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={8}>Sin vendedores.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </TablaDesplazable>
         <Pagination page={page} total={data?.total ?? 0} onPageChange={onPageChange} />
       </div>
     </ReportShell>
@@ -753,43 +760,45 @@ function CustomersReport({ filters, sort, page, onPageChange, onSortChange, onRo
       <TopChart title="Top 10 clientes por revenue" data={chartData} dataKey="value" labelFormatter={(v) => fmtMoney(String(v))} />
       <div style={{ height: 16 }} />
       <div style={{ background: 'var(--p-surface)', border: '1px solid var(--p-border)', borderRadius: 14, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
-          <thead>
-            <tr>
-              <HeaderCell label="Cliente" sortKey="customer_name" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Tickets" sortKey="ticket_count" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Revenue" sortKey="total_revenue" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Tkt prom." sortKey="avg_ticket" sort={sort} onSortChange={onSortChange} align="right" />
-              <HeaderCell label="Último" sortKey="last_purchase" sort={sort} onSortChange={onSortChange} />
-              <HeaderCell label="Recur. (días)" sortKey="avg_days_between_purchases" sort={sort} onSortChange={onSortChange} align="right" />
-            </tr>
-          </thead>
-          <tbody>
-            {(data?.items ?? []).map((r) => (
-              <tr
-                key={r.customer_id}
-                onClick={() => onRowClick(r.customer_id, r.customer_name)}
-                style={{ cursor: 'pointer' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-              >
-                <td style={cellStyle}>{r.customer_name}</td>
-                <td style={rightCell}>{r.ticket_count}</td>
-                <td style={rightCell}>{fmtMoney(r.total_revenue)}</td>
-                <td style={rightCell}>{fmtMoneyDecimal(r.avg_ticket)}</td>
-                <td style={cellStyle}>{fmtDate(r.last_purchase)}</td>
-                <td style={rightCell}>
-                  {r.avg_days_between_purchases !== null
-                    ? r.avg_days_between_purchases.toFixed(1)
-                    : '—'}
-                </td>
+        <TablaDesplazable>
+          <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, fontSize: 13 }}>
+            <thead>
+              <tr>
+                <HeaderCell label="Cliente" sortKey="customer_name" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Tickets" sortKey="ticket_count" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Revenue" sortKey="total_revenue" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Tkt prom." sortKey="avg_ticket" sort={sort} onSortChange={onSortChange} align="right" />
+                <HeaderCell label="Último" sortKey="last_purchase" sort={sort} onSortChange={onSortChange} />
+                <HeaderCell label="Recur. (días)" sortKey="avg_days_between_purchases" sort={sort} onSortChange={onSortChange} align="right" />
               </tr>
-            ))}
-            {(!data || data.items.length === 0) && !loading && (
-              <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={6}>Sin clientes.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {(data?.items ?? []).map((r) => (
+                <tr
+                  key={r.customer_id}
+                  onClick={() => onRowClick(r.customer_id, r.customer_name)}
+                  style={{ cursor: 'pointer' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--p-surface-2)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                >
+                  <td style={cellStyle}>{r.customer_name}</td>
+                  <td style={rightCell}>{r.ticket_count}</td>
+                  <td style={rightCell}>{fmtMoney(r.total_revenue)}</td>
+                  <td style={rightCell}>{fmtMoneyDecimal(r.avg_ticket)}</td>
+                  <td style={cellStyle}>{fmtDate(r.last_purchase)}</td>
+                  <td style={rightCell}>
+                    {r.avg_days_between_purchases !== null
+                      ? r.avg_days_between_purchases.toFixed(1)
+                      : '—'}
+                  </td>
+                </tr>
+              ))}
+              {(!data || data.items.length === 0) && !loading && (
+                <tr><td style={{ ...cellStyle, textAlign: 'center', color: 'var(--p-muted)' }} colSpan={6}>Sin clientes.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </TablaDesplazable>
         <Pagination page={page} total={data?.total ?? 0} onPageChange={onPageChange} />
       </div>
     </ReportShell>
