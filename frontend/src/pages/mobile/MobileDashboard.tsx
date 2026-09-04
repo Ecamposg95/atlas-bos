@@ -5,6 +5,7 @@ import { Spinner } from '../../components/ui/Spinner'
 import { ErrorState } from '../../components/ui/ErrorState'
 import { formatCurrency } from '../../utils/currency'
 import { todayStr } from '../../utils/dates'
+import { resumirDia } from '../../utils/panelDia'
 
 export function MobileDashboard() {
   const [summary, setSummary] = useState<DailySummary | null>(null)
@@ -29,6 +30,7 @@ export function MobileDashboard() {
 
   const hour = now.getHours()
   const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches'
+  const resumen = summary ? resumirDia(summary) : null
 
   return (
     <div className="space-y-5 max-w-lg mx-auto">
@@ -49,43 +51,43 @@ export function MobileDashboard() {
         <div className="dax-card">
           <ErrorState onRetry={load} compact />
         </div>
-      ) : summary ? (
+      ) : resumen ? (
         <div className="space-y-3">
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Hoy</p>
           <div className="grid grid-cols-2 gap-3">
             <div className="dax-card">
               <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Ventas</p>
-              <p className="text-xl font-black text-emerald-400 tabular-nums">{formatCurrency(summary.total_sales)}</p>
+              <p className="text-xl font-black text-emerald-400 tabular-nums">{formatCurrency(resumen.venta)}</p>
             </div>
             <div className="dax-card">
               <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Transacciones</p>
-              <p className="text-xl font-black text-white tabular-nums">{summary.transaction_count}</p>
+              <p className="text-xl font-black text-white tabular-nums">{resumen.tickets}</p>
             </div>
           </div>
 
-          {summary.by_method.length > 0 && (
+          {resumen.pagos.length > 0 && (
             <div className="dax-card space-y-2">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Por método</p>
-              {summary.by_method.map((m) => (
-                <div key={m.method} className="flex justify-between text-sm">
-                  <span className="text-slate-400">{m.method}</span>
+              {resumen.pagos.map((m) => (
+                <div key={m.metodo} className="flex justify-between text-sm">
+                  <span className="text-slate-400">{m.metodo}</span>
                   <span className="font-semibold text-white tabular-nums">{formatCurrency(m.total)}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {summary.top_5_products.length > 0 && (
+          {resumen.masVendidos.length > 0 && (
             <div className="dax-card">
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Top productos</p>
               <div className="space-y-2">
-                {summary.top_5_products.map((p, i) => (
+                {resumen.masVendidos.map((p, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-slate-600 text-xs w-4">{i + 1}.</span>
-                      <span className="text-slate-300">{p.name}</span>
+                      <span className="text-slate-300">{p.nombre}</span>
                     </div>
-                    <span className="text-slate-500 text-xs">{p.qty} uds · {formatCurrency(p.total)}</span>
+                    <span className="text-slate-500 text-xs">{p.piezas} uds</span>
                   </div>
                 ))}
               </div>
