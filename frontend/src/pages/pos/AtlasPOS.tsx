@@ -9,6 +9,8 @@ import { formatCurrency } from '../../utils/currency'
 import { useIsBranchUser } from '../../components/branch/useIsBranchUser'
 import { Cockpit } from '../../components/branch/Cockpit'
 
+import { TablaDesplazable } from '../../components/ui/TablaDesplazable'
+
 function greeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Buenos días'
@@ -147,30 +149,32 @@ function AtlasPOSHome() {
         ) : sales.length === 0 ? (
           <div className="p-6 text-center text-slate-600 text-sm">Sin ventas registradas hoy</div>
         ) : (
-          <table className="dax-table w-full">
-            <thead>
-              <tr>
-                <th>Folio</th>
-                <th>Hora</th>
-                <th>Total</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sales.map((sale) => (
-                <tr key={sale.id}>
-                  <td className="font-mono text-indigo-400">{saleLabel(sale)}</td>
-                  <td>{new Date(sale.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</td>
-                  <td className="font-semibold">{formatCurrency(sale.total_amount)}</td>
-                  <td>
-                    <span className={`dax-badge ${sale.status === 'CLOSED' ? 'dax-badge-green' : sale.status === 'CANCELLED' ? 'dax-badge-red' : 'dax-badge-yellow'}`}>
-                      {sale.status}
-                    </span>
-                  </td>
+          <TablaDesplazable>
+            <table className="dax-table w-full">
+              <thead>
+                <tr>
+                  <th>Folio</th>
+                  <th>Hora</th>
+                  <th>Total</th>
+                  <th>Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sales.map((sale) => (
+                  <tr key={sale.id}>
+                    <td className="font-mono text-indigo-400">{saleLabel(sale)}</td>
+                    <td>{new Date(sale.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="font-semibold">{formatCurrency(sale.total_amount)}</td>
+                    <td>
+                      <span className={`dax-badge ${sale.status === 'CLOSED' ? 'dax-badge-green' : sale.status === 'CANCELLED' ? 'dax-badge-red' : 'dax-badge-yellow'}`}>
+                        {sale.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TablaDesplazable>
         )}
       </DaxCard>
     </div>

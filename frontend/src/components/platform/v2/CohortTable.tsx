@@ -1,5 +1,7 @@
 import type { CohortRow } from '../../../api/platform'
 
+import { TablaDesplazable } from '../../ui/TablaDesplazable'
+
 interface CohortTableProps {
   rows: CohortRow[]
 }
@@ -39,23 +41,25 @@ export function CohortTable({ rows }: CohortTableProps) {
     )
   }
   return (
-    <table className="cohort-table">
-      <thead>
-        <tr>
-          <th>Cohort</th>
-          {PERIODS.map(p => <th key={p.key}>{p.label}</th>)}
-          <th>n</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map(r => (
-          <tr key={r.cohort}>
-            <th scope="row">{r.cohort_label}</th>
-            {PERIODS.map(p => <CohortCell key={p.key} value={r[p.key]} />)}
-            <td className="size mono">{r.size}</td>
+    <TablaDesplazable>
+      <table className="cohort-table">
+        <thead>
+          <tr>
+            <th>Cohort</th>
+            {PERIODS.map(p => <th key={p.key}>{p.label}</th>)}
+            <th>n</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.cohort}>
+              <th scope="row">{r.cohort_label}</th>
+              {PERIODS.map(p => <CohortCell key={p.key} value={r[p.key]} />)}
+              <td className="size mono">{r.size}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </TablaDesplazable>
   )
 }

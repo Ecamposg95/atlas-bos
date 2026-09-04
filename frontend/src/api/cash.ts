@@ -25,9 +25,71 @@ export interface CashMovementRecord {
   created_at: string
 }
 
+/** Un cajero dentro del corte global de la sucursal. */
+export interface CorteDeCajero {
+  session_id: number
+  user_id: number
+  username: string
+  full_name: string | null
+  status: 'OPEN' | 'CLOSED'
+  opened_at: string | null
+  closed_at: string | null
+  opening_balance: number
+  closing_balance: number
+  /** Diferencia recalculada en vivo por el backend, no la persistida. */
+  difference: number
+  /** Efectivo esperado — sale de `compute_expected_cash`, fuente única. */
+  expected_cash: number
+  sales: number
+  tickets: number
+  cash: number
+  card: number
+  transfer: number
+  change_given: number
+  inflows: number
+  outflows: number
+  cash_refunds: number
+  returns_count: number
+}
+
+/**
+ * Respuesta de `GET /api/cash/branch-summary`: consolida TODAS las sesiones de
+ * una sucursal en una fecha, no solo la del usuario que pregunta. Es el
+ * endpoint del back-office (ADMINISTRADOR/DUEÑO/GERENTE); `/cash/status` es el
+ * del cajero y solo devuelve la sesión abierta propia.
+ */
+export interface CorteDeSucursal {
+  branch_id: number
+  branch_name: string
+  date: string
+  sessions_count: number
+  cashiers: CorteDeCajero[]
+  totals: {
+    sales: number
+    tickets: number
+    cash: number
+    card: number
+    transfer: number
+    inflows: number
+    outflows: number
+    cash_refunds: number
+    opening_total: number
+    closing_total: number
+    difference_total: number
+  }
+}
+
 export const cashApi = {
   getStatus: async (): Promise<CashSession | null> => {
     const { data } = await client.get<CashSession | null>('/cash/status')
+    return data
+  },
+
+  /** Corte global de una sucursal para una fecha (YYYY-MM-DD). */
+  branchSummary: async (branchId: number, date?: string): Promise<CorteDeSucursal> => {
+    const { data } = await client.get<CorteDeSucursal>('/cash/branch-summary', {
+      params: date ? { branch_id: branchId, date } : { branch_id: branchId },
+    })
     return data
   },
 

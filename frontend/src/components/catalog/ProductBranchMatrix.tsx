@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { productsApi } from '../../api/products'
 import { organizationApi, type Branch } from '../../api/organization'
 import { Spinner } from '../ui/Spinner'
+import { TablaDesplazable } from '../ui/TablaDesplazable'
 import { toast } from '../../store/toastStore'
 import type { Product, ProductBranchStatus } from '../../types/products'
 import { formatCurrency } from '../../utils/currency'
@@ -240,34 +241,36 @@ export function ProductBranchMatrix({ product, onClose, onSaved }: Props) {
             </p>
           ) : (
             <div className="rounded-xl border border-slate-800 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-900/40">
-                  <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800">
-                    <th className="text-left py-2 px-3">Sucursal</th>
-                    <th className="text-center py-2 px-3">POS</th>
-                    <th className="text-right py-2 px-3">Precio override</th>
-                    <th className="text-right py-2 px-3">Stock mín / máx</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {branches.map((b) => {
-                    const pbs = pbsByBranch.get(b.id)
-                    return (
-                      <BranchRow
-                        key={b.id}
-                        branch={b}
-                        pbs={pbs}
-                        variantPrice={variant?.price ?? 0}
-                        disabled={saving}
-                        onToggle={(val) => saveCell(b.id, { is_active_pos: val })}
-                        onPriceOverride={(val) => saveCell(b.id, { price_override: val })}
-                        onMinStock={(val) => saveCell(b.id, { min_stock_alert: val })}
-                        onMaxStock={(val) => saveCell(b.id, { max_stock_limit: val })}
-                      />
-                    )
-                  })}
-                </tbody>
-              </table>
+              <TablaDesplazable>
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-900/40">
+                    <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-800">
+                      <th className="text-left py-2 px-3">Sucursal</th>
+                      <th className="text-center py-2 px-3">POS</th>
+                      <th className="text-right py-2 px-3">Precio override</th>
+                      <th className="text-right py-2 px-3">Stock mín / máx</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {branches.map((b) => {
+                      const pbs = pbsByBranch.get(b.id)
+                      return (
+                        <BranchRow
+                          key={b.id}
+                          branch={b}
+                          pbs={pbs}
+                          variantPrice={variant?.price ?? 0}
+                          disabled={saving}
+                          onToggle={(val) => saveCell(b.id, { is_active_pos: val })}
+                          onPriceOverride={(val) => saveCell(b.id, { price_override: val })}
+                          onMinStock={(val) => saveCell(b.id, { min_stock_alert: val })}
+                          onMaxStock={(val) => saveCell(b.id, { max_stock_limit: val })}
+                        />
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </TablaDesplazable>
             </div>
           )}
         </div>

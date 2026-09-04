@@ -15,7 +15,9 @@ Dos defectos preexistentes, ambos en produccion desde el 8 de mayo de 2026:
 El criterio de "esta venta ya es ingreso reconocido" tiene una sola fuente:
 `SALES_REPORT_STATUSES` en `app/services/cash_reconciliation.py`.
 """
+from datetime import datetime, time, timezone
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from app.models.sales import (
     DocumentStatus, Payment, PaymentMethod, SalesDocument, SalesLineItem,
@@ -28,14 +30,30 @@ def _v(products_setup):
     return products_setup["product_a"][1]
 
 
+_MX = ZoneInfo("America/Mexico_City")
+
+
+def _hoy_mx_a_las(hora):
+    """Instante UTC que corresponde a `hora` de hoy en hora de Mexico.
+
+    `sales-by-hour` solo arma franjas de 8 a 21 (app/routers/reports.py), asi
+    que una venta creada con la hora real del reloj deja la prueba en verde
+    falso si la suite corre de madrugada.
+    """
+    hoy_mx = datetime.now(_MX).date()
+    return datetime.combine(hoy_mx, time(hora), tzinfo=_MX).astimezone(timezone.utc)
+
+
 def _venta(db, org, branch, user, variant, folio, total, status, costo_unitario="40",
-           entregado=None):
+           entregado=None, hora_mx=None):
     doc = SalesDocument(
         organization_id=org.id, branch_id=branch.id, seller_id=user.id,
         folio=folio, series="A", subtotal=Decimal(total), tax_amount=Decimal("0"),
         total_amount=Decimal(total), status=status, doc_type="ORDER",
         change_given=Decimal(entregado) - Decimal(total) if entregado else None,
     )
+    if hora_mx is not None:
+        doc.created_at = _hoy_mx_a_las(hora_mx)
     db.add(doc); db.commit(); db.refresh(doc)
     db.add(SalesLineItem(
         organization_id=org.id, document_id=doc.id, variant_id=variant.id,
@@ -110,3 +128,112 @@ def test_daily_summary_descuenta_el_vuelto_del_efectivo(
 
     assert data["total_revenue"] == 100.0
     assert data["payments"]["CASH"] == 100.0
+
+
+def test_rol_de_oficina_ve_toda_la_organizacion_con_branch_cero(
+    client, db, org, branch_a, branch_b, admin_user, auth_admin, products_setup
+):
+    """`branch_id=0` es la convención que ya usa sales-by-hour: toda la org."""
+    _venta(db, org, branch_a, admin_user, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, admin_user, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get("/api/reports/daily-summary?branch_id=0", headers=auth_admin).json()
+
+    assert data["total_revenue"] == 800.0
+    assert data["transactions_count"] == 2
+
+
+def test_rol_de_oficina_puede_pedir_otra_sucursal(
+    client, db, org, branch_a, branch_b, admin_user, auth_admin, products_setup
+):
+    _venta(db, org, branch_a, admin_user, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, admin_user, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get(
+        f"/api/reports/daily-summary?branch_id={branch_b.id}", headers=auth_admin
+    ).json()
+
+    assert data["total_revenue"] == 700.0
+
+
+def test_un_cajero_no_puede_mirar_otra_sucursal(
+    client, db, org, branch_a, branch_b, cajero_a, auth_cajero_a, products_setup
+):
+    """Aunque mande el branch_id de otra sucursal, sigue viendo la suya."""
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get(
+        f"/api/reports/daily-summary?branch_id={branch_b.id}", headers=auth_cajero_a
+    ).json()
+
+    assert data["total_revenue"] == 100.0
+
+
+def test_sin_parametro_el_comportamiento_no_cambia(
+    client, db, org, branch_a, branch_b, cajero_a, auth_cajero_a, products_setup
+):
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get("/api/reports/daily-summary", headers=auth_cajero_a).json()
+
+    assert data["total_revenue"] == 100.0
+
+
+def test_un_rol_sin_sucursal_no_ve_la_organizacion_entera(
+    client, db, org, branch_a, branch_b, cajero_a,
+    vendedor_sin_sucursal, auth_vendedor_sin_sucursal, products_setup
+):
+    """`branch_id` nulo es "este usuario no tiene sucursal", no "toda la org".
+
+    Aislamiento: un VENDEDOR sin sucursal asignada no es un rol de oficina
+    central. El guard `if target_branch_id` trataba `None` igual que el `0` de
+    "toda la organizacion", asi que este usuario pasaba de no ver nada a ver la
+    venta, la utilidad y el desglose de pagos del negocio completo.
+    """
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get(
+        "/api/reports/daily-summary", headers=auth_vendedor_sin_sucursal
+    ).json()
+
+    assert data["total_revenue"] == 0.0
+    assert data["transactions_count"] == 0
+    assert data["gross_profit"] == 0.0
+    assert data["payments"] == {}
+    assert data["top_selling_items"] == []
+
+
+def test_un_rol_sin_sucursal_tampoco_ve_el_ritmo_de_la_organizacion(
+    client, db, org, branch_a, branch_b, cajero_a,
+    vendedor_sin_sucursal, auth_vendedor_sin_sucursal, products_setup
+):
+    """Mismo criterio en `sales-by-hour`: dos endpoints, una sola regla."""
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100",
+           DocumentStatus.PAID, hora_mx=15)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700",
+           DocumentStatus.PAID, hora_mx=15)
+
+    data = client.get(
+        "/api/reports/sales-by-hour", headers=auth_vendedor_sin_sucursal
+    ).json()
+
+    assert sum(h["amount"] for h in data["hourly"]) == 0.0
+    assert sum(h["tickets"] for h in data["hourly"]) == 0
+
+
+def test_un_rol_sin_sucursal_no_puede_pedir_toda_la_organizacion(
+    client, db, org, branch_a, branch_b, cajero_a,
+    vendedor_sin_sucursal, auth_vendedor_sin_sucursal, products_setup
+):
+    """Ni mandando `branch_id=0` a mano: esa convencion es solo de oficina central."""
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100", DocumentStatus.PAID)
+    _venta(db, org, branch_b, cajero_a, _v(products_setup), "R-9", "700", DocumentStatus.PAID)
+
+    data = client.get(
+        "/api/reports/daily-summary?branch_id=0", headers=auth_vendedor_sin_sucursal
+    ).json()
+
+    assert data["total_revenue"] == 0.0

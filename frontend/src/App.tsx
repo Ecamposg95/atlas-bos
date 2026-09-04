@@ -5,6 +5,7 @@ import { useEnabledModulesStore } from './store/enabledModulesStore'
 import { ThemeProvider } from './context/ThemeContext'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useIsMobile } from './hooks/useIsMobile'
+import { rutaInicioPorRol } from './utils/rutaInicio'
 
 // Aplicar tema inicial antes del primer render — evita flash
 const _savedTheme = localStorage.getItem('atlas_theme') ?? 'dark'
@@ -153,21 +154,6 @@ function PlatformRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Landing path after login for a given role/preset. Admins/owners with an
-// Atlas One vertical preset land on /home (PresetHome). Without an Atlas One
-// preset they fall back to /hq/operations. Branch/mobile roles keep their
-// specialized dashboards.
-function homePathForRole(role?: string | null, isMobile = false, preset?: string | null): string {
-  if (role === 'DUEÑO' && isMobile) return '/mobile/owner'
-  if (role === 'ADMINISTRADOR' || role === 'DUEÑO') {
-    if (preset && preset.startsWith('ATLAS_ONE_')) return '/home'
-    return '/hq/operations'
-  }
-  if (role === 'VENDEDOR' || role === 'SOPORTE_OPERATIVO') return '/mobile/dashboard'
-  if (role === 'CLIENTE') return '/portal'
-  return '/atlas-pos'
-}
-
 function RoleHomeRedirect() {
   const user = useAuthStore((s) => s.user)
   const isMobile = useIsMobile()
@@ -184,7 +170,7 @@ function RoleHomeRedirect() {
       <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 22 }} />
     </div>
   }
-  return <Navigate to={homePathForRole(user?.role, isMobile, preset)} replace />
+  return <Navigate to={rutaInicioPorRol(user?.role, isMobile, preset)} replace />
 }
 
 function AtlasPOSGate({ children }: { children: React.ReactNode }) {

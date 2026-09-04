@@ -17,6 +17,7 @@ import { PlatformPageShell } from '../../components/platform/PlatformPageShell'
 import { StatusBadge } from '../../components/platform/StatusBadge'
 import { SideDrawer } from '../../components/platform/SideDrawer'
 import { ConfirmModal } from '../../components/platform/ConfirmModal'
+import { TablaDesplazable } from '../../components/ui/TablaDesplazable'
 
 // ── Inline shared styles (tokens) ────────────────────────────────────────────
 const card: React.CSSProperties = {
@@ -992,81 +993,85 @@ export function PlatformOrgDetail() {
         </div>
 
         {tab === 'branches' && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead style={{ background: 'var(--p-surface-2)' }}>
-              <tr>
-                <th style={tableHeadCell}>Sucursal</th>
-                <th style={tableHeadCell}>Tipo</th>
-                <th style={tableHeadCell}>Dirección</th>
-                <th style={tableHeadCell}>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {branches.length === 0 ? (
-                <tr><td colSpan={4} style={{ ...tableCell, textAlign: 'center', color: 'var(--p-muted)', padding: '2rem' }}>Sin sucursales</td></tr>
-              ) : branches.map(b => (
-                <tr key={b.id}>
-                  <td style={tableCell}>
-                    <div style={{ fontWeight: 600 }}>{b.name}</div>
-                    <div style={{ fontSize: 11, color: 'var(--p-muted)', fontFamily: 'monospace' }}>#{b.id}</div>
-                  </td>
-                  <td style={tableCell}>
-                    <span style={{
-                      background: 'var(--p-surface-2)',
-                      color: 'var(--p-text)',
-                      padding: '2px 8px',
-                      borderRadius: 4,
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                    }}>{b.branch_type}</span>
-                  </td>
-                  <td style={{ ...tableCell, color: 'var(--p-muted)' }}>{b.address || '—'}</td>
-                  <td style={tableCell}>
-                    {b.is_active ? <StatusBadge status="active" /> : <StatusBadge status="inactive" />}
-                  </td>
+          <TablaDesplazable>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead style={{ background: 'var(--p-surface-2)' }}>
+                <tr>
+                  <th style={tableHeadCell}>Sucursal</th>
+                  <th style={tableHeadCell}>Tipo</th>
+                  <th style={tableHeadCell}>Dirección</th>
+                  <th style={tableHeadCell}>Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {branches.length === 0 ? (
+                  <tr><td colSpan={4} style={{ ...tableCell, textAlign: 'center', color: 'var(--p-muted)', padding: '2rem' }}>Sin sucursales</td></tr>
+                ) : branches.map(b => (
+                  <tr key={b.id}>
+                    <td style={tableCell}>
+                      <div style={{ fontWeight: 600 }}>{b.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--p-muted)', fontFamily: 'monospace' }}>#{b.id}</div>
+                    </td>
+                    <td style={tableCell}>
+                      <span style={{
+                        background: 'var(--p-surface-2)',
+                        color: 'var(--p-text)',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                      }}>{b.branch_type}</span>
+                    </td>
+                    <td style={{ ...tableCell, color: 'var(--p-muted)' }}>{b.address || '—'}</td>
+                    <td style={tableCell}>
+                      {b.is_active ? <StatusBadge status="active" /> : <StatusBadge status="inactive" />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TablaDesplazable>
         )}
 
         {tab === 'users' && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead style={{ background: 'var(--p-surface-2)' }}>
-              <tr>
-                <th style={tableHeadCell}>Usuario</th>
-                <th style={tableHeadCell}>Rol</th>
-                <th style={tableHeadCell}>Email</th>
-                <th style={tableHeadCell}>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr><td colSpan={4} style={{ ...tableCell, textAlign: 'center', color: 'var(--p-muted)', padding: '2rem' }}>Sin usuarios</td></tr>
-              ) : users.map(u => (
-                <tr key={u.id}>
-                  <td style={tableCell}>
-                    <div style={{ fontWeight: 600 }}>{u.full_name || u.username}</div>
-                    <div style={{ fontSize: 11, color: 'var(--p-muted)', fontFamily: 'monospace' }}>@{u.username}</div>
-                  </td>
-                  <td style={tableCell}>
-                    <span style={{
-                      background: 'var(--p-surface-2)',
-                      color: 'var(--p-text)',
-                      padding: '2px 8px',
-                      borderRadius: 4,
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                    }}>{u.role}</span>
-                  </td>
-                  <td style={{ ...tableCell, color: 'var(--p-muted)' }}>{u.email || '—'}</td>
-                  <td style={tableCell}>
-                    {u.is_active ? <StatusBadge status="active" /> : <StatusBadge status="inactive" />}
-                  </td>
+          <TablaDesplazable>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead style={{ background: 'var(--p-surface-2)' }}>
+                <tr>
+                  <th style={tableHeadCell}>Usuario</th>
+                  <th style={tableHeadCell}>Rol</th>
+                  <th style={tableHeadCell}>Email</th>
+                  <th style={tableHeadCell}>Estado</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.length === 0 ? (
+                  <tr><td colSpan={4} style={{ ...tableCell, textAlign: 'center', color: 'var(--p-muted)', padding: '2rem' }}>Sin usuarios</td></tr>
+                ) : users.map(u => (
+                  <tr key={u.id}>
+                    <td style={tableCell}>
+                      <div style={{ fontWeight: 600 }}>{u.full_name || u.username}</div>
+                      <div style={{ fontSize: 11, color: 'var(--p-muted)', fontFamily: 'monospace' }}>@{u.username}</div>
+                    </td>
+                    <td style={tableCell}>
+                      <span style={{
+                        background: 'var(--p-surface-2)',
+                        color: 'var(--p-text)',
+                        padding: '2px 8px',
+                        borderRadius: 4,
+                        fontFamily: 'monospace',
+                        fontSize: 11,
+                      }}>{u.role}</span>
+                    </td>
+                    <td style={{ ...tableCell, color: 'var(--p-muted)' }}>{u.email || '—'}</td>
+                    <td style={tableCell}>
+                      {u.is_active ? <StatusBadge status="active" /> : <StatusBadge status="inactive" />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TablaDesplazable>
         )}
       </section>
 

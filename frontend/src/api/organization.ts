@@ -21,6 +21,9 @@ export interface Branch {
   phone: string | null
   is_headquarters: boolean
   is_active: boolean
+  // El backend siempre lo manda (BranchRead); opcional aquí porque varias
+  // pantallas construyen sucursales parciales para sus propios listados.
+  can_sell?: boolean
 }
 
 export interface BranchCreate {

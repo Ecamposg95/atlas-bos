@@ -528,3 +528,7 @@
     color: var(--dax-text);
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  #cajon-lateral { transition: none !important; }
+}

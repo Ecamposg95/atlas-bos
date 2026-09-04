@@ -56,6 +56,24 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):
     # Postgres (app/routers/reports.py::_mx). SQLite no la trae. Shim de solo
     # pruebas -- el SQL de produccion queda identico al que corre en Postgres.
     dbapi_connection.create_function("timezone", 2, _pg_timezone)
+    # `sales-by-hour` agrupa con `to_char(ts, 'HH24')`, tambien de Postgres.
+    dbapi_connection.create_function("to_char", 2, _pg_to_char)
+
+
+def _pg_to_char(ts, fmt):
+    """Shim de `to_char(ts, formato)` de Postgres para SQLite.
+
+    Solo cubre 'HH24' -- el unico formato que usan los reportes. Cualquier otro
+    revienta a proposito: un shim que devuelve algo plausible para un formato
+    que no implementa haria pasar pruebas contra un SQL que en produccion
+    devuelve otra cosa.
+    """
+    if ts is None:
+        return None
+    dt = ts if isinstance(ts, datetime) else datetime.fromisoformat(str(ts))
+    if fmt == "HH24":
+        return f"{dt.hour:02d}"
+    raise NotImplementedError(f"to_char no implementa el formato {fmt!r} en pruebas")
 
 
 def _pg_timezone(zone, ts):
@@ -197,6 +215,22 @@ def cajero_a(db, org, branch_a):
 def gerente_a(db, org, branch_a):
     """GERENTE user at Branch A."""
     return _make_user(db, org, branch_a, "gerente_a", Role.GERENTE)
+
+
+@pytest.fixture()
+def vendedor_sin_sucursal(db, org):
+    """VENDEDOR sin sucursal asignada.
+
+    `User.branch_id` es nullable y la propia caja contempla el caso
+    ("Tu usuario no tiene una sucursal asignada", app/routers/cash.py). Un rol
+    asi no es de oficina central: no debe ver la organizacion entera.
+    """
+    return _make_user(db, org, None, "vendedor_sin_sucursal", Role.VENDEDOR)
+
+
+@pytest.fixture()
+def auth_vendedor_sin_sucursal(vendedor_sin_sucursal):
+    return _auth_header(vendedor_sin_sucursal)
 
 
 @pytest.fixture()
