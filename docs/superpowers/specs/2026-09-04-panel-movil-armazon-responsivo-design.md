@@ -36,7 +36,7 @@ Auditoría mecánica sobre `frontend/src` (77 vistas en `pages/`, 105 componente
 | Vistas sin ningún punto de quiebre de Tailwind | 52 de 77 |
 | Puntos de quiebre en uso en todo el proyecto | `lg` 63, `sm` 46, `md` 24, `xl` 4 |
 | Archivos con `<table>` sin contenedor de scroll horizontal | 10 |
-| Archivos con anchos fijos ≥ 400px | 6 |
+| Archivos con anchos fijos ≥ 400px | **1** (medición corregida, ver abajo) |
 | Vistas que usan `style={{ }}` en línea | 37 de 77 |
 
 Los estilos en línea son la razón de fondo por la que esto no se arregla solo:
@@ -126,7 +126,21 @@ Se aplica a los 10 archivos que hoy tienen `<table>` sin contenedor de scroll:
 - `components/platform/v2/Leaderboard.tsx`
 - `components/platform/v2/TopOrgsTable.tsx`
 
-### 3. Los anchos fijos pasan a máximos
+### 3. Los anchos fijos pasan a máximos — SECCIÓN ANULADA
+
+**Esta sección se basaba en una medición equivocada y no se implementó.** La
+auditoría usó `(?:width|minWidth|maxWidth)\s*:\s*['"]?(\d{3,4})px`, que incluye
+`maxWidth` y además casa con el `width: 900px` que hay dentro de
+`max-width: 900px`. De los seis archivos que listaba: dos tienen media queries
+—código responsivo, lo contrario de un problema— y tres ya usaban `max-w-[Npx]`,
+que ya es un máximo. El único ancho fijo real es `min-w-[420px]` en
+`pages/pos/POS.tsx:589`, el panel del carrito del checkout, y se decidió no
+tocarlo: la pantalla de cobro no es el caso de uso móvil, así que cambiarla es
+riesgo sobre cobros reales sin beneficio. Queda como asunto propio.
+
+El texto original se conserva abajo para dejar constancia de qué se creyó.
+
+### 3-bis. Texto original (no implementado)
 
 Seis archivos declaran anchos fijos de 400px o más. Cada `width: Npx` y
 `minWidth: Npx` de ese conjunto pasa a `maxWidth: Npx` más `width: '100%'`, que
