@@ -62,7 +62,16 @@ consultar datos actuales: diverge de Railway con cada venta.
 ```bash
 git archive --format=tar origin/main | ssh ionos 'tar -x -C /srv/apps/atlas-one-prod/src'
 scp Dockerfile .dockerignore ionos:/srv/apps/atlas-one-prod/src/
-ssh ionos 'cd /srv/apps/atlas-one-beta && docker compose build && docker compose up -d'
+ssh ionos 'cd /srv/apps/atlas-one-prod && docker compose build && docker compose up -d'
+```
+
+El `build` y el `up -d` van **juntos**: construir sin levantar deja el contenedor
+corriendo la imagen vieja, y `docker inspect -f "{{.State.StartedAt}}"` lo delata
+sin necesidad de adivinar. Verifica siempre contra el contenedor, no contra el
+`src/` del servidor:
+
+```bash
+ssh ionos 'docker exec atlas-one-prod grep -c "<algo del cambio>" /app/app/routers/<archivo>.py'
 ```
 
 El `src/` del VPS es un export de `origin/staging` más el `Dockerfile` de
