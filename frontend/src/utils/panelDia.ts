@@ -61,8 +61,13 @@ export interface EstadoCorte {
  * Estado del corte para el panel. Con la caja abierta, lo que debería haber es
  * el fondo declarado más el efectivo neto del día — el mismo criterio del corte
  * (`net_cash`, ya sin el vuelto). Con la caja cerrada se reporta lo que quedó.
+ *
+ * `efectivoDelDia` es `number | null` a propósito: `null` significa "no lo sé"
+ * (la fuente de la venta del día falló), no "no hubo efectivo". Confundir
+ * ambos casos produciría un `deberiaHaber` plausible pero falso — con la caja
+ * abierta, sin el dato no se calcula `deberiaHaber` en absoluto.
  */
-export function estadoDelCorte(s: CashSession | null, efectivoDelDia: number): EstadoCorte {
+export function estadoDelCorte(s: CashSession | null, efectivoDelDia: number | null): EstadoCorte {
   if (!s) return { situacion: 'SIN_CAJA' }
   const fondo = Number(s.opening_balance ?? 0)
   if (s.status === 'CLOSED') {
@@ -73,5 +78,9 @@ export function estadoDelCorte(s: CashSession | null, efectivoDelDia: number): E
       diferencia: Number(s.difference ?? 0),
     }
   }
-  return { situacion: 'ABIERTA', fondo, deberiaHaber: fondo + efectivoDelDia }
+  return {
+    situacion: 'ABIERTA',
+    fondo,
+    deberiaHaber: efectivoDelDia === null ? undefined : fondo + efectivoDelDia,
+  }
 }

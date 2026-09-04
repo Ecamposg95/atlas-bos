@@ -43,7 +43,9 @@ export function MobileOwnerDashboard() {
     if (rh.status === 'fulfilled') setBarras(barrasPorHora(rh.value))
     else fallidas.push('el ritmo por hora')
 
-    const efectivo = rs.status === 'fulfilled' ? (rs.value.payments?.CASH ?? 0) : 0
+    // `null` cuando la venta del día falló: es "no lo sé", no "no hubo efectivo" —
+    // con la caja abierta, `estadoDelCorte` no calcula `deberiaHaber` en ese caso.
+    const efectivo = rs.status === 'fulfilled' ? (rs.value.payments?.CASH ?? 0) : null
     if (rc.status === 'fulfilled') setCorte(estadoDelCorte(rc.value, efectivo))
     else fallidas.push('el corte de caja')
 
@@ -173,9 +175,15 @@ export function MobileOwnerDashboard() {
               </div>
               <div className="min-w-0 rounded-xl bg-slate-800/60 p-3">
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Debería haber</p>
-                <p className="text-lg font-black text-emerald-400 tabular-nums truncate">
-                  {formatCurrency(corte.deberiaHaber ?? 0)}
-                </p>
+                {corte.deberiaHaber !== undefined ? (
+                  <p className="text-lg font-black text-emerald-400 tabular-nums truncate">
+                    {formatCurrency(corte.deberiaHaber)}
+                  </p>
+                ) : (
+                  <p className="text-xs font-semibold text-amber-400 leading-snug">
+                    Falta la venta del día
+                  </p>
+                )}
               </div>
             </div>
           )}

@@ -87,4 +87,12 @@ describe('estadoDelCorte', () => {
     expect(e.contado).toBe(1020)
     expect(e.diferencia).toBeCloseTo(27.21, 2)
   })
+
+  it('con la caja abierta y el efectivo del dia desconocido, no inventa cuanto deberia haber', () => {
+    const e = estadoDelCorte(
+      { id: 97, status: 'OPEN', opening_balance: 500, closing_balance: null } as never, null)
+    expect(e.situacion).toBe('ABIERTA')
+    expect(e.fondo).toBe(500)
+    expect(e.deberiaHaber).toBeUndefined()
+  })
 })
