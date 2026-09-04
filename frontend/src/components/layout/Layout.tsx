@@ -87,10 +87,11 @@ export function Layout() {
   // `translateX(-100%)` solo saca el cajón cerrado de la vista, no del árbol
   // de accesibilidad ni del orden de tabulación: un Tab desde el teclado o un
   // lector de pantalla lo recorren igual. `inert` sí lo excluye de ambos. No
-  // se pasa como prop de JSX porque @types/react 18 no lo tipa y react-dom 18
-  // no lo reconoce como atributo booleano — `inert={false}` terminaría
-  // escribiendo `inert="false"`, que el navegador sigue leyendo como
-  // presente. Se aplica directo sobre el nodo para evitar esa ambigüedad.
+  // se pasa como prop de JSX porque @types/react 18 no lo tipa y react-dom
+  // 18.3.1 no conoce el atributo: comprobado contra el react-dom instalado,
+  // DESCARTA `inert` por completo cuando el valor es booleano —tanto `true`
+  // como `false`—, así que la propiedad no serviría ni para activarlo. Se
+  // aplica directo sobre el nodo, que es la única vía que funciona aquí.
   useEffect(() => {
     const el = cajonRef.current
     if (!el) return
@@ -164,9 +165,19 @@ export function Layout() {
               style={{ color: 'rgba(148,163,184,0.6)' }}
               onMouseEnter={e => ((e.currentTarget as HTMLElement).style.color = 'white')}
               onMouseLeave={e => ((e.currentTarget as HTMLElement).style.color = 'rgba(148,163,184,0.6)')}
-              title={esMovil ? 'Abrir menú' : 'Contraer menú'}
+              title={
+                esMovil
+                  ? (cajonAbierto ? 'Cerrar menú' : 'Abrir menú')
+                  : (collapsed ? 'Expandir menú' : 'Contraer menú')
+              }
             >
-              <i className={`fa-solid ${collapsed ? 'fa-indent' : 'fa-outdent'} text-sm`} />
+              <i
+                className={`fa-solid ${
+                  esMovil
+                    ? (cajonAbierto ? 'fa-xmark' : 'fa-bars')
+                    : (collapsed ? 'fa-indent' : 'fa-outdent')
+                } text-sm`}
+              />
             </button>
 
             <div className="hidden sm:flex flex-col min-w-0">
