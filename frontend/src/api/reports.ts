@@ -82,11 +82,11 @@ export interface CommandCenterStats {
 
 export interface DailySummary {
   date: string
-  total_sales: number
-  transaction_count: number
-  by_method: { method: string; total: number }[]
-  top_5_products: { name: string; qty: number; total: number }[]
+  transactions_count: number
+  total_revenue: number
   gross_profit: number
+  payments: Record<string, number>
+  top_selling_items: { name: string; quantity: number }[]
 }
 
 export interface AuditDiscrepancy {
@@ -126,9 +126,12 @@ export const reportsApi = {
     return data
   },
 
-  dailySummary: async (targetDate?: string): Promise<DailySummary> => {
+  dailySummary: async (targetDate?: string, branchId?: number): Promise<DailySummary> => {
+    const params: Record<string, string | number> = {}
+    if (targetDate) params.target_date = targetDate
+    if (branchId !== undefined) params.branch_id = branchId
     const { data } = await client.get<DailySummary>('/reports/daily-summary', {
-      params: targetDate ? { target_date: targetDate } : undefined,
+      params: Object.keys(params).length ? params : undefined,
     })
     return data
   },
