@@ -38,6 +38,33 @@ from app.crud.products import _is_admin
 
 CRITICAL_STOCK_THRESHOLD = 5
 
+# Roles de oficina central: los unicos que pueden mirar una sucursal que no es
+# la suya, o la organizacion entera.
+HQ_ROLES = ("ADMINISTRADOR", "GERENTE", "DUEÑO")
+
+
+def _resolver_sucursal(current_user: User, branch_id):
+    """Ambito de un reporte por sucursal: `(sucursal, toda_la_organizacion)`.
+
+    `branch_id=0` significa "toda la organizacion" y solo lo honra un rol de
+    oficina central; para cualquier otro rol el parametro se ignora y se queda
+    en su propia sucursal.
+
+    El segundo valor es explicito a proposito. Antes el guard era
+    `if target_branch_id`, que trata `None` --"este usuario no tiene sucursal
+    asignada", `User.branch_id` es nullable-- igual que el `0` de "toda la
+    organizacion": un VENDEDOR sin sucursal pasaba de no ver nada a ver la
+    venta, la utilidad y el desglose de pagos del negocio completo. Con la
+    bandera aparte, `None` sigue filtrando `branch_id IS NULL` (cero filas) y
+    solo el `0` de un rol de oficina central levanta el filtro.
+    """
+    if current_user.role in HQ_ROLES:
+        if branch_id == 0:
+            return None, True
+        if branch_id:
+            return branch_id, False
+    return current_user.branch_id, False
+
 
 router = APIRouter()
 
@@ -53,20 +80,9 @@ def get_daily_summary(
     if not target_date:
         target_date = _today_mx()
 
-    # Resolución de sucursal: calcada de get_sales_by_hour (mismo archivo).
-    # branch_id=0 significa "toda la organización" y solo lo honra un rol de
-    # oficina central; para cualquier otro rol el parámetro se ignora y se
-    # queda en su propia sucursal.
-    is_hq_user = current_user.role in ["ADMINISTRADOR", "GERENTE", "DUEÑO"]
-    target_branch_id = current_user.branch_id
-    if is_hq_user:
-        if branch_id == 0:
-            target_branch_id = None
-        elif branch_id:
-            target_branch_id = branch_id
-
+    target_branch_id, toda_la_org = _resolver_sucursal(current_user, branch_id)
     filtros_sucursal = (
-        [SalesDocument.branch_id == target_branch_id] if target_branch_id else []
+        [] if toda_la_org else [SalesDocument.branch_id == target_branch_id]
     )
 
     # 1. Ventas Totales por Estatus
@@ -554,20 +570,14 @@ def get_sales_by_hour(
     if not date:
         date = _today_mx()
 
-    is_hq_user = current_user.role in ["ADMINISTRADOR", "GERENTE", "DUEÑO"]
-    target_branch_id = current_user.branch_id
-    if is_hq_user:
-        if branch_id == 0:
-            target_branch_id = None
-        elif branch_id:
-            target_branch_id = branch_id
+    target_branch_id, toda_la_org = _resolver_sucursal(current_user, branch_id)
 
     filters = [
         SalesDocument.organization_id == org_id,
         func.date(_mx(SalesDocument.created_at)) == date,
         SalesDocument.status == DocumentStatus.PAID,
     ]
-    if target_branch_id:
+    if not toda_la_org:
         filters.append(SalesDocument.branch_id == target_branch_id)
 
     rows = db.query(
