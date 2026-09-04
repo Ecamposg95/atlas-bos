@@ -28,11 +28,13 @@ def _v(products_setup):
     return products_setup["product_a"][1]
 
 
-def _venta(db, org, branch, user, variant, folio, total, status, costo_unitario="40"):
+def _venta(db, org, branch, user, variant, folio, total, status, costo_unitario="40",
+           entregado=None):
     doc = SalesDocument(
         organization_id=org.id, branch_id=branch.id, seller_id=user.id,
         folio=folio, series="A", subtotal=Decimal(total), tax_amount=Decimal("0"),
         total_amount=Decimal(total), status=status, doc_type="ORDER",
+        change_given=Decimal(entregado) - Decimal(total) if entregado else None,
     )
     db.add(doc); db.commit(); db.refresh(doc)
     db.add(SalesLineItem(
@@ -43,7 +45,7 @@ def _venta(db, org, branch, user, variant, folio, total, status, costo_unitario=
     ))
     db.add(Payment(
         organization_id=org.id, sales_document_id=doc.id,
-        method=PaymentMethod.CASH, amount=Decimal(total),
+        method=PaymentMethod.CASH, amount=Decimal(entregado or total),
     ))
     db.commit()
     return doc
@@ -87,3 +89,24 @@ def test_daily_summary_no_mezcla_sucursales(
     assert data["total_revenue"] == 100.0
     assert [p["name"] for p in data["top_selling_items"]] == ["Producto R-1"]
     assert data["gross_profit"] == 60.0
+
+
+def test_daily_summary_descuenta_el_vuelto_del_efectivo(
+    client, db, org, branch_a, cajero_a, auth_cajero_a, products_setup
+):
+    """El vuelto no es ingreso.
+
+    `Payment.amount` guarda lo que el cliente ENTREGO, no lo que se quedo en el
+    cajon. Sin descontar el vuelto, el desglose de pagos reportaba mas efectivo
+    que la venta del dia -- en produccion, $1,264.00 de CASH contra $992.78
+    vendidos, exactamente los $271.22 de vuelto entregado. El corte de caja ya
+    aplica este criterio (`net_cash = gross_cash - change_given`).
+    """
+    # Venta de $100 pagada con un billete de $150: el cajon se queda con $100.
+    _venta(db, org, branch_a, cajero_a, _v(products_setup), "R-1", "100",
+           DocumentStatus.PAID, entregado="150")
+
+    data = client.get("/api/reports/daily-summary", headers=auth_cajero_a).json()
+
+    assert data["total_revenue"] == 100.0
+    assert data["payments"]["CASH"] == 100.0

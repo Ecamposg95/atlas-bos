@@ -30,6 +30,7 @@ from app.models import (
 from app.core.security import get_current_user
 from app.models import User
 from app.models.cash import CashSessionStatus
+from app.models.sales import PaymentMethod
 from app.models.organization import BranchType
 from app.schemas.reports import AgingReportResponse
 from app.core.tenant_context import get_current_active_organization
@@ -84,6 +85,25 @@ def get_daily_summary(
         SalesDocument.status.in_(SALES_REPORT_STATUSES)
     ).group_by(SalesLineItem.description).order_by(desc("qty")).limit(5).all()
 
+    # 2.b El vuelto no es ingreso. `Payment.amount` guarda lo que el cliente
+    # ENTREGO, no lo que se quedó en el cajón, así que el efectivo del día salía
+    # inflado y no cuadraba contra la venta. El corte de caja ya aplica este
+    # criterio (`net_cash = gross_cash - change_given`, en
+    # app/services/cash_reconciliation.py); aquí se replica el criterio, no la
+    # fórmula, porque el resumen agrupa por día y el corte por sesión.
+    vuelto_del_dia = db.query(
+        func.coalesce(func.sum(SalesDocument.change_given), 0)
+    ).filter(
+        SalesDocument.organization_id == org_id,
+        func.date(_mx(SalesDocument.created_at)) == target_date,
+        SalesDocument.branch_id == current_user.branch_id,
+        SalesDocument.status.in_(SALES_REPORT_STATUSES)
+    ).scalar() or Decimal(0)
+
+    pagos = {p.method: Decimal(str(p.total or 0)) for p in payments_breakdown}
+    if PaymentMethod.CASH in pagos:
+        pagos[PaymentMethod.CASH] -= Decimal(str(vuelto_del_dia))
+
     # 4. Cálculo de Utilidad Bruta (Venta - Costo)
     profit_data = db.query(
         func.sum(SalesLineItem.total_line - (SalesLineItem.unit_cost * SalesLineItem.quantity))
@@ -99,7 +119,7 @@ def get_daily_summary(
         "transactions_count": sales_query.count or 0,
         "total_revenue": float(sales_query.total or 0),
         "gross_profit": float(profit_data),
-        "payments": {p.method: float(p.total) for p in payments_breakdown},
+        "payments": {m: float(v) for m, v in pagos.items()},
         "top_selling_items": [{"name": p.description, "quantity": float(p.qty)} for p in top_products]
     }
 
